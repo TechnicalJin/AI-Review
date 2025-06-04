@@ -286,5 +286,78 @@ class UserControllerTest {
         assertEquals(400, response.getStatusCodeValue());
     }
 
+    @Test
+    void testEditClient_Get_Success() {
+        Client client = new Client();
+        client.setId(1);
+        client.setName("Test Client");
+        client.setReviewLink("");
+        when(clientRepo.findById(1)).thenReturn(Optional.of(client));
 
+        String view = userController.editClient(1, model);
+
+        assertEquals("user/edit", view);
+        verify(model).addAttribute(eq("clientDao"), any(ClientDao.class));
+        verify(model).addAttribute("clientId", 1);
+    }
+
+    @Test
+    void testEditClient_Get_NotFound() {
+        when(clientRepo.findById(1)).thenReturn(Optional.empty());
+
+        String view = userController.editClient(1, model);
+
+        assertEquals("redirect:/user?error=notfound", view);
+    }
+
+    @Test
+    void testUpdateClient_Success() throws IOException {
+        Client client = new Client();
+        client.setId(1);
+        client.setName("Old Name");
+        ClientDao clientDao = new ClientDao();
+        clientDao.setName("New Name");
+        clientDao.setEmail("new@client.com");
+        clientDao.setMobile("1234567890");
+        clientDao.setReviewLink("");
+        MockMultipartFile logo = new MockMultipartFile("logo", "logo.png", "image/png", "test".getBytes());
+        clientDao.setLogo(logo);
+
+        when(bindingResult.hasErrors()).thenReturn(false);
+        when(clientRepo.findById(1)).thenReturn(Optional.of(client));
+        when(clientRepo.findByName("New Name")).thenReturn(Collections.emptyList());
+        when(clientRepo.findByEmail("new@client.com")).thenReturn(Optional.empty());
+        when(clientRepo.findByMobile("1234567890")).thenReturn(Optional.empty());
+
+        String view = userController.updateClient(1, clientDao, bindingResult, model);
+
+        assertEquals("redirect:/user/home", view);
+        verify(clientRepo).save(client);
+    }
+
+    @Test
+    void testDeleteClient_Success() {
+        String view = userController.deleteClient(1);
+
+        assertEquals("redirect:/user/home", view);
+        verify(clientRepo).deleteById(1);
+    }
+
+    @Test
+    void testSearchClients_Success() {
+        String query = "test";
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Client> clientPage = new PageImpl<>(Collections.emptyList());
+        when(clientRepo.findByNameContainingIgnoreCaseOrMobileContainingOrEmailContainingIgnoreCase(
+                query, query, query, pageable)).thenReturn(clientPage);
+
+        String view = userController.searchClients(query, 0, 10, model);
+
+        assertEquals("user/home", view);
+        verify(model).addAttribute("clients", clientPage);
+        verify(model).addAttribute("currentPage", 0);
+        verify(model).addAttribute("pageSize", 10);
+        verify(model).addAttribute("searchQuery", query);
+        verify(model).addAttribute("resourceURL", resourceAccessUrl);
+    }
 }
