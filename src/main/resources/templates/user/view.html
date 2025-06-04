@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>| Client Details |</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Root variables for consistent theming */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --background-color: #f5f7fa;
+            --text-color: #2d3436;
+            --border-color: #e1e8ed;
+            --shadow-sm: 0 2px 15px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 5px 15px rgba(0, 0, 0, 0.1);
+            --transition-speed: 0.3s;
+            --primary-gradient: linear-gradient(135deg, #007bff, #0056b3);
+            --secondary-gradient: linear-gradient(135deg, #6c757d, #495057);
+            --success-gradient: linear-gradient(135deg, #28a745, #1e7e34);
+            --button-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --button-active-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            --hover-shadow: 0 8px 25px rgba(0, 123, 255, 0.2);
+            --primary-hover: linear-gradient(135deg, #0056b3, #004494);
+            --secondary-hover: linear-gradient(135deg, #5a6268, #383d41);
+            --success-hover: linear-gradient(135deg, #218838, #1a682c);
+        }
+
+        /* Base styles */
+        @import url("https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700");
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.7;
+        }
+
+        /* Enhanced Container Styles */
+        .container {
+            max-width: 960px;
+            margin: 30px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: var(--shadow-sm);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* Enhanced Client Info Card */
+        .client-info {
+            padding: 25px;
+            border-radius: 12px;
+            background: #ffffff;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-speed);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .client-info:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Enhanced Image Styles */
+        .container img {
+            max-width: 100%;
+            height: 300px;
+            display: block;
+            margin: 20px auto;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            object-fit: contain;
+            transition: transform var(--transition-speed);
+            animation: zoomIn 0.6s ease-out;
+        }
+
+        .container img:hover {
+            transform: scale(1.05);
+        }
+
+        /* Enhanced Text Area */
+        .generated-msg-box {
+            width: 100%;
+            min-height: 200px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            resize: vertical;
+            font-family: 'Poppins', monospace;
+            white-space: pre-wrap;
+            overflow: auto;
+            background: #f8f9fa;
+            transition: all var(--transition-speed);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .generated-msg-box:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        /* Enhanced Modern Button Styles */
+        .btn-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: none;
+            box-shadow: var(--button-shadow);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        #copy-btn {
+            background: var(--primary-gradient);
+            color: white;
+            min-width: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        #copy-btn:before {
+            content: '\f0c5';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            margin-right: 5px;
+        }
+
+        #copy-btn:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--primary-hover);
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        #copy-btn:hover:after {
+            opacity: 1;
+        }
+
+        .review-length-controls {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 300px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .length-btn {
+            flex: 1;
+            background: white;
+            color: var(--secondary-color);
+            border: 2px solid #e1e8ed;
+            font-weight: 600;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .length-btn:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .length-btn:hover {
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .length-btn:hover:after {
+            opacity: 1;
+        }
+
+        .length-btn.active {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .length-btn.active:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .regenerate-btn {
+            background: var(--secondary-gradient);
+            color: white;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .regenerate-btn:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--secondary-hover);
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .regenerate-btn:hover:after {
+            opacity: 1;
+        }
+
+        .regenerate-btn:before {
+            content: '\f2f1';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+        }
+
+        /* Button hover and active states */
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+            box-shadow: var(--button-active-shadow);
+        }
+
+        /* Copy success animation */
+        .copy-success {
+            background: var(--success-gradient) !important;
+        }
+
+        .copy-success:after {
+            background: var(--success-hover) !important;
+        }
+
+        /* Loading state for regenerate button */
+        .regenerate-btn.loading {
+            background: var(--secondary-gradient);
+            opacity: 0.8;
+            cursor: not-allowed;
+        }
+
+        .regenerate-btn.loading:hover {
+            transform: none;
+            box-shadow: var(--button-shadow);
+        }
+
+        .regenerate-btn .spinner-border {
+            width: 1rem;
+            height: 1rem;
+            margin-right: 8px;
+        }
+
+        /* Button ripple effect */
+        .btn::after {
+            border-radius: 12px;
+        }
+
+        /* Enhanced hover transitions */
+        .btn, .btn:after {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px) scale(1.02);
+        }
+
+        .btn:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .btn-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .review-length-controls {
+                min-width: 100%;
+            }
+
+            #copy-btn {
+                width: 100%;
+            }
+
+            .btn-group {
+                gap: 8px;
+            }
+
+            .length-btn {
+                padding: 10px 15px;
+                font-size: 0.85rem;
+            }
+
+            .regenerate-btn {
+                padding: 12px 20px;
+            }
+        }
+
+        /* Enhanced Footer */
+        .footer {
+            margin-top: 40px;
+            padding: 30px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            animation: slideUp 0.7s ease-out;
+        }
+
+        .footer .cta-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin: 15px auto;
+            padding: 15px 25px;
+            background: #25D366;
+            color: white;
+            border-radius: 12px;
+            border: none;
+            transition: all var(--transition-speed);
+            animation: pulse 2s infinite;
+            text-decoration: none;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2);
+            max-width: 90%;
+            width: fit-content;
+            flex-wrap: nowrap;
+            justify-content: center;
+        }
+
+        .footer .cta-link i {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .footer .cta-link span {
+            font-size: 1.1rem;
+            white-space: normal;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .footer .website-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all var(--transition-speed);
+            padding: 8px 15px;
+            border-radius: 8px;
+        }
+
+        .footer .website-link:hover {
+            background: rgba(0, 123, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .footer .website-link i {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        /* Mobile Responsiveness for Footer Links */
+        @media (max-width: 768px) {
+            .footer .cta-link {
+                padding: 12px 20px;
+                margin: 10px auto;
+                gap: 10px;
+                flex-direction: row;
+                align-items: center;
+                width: 90%;
+            }
+
+            .footer .cta-link i {
+                font-size: 1.4rem;
+            }
+
+            .footer .cta-link span {
+                font-size: 0.95rem;
+                display: block;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .footer .cta-link {
+                padding: 10px 15px;
+                gap: 8px;
+            }
+
+            .footer .cta-link i {
+                font-size: 1.3rem;
+            }
+
+            .footer .cta-link span {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 15px;
+            }
+
+            .client-info {
+                padding: 15px;
+            }
+
+            .container img {
+                height: 200px;
+            }
+
+            .generated-msg-box {
+                min-height: 150px;
+                font-size: 0.9rem;
+            }
+
+            .btn-container {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+                padding: 10px 20px;
+            }
+
+            .footer {
+                padding: 20px;
+                margin-top: 30px;
+            }
+        }
+
+        /* Tag Selection Styles */
+        .tag-selection {
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .tag-selection h4 {
+            color: #2d3436;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .tag-selection h4::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+            padding: 5px;
+            max-height: 250px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) #f0f0f0;
+        }
+
+        /* Custom scrollbar styling for webkit browsers */
+        .tags-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .tags-container::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+
+        .tags-container::-webkit-scrollbar-thumb {
+            background-color: var(--primary-color);
+            border-radius: 4px;
+            border: 2px solid #f0f0f0;
+        }
+
+        .tags-container::-webkit-scrollbar-thumb:hover {
+            background-color: #0056b3;
+        }
+
+        /* Tag item container */
+        .tag-item {
+            order: 2; /* Default order for unselected tags */
+            transition: all 0.3s ease;
+        }
+
+        .tag-item.selected {
+            order: 1; /* Selected tags appear first */
+        }
+
+        .form-check-inline {
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+
+        .form-check-input {
+            display: none;
+        }
+
+        .form-check-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #e1e8ed;
+            border-radius: 25px;
+            color: #4a5568;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            user-select: none;
+        }
+
+        .form-check-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .form-check-input:checked + .form-check-label {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+        }
+
+        .form-check-input:checked + .form-check-label::before {
+            content: '✓';
+            margin-right: 5px;
+            font-size: 14px;
+        }
+
+        #tag-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: none;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        #tag-warning::before {
+            content: '⚠️';
+            font-size: 1.2rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile responsiveness for tags */
+        @media (max-width: 768px) {
+            .tag-selection {
+                padding: 20px;
+            }
+
+            .tag-selection h4 {
+                font-size: 1.1rem;
+            }
+
+            .tags-container {
+                gap: 8px;
+            }
+
+            .form-check-label {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .tag-selection h4 {
+                font-size: 1rem;
+            }
+
+            .form-check-label {
+                padding: 6px 14px;
+                font-size: 0.85rem;
+            }
+
+            #tag-warning {
+                padding: 12px 15px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Tag counter badge */
+        .tags-counter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 15px;
+            padding: 3px 10px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+        }
+
+        .tags-counter.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Ripple effect */
+        .form-check-label {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.7);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Loading Animation for Regenerate */
+        .loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            animation: pulse 1s infinite;
+        }
+
+        /* Success Animation */
+        .copy-success {
+            animation: successPulse 0.5s ease-out;
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Enhanced button feedback for mobile */
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .copy-success {
+            background-color: #28a745 !important;
+            transform: scale(1.05);
+        }
+
+        @media (hover: none) {
+            .btn:hover {
+                transform: none;
+            }
+        }
+
+        /* Client Name Styling */
+        .client-name {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--text-color);
+            text-transform: capitalize;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .client-name::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .client-name {
+                font-size: 1.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .client-name {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Mobile-First Base Styles */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 10px;
+                border-radius: 12px;
+            }
+
+            /* Client Info Card Mobile Styling */
+            .client-info {
+                padding: 15px;
+                margin-bottom: 20px;
+                border-radius: 12px;
+            }
+
+            /* Client Name Mobile Styling */
+            .client-name {
+                font-size: 1.5rem;
+                margin: 15px 0;
+                padding-bottom: 10px;
+            }
+
+            .client-name::after {
+                width: 80px;
+                height: 2px;
+            }
+
+            /* Tag Selection Mobile Optimization */
+            .tag-selection {
+                padding: 15px;
+                margin-bottom: 20px;
+                border-radius: 12px;
+            }
+
+            .tag-selection h4 {
+                font-size: 1.1rem;
+                margin-bottom: 0.8rem;
+            }
+
+            .tags-container {
+                gap: 8px;
+                max-height: 200px;
+                padding: 5px 2px;
+            }
+
+            .form-check-label {
+                padding: 10px 16px;
+                font-size: 0.95rem;
+                border-radius: 20px;
+                /* Enhance touch target size */
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            /* Generated Review Box Mobile Styling */
+            .generated-msg-box {
+                min-height: 150px;
+                padding: 12px;
+                font-size: 1rem;
+                line-height: 1.6;
+                margin-bottom: 15px;
+                border-radius: 12px;
+                -webkit-appearance: none;
+            }
+
+            /* Button Container Mobile Optimization */
+            .btn-container {
+                flex-direction: column;
+                gap: 12px;
+                margin-top: 15px;
+            }
+
+            /* Copy Button Mobile Styling */
+            #copy-btn {
+                width: 100%;
+                height: 50px;
+                font-size: 1rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 5px;
+                /* Enhance touch feedback */
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            /* Length Buttons Mobile Styling */
+            .review-length-controls {
+                width: 100%;
+                gap: 10px;
+            }
+
+            .btn-group {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                width: 100%;
+            }
+
+            .length-btn {
+                height: 44px;
+                padding: 0;
+                font-size: 0.9rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 10px;
+                /* Enhance touch feedback */
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            /* Regenerate Button Mobile Styling */
+            .regenerate-btn {
+                height: 50px;
+                font-size: 1rem;
+                margin-top: 5px;
+                /* Enhance touch feedback */
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            /* Enhanced Touch Feedback */
+            .btn:active {
+                transform: scale(0.98);
+                transition: transform 0.1s;
+            }
+
+            /* Mobile-specific animations */
+            @keyframes buttonPress {
+                0% { transform: scale(1); }
+                50% { transform: scale(0.98); }
+                100% { transform: scale(1); }
+            }
+
+            .btn-press {
+                animation: buttonPress 0.2s ease-out;
+            }
+
+            /* Mobile Loading States */
+            .loading {
+                opacity: 0.8;
+            }
+
+            .loading::after {
+                border-radius: 12px;
+            }
+
+            /* Mobile Success States */
+            .copy-success {
+                animation: successPulse 0.3s ease-out;
+            }
+
+            /* Improve scrolling experience */
+            .tags-container {
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+            }
+
+            /* Mobile-optimized warning message */
+            #tag-warning {
+                padding: 12px 15px;
+                font-size: 0.9rem;
+                border-radius: 10px;
+                margin-top: 12px;
+            }
+
+            /* Footer Mobile Optimization */
+            .footer {
+                margin-top: 25px;
+                padding: 20px 15px;
+                border-radius: 12px;
+            }
+
+            .footer .cta-link {
+                padding: 15px;
+                font-size: 0.95rem;
+                border-radius: 10px;
+                width: 100%;
+                gap: 10px;
+            }
+
+            .footer .website-link {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+
+            /* Safe Area Insets for Modern Mobile Browsers */
+            @supports(padding: max(0px)) {
+                .container {
+                    padding-left: max(15px, env(safe-area-inset-left));
+                    padding-right: max(15px, env(safe-area-inset-right));
+                    padding-bottom: max(15px, env(safe-area-inset-bottom));
+                }
+            }
+        }
+
+        /* Additional Mobile Optimizations for Small Screens */
+        @media (max-width: 380px) {
+            .container {
+                padding: 12px;
+                margin: 8px;
+            }
+
+            .client-name {
+                font-size: 1.3rem;
+            }
+
+            .form-check-label {
+                padding: 8px 14px;
+                font-size: 0.85rem;
+            }
+
+            .btn {
+                font-size: 0.9rem;
+            }
+
+            .generated-msg-box {
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Touch Device Specific Styles */
+        @media (hover: none) {
+            .btn:hover {
+                transform: none;
+                box-shadow: var(--button-shadow);
+            }
+
+            .form-check-label:hover {
+                transform: none;
+            }
+
+            /* Enhance active states for touch */
+            .btn:active {
+                transform: scale(0.98);
+                box-shadow: var(--button-active-shadow);
+            }
+
+            .form-check-label:active {
+                transform: scale(0.98);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Add back button -->
+    <!-- <div class="mb-3">
+        <a href="/user/home" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div> -->
+
+    <div th:if="${clients != null and clients.size() > 0}">
+        <div th:each="client : ${clients}" class="client-info" th:data-review-link="${client.reviewLink}">
+            <h2 class="client-name" th:text="${client.name}"></h2>
+            <!-- <p><strong>Email:</strong> <span th:text="${client.email}"></span></p>
+            <p><strong>Mobile:</strong> <span th:text="${client.mobile}"></span></p>
+            <p><strong>Review Link:</strong>
+                <a th:href="${client.reviewLink}" target="_blank" th:text="${client.reviewLink}"></a>
+            </p>
+            <img th:src="@{'/uploads/' + ${client.logo}}" alt="Client Logo" onerror="this.src='/default-logo.png'"> -->
+
+            <hr/>
+
+            <!-- Add tag selection section -->
+            <div class="tag-selection mb-3">
+                <h4>
+                    Select Tags for Review Generation
+                    <span class="tags-counter">0 selected</span>
+                </h4>
+                <p class="text-muted mb-3">Choose at least 3 tags that best describe the review you want to generate.</p>
+                <div class="tags-container" th:if="${client.chatText != null}">
+                    <div th:each="tag : ${#strings.arraySplit(client.chatText, ',')}" class="tag-item form-check form-check-inline">
+                        <input class="form-check-input tag-checkbox" type="checkbox" th:value="${#strings.trim(tag)}" th:id="${'tag-' + tagStat.index}">
+                        <label class="form-check-label" th:for="${'tag-' + tagStat.index}" th:text="${#strings.trim(tag)}"></label>
+                    </div>
+                </div>
+                <div class="alert alert-warning mt-2 d-none" id="tag-warning">
+                    <span>Please select at least 3 tags to regenerate the review.</span>
+                </div>
+            </div>
+
+            <div th:if="${review != null}">
+                <div class="btn-container mt-2">
+                    <div class="review-length-controls">
+                        <div class="btn-group" role="group" aria-label="Review length options">
+                            <button type="button" class="btn btn-outline-secondary length-btn" data-length="short">Short</button>
+                            <button type="button" class="btn btn-outline-secondary length-btn" data-length="medium">Medium</button>
+                            <button type="button" class="btn btn-outline-secondary length-btn" data-length="large">Large</button>
+                        </div>
+                        <button class="btn btn-secondary regenerate-btn mt-2"
+                                th:attr="data-client-id=${client.id}">Regenerate Review</button>
+                    </div>
+                </div>
+                <h3>Generated Review:</h3>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <textarea class="generated-msg-box" id="review-msg-content" th:text="${review}" readonly></textarea>
+                    </div>
+                </div>
+                <div class="btn-container mt-2">
+                    <button class="btn btn-primary" id="copy-btn">Copy Review</button>
+                </div>
+            </div>
+
+            <!--<div th:if="${review != null}">
+                <h3>Generated Review:</h3>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <textarea class="generated-msg-box" id="review-msg-content" th:text="${review}" readonly></textarea>
+                    </div>
+                </div>
+                <div class="btn-container mt-2">
+                    <button class="btn btn-primary" id="copy-btn">Copy Review</button>
+                    <div class="review-length-controls">
+                        <div class="btn-group" role="group" aria-label="Review length options">
+                            <button type="button" class="btn btn-outline-secondary length-btn" data-length="short">Short</button>
+                            <button type="button" class="btn btn-outline-secondary length-btn" data-length="medium">Medium</button>
+                            <button type="button" class="btn btn-outline-secondary length-btn" data-length="large">Large</button>
+                        </div>
+                        <button class="btn btn-secondary regenerate-btn mt-2"
+                                th:attr="data-client-id=${client.id}">Regenerate Review</button>
+                    </div>
+                </div>
+            </div>-->
+
+            <div th:unless="${review != null}">
+                <p>No review generated yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${clients == null or clients.size() == 0}">
+        <p>No clients found with that name.</p>
+    </div>
+</div>
+
+
+<div class="footer">
+    <a href="https://wa.me/918200010737?text=Hello,%0AI%20need%20the%20AI%20Review%20Card"
+       target="_blank"
+       class="cta-link">
+        <i class="fab fa-whatsapp"></i>
+        <span>Unlock New Possibilities: Get Your Digital Review Card Now!</span>
+    </a>
+    <p>
+        <a href="https://yrhpsoftware.in/" target="_blank" class="website-link">
+            <i class="fas fa-globe"></i>
+            Developed by YRHP
+        </a>
+    </p>
+    <p>&copy; 2025 YRHP | All Rights Reserved</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+<script>
+    document.getElementById("copy-btn").addEventListener("click", async function() {
+        const button = this;
+        const originalText = button.textContent;
+        const textArea = document.getElementById("review-msg-content");
+        const reviewText = textArea.value;
+        const clientInfo = button.closest('.client-info');
+        const reviewLink = clientInfo.getAttribute('data-review-link'); // We'll get the link from a data attribute
+
+        try {
+            // For modern browsers
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(reviewText);
+                button.textContent = "Copied!";
+            }
+            // Fallback for older browsers and mobile
+            else {
+                // Create temporary textarea
+                const tempTextArea = document.createElement("textarea");
+                tempTextArea.value = reviewText;
+                tempTextArea.style.position = "fixed";
+                tempTextArea.style.left = "-999999px";
+                tempTextArea.style.top = "-999999px";
+                document.body.appendChild(tempTextArea);
+
+                // Select and copy
+                tempTextArea.focus();
+                tempTextArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextArea);
+                button.textContent = "Copied!";
+            }
+
+            // Add success animation
+            button.classList.add('copy-success');
+
+            // Reset button and redirect after delay
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('copy-success');
+
+                // Check if review link exists and redirect
+                if (reviewLink) {
+                    window.open(reviewLink, '_blank') || window.location.assign(reviewLink);
+                }
+            }, 1500);
+
+        } catch (err) {
+            console.error("Copy failed:", err);
+            button.textContent = "Error!";
+            button.style.backgroundColor = "#dc3545";
+
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.backgroundColor = "";
+            }, 1500);
+        }
+    });
+
+    // Add visual feedback for button press
+    const buttons = document.querySelectorAll('.btn');
+    buttons.forEach(button => {
+        button.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.95)';
+        });
+
+        button.addEventListener('touchend', function() {
+            this.style.transform = '';
+        });
+    });
+
+    document.querySelectorAll(".regenerate-btn").forEach(button => {
+        // Add variable to store selected length
+        let selectedLength = 'medium'; // default length
+
+        // Add click handlers for length buttons
+        document.querySelectorAll('.length-btn').forEach(lengthBtn => {
+            lengthBtn.addEventListener('click', function() {
+                // Remove active class from all buttons
+                document.querySelectorAll('.length-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                // Add active class to clicked button
+                this.classList.add('active');
+                selectedLength = this.dataset.length;
+            });
+        });
+
+        // Set medium as default active
+        document.querySelector('.length-btn[data-length="medium"]').classList.add('active');
+
+        button.addEventListener("click", function() {
+            let clientId = this.dataset.clientId;
+
+            // Get selected tags
+            const selectedTags = Array.from(document.querySelectorAll('.tag-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+
+            // Check if at least 3 tags are selected
+            if (selectedTags.length < 3) {
+                document.getElementById('tag-warning').classList.remove('d-none');
+                return;
+            }
+
+            document.getElementById('tag-warning').classList.add('d-none');
+
+            // Add loading state
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Regenerating...';
+
+            fetch(`/user/regenerate/${clientId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    selectedTags: selectedTags,
+                    reviewLength: selectedLength
+                })
+            })
+            .then(response => {
+                const clonedResponse = response.clone();
+
+                if (!response.ok) {
+                    return clonedResponse.json().then(err => {
+                        console.error("Server Error (JSON):", err);
+                        throw new Error(err.message || "Server returned an error");
+                    }).catch(() => {
+                        return clonedResponse.text().then(textErr => {
+                            console.error("Server Error (Text):", textErr);
+                            throw new Error(textErr || "Server returned an error");
+                        });
+                    });
+                } else {
+                    return response.text().then(newReview => {
+                        document.getElementById("review-msg-content").value = newReview;
+                    });
+                }
+            })
+            .catch(error => {
+                console.error("Fetch or processing error:", error);
+                alert("Error: " + error.message);
+            })
+            .finally(() => {
+                // Reset button state
+                button.disabled = false;
+                button.innerHTML = 'Regenerate Review';
+            });
+        });
+    });
+
+    // Add tag selection visual feedback
+    document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const selectedCount = document.querySelectorAll('.tag-checkbox:checked').length;
+            const tagsCounter = document.querySelector('.tags-counter');
+            const tagItem = this.closest('.tag-item');
+
+            // Update counter
+            tagsCounter.textContent = `${selectedCount} selected`;
+            tagsCounter.classList.toggle('visible', selectedCount > 0);
+
+            // Update warning visibility
+            const warningElement = document.getElementById('tag-warning');
+            if (selectedCount >= 3) {
+                warningElement.classList.add('d-none');
+            } else if (selectedCount > 0) {
+                warningElement.classList.remove('d-none');
+            }
+
+            // Handle tag selection and reordering
+            if (this.checked) {
+                tagItem.classList.add('selected');
+                // Smooth scroll to top of container if tag is below the visible area
+                const container = document.querySelector('.tags-container');
+                const tagRect = tagItem.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                if (tagRect.top > containerRect.bottom) {
+                    tagItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            } else {
+                tagItem.classList.remove('selected');
+            }
+
+            // Add ripple effect on click
+            const label = this.nextElementSibling;
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            label.appendChild(ripple);
+
+            // Remove ripple after animation
+            setTimeout(() => ripple.remove(), 1000);
+        });
+    });
+
+    // Add hover effect for tags
+    document.querySelectorAll('.form-check-label').forEach(label => {
+        label.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+
+        label.addEventListener('mouseleave', function() {
+            this.style.transform = '';
+        });
+    });
+
+    // Initialize counter if there are pre-selected tags
+    const initialSelectedCount = document.querySelectorAll('.tag-checkbox:checked').length;
+    if (initialSelectedCount > 0) {
+        const tagsCounter = document.querySelector('.tags-counter');
+        tagsCounter.textContent = `${initialSelectedCount} selected`;
+        tagsCounter.classList.add('visible');
+        
+        // Set initial selected state for tags
+        document.querySelectorAll('.tag-checkbox:checked').forEach(checkbox => {
+            checkbox.closest('.tag-item').classList.add('selected');
+        });
+    }
+</script>
+
+</body>
+</html>

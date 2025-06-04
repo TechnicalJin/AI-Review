@@ -1,0 +1,253 @@
+ /* custom.css */
+
+ @import url("https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700");
+
+ body {
+    font-family: 'Poppins', sans-serif;
+    background: #fafafa;
+ }
+
+ p {
+    font-size: 1.1em;
+    font-weight: 300;
+    line-height: 1.7em;
+    color: #999;
+ }
+
+ .container {
+    max-width: 960px;
+    margin: 20px auto;
+    padding: 20px;
+ }
+
+ .container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+ }
+
+ .container p {
+    margin-bottom: 10px;
+ }
+
+ .container img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 10px auto;
+ }
+
+ /* Form Styles (Edit Client) */
+ .rounded {
+    border-radius: 10px;
+ }
+
+ .p-4 {
+    padding: 20px;
+ }
+
+ .mb-3 {
+    margin-bottom: 15px;
+ }
+
+ .col-form-label {
+    font-weight: bold;
+ }
+
+ .form-control {
+    border: 1px solid #ced4da;
+ }
+
+ .text-danger {
+    color: #dc3545;
+    font-size: smaller;
+ }
+
+ .input-wrapper {
+    position: relative;
+    max-width: 300px; /* Adjust as needed */
+    display: flex; /* Use flexbox for alignment */
+ }
+
+ #chatTextInput {
+    padding-right: 40px; /* Space for the button */
+    border-radius: 20px;
+    border: 1px solid #c1dafc;
+    font-size: 14px;
+    width: 100%;
+ }
+
+ .plus-btn-inside {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 6px 12px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 18px;
+    transition: background-color 0.3s ease;
+ }
+
+ .plus-btn-inside:hover {
+    background-color: #0056b3;
+ }
+
+
+ /* Gmail-like tag styling */
+ .tag {
+     display: inline-flex;
+     align-items: center;
+     background-color: #D2E3FC;
+     border: 1px solid #AECBFA;
+     color: #202124;
+     padding: 5px 12px;
+     margin: 4px;
+     border-radius: 16px;
+     font-size: 14px;
+     font-weight: 500;
+     cursor: pointer;
+     transition: background-color 0.2s, box-shadow 0.2s;
+ }
+
+ /* Hover effect like Gmail */
+ .tag:hover {
+     background-color: #C0D8FC;
+ }
+
+ /* Active selection effect */
+ .tag:active {
+     background-color: #AECBFA;
+     box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+ }
+
+ /* Close button inside the tag */
+ .tag .close-icon {
+     margin-left: 8px;
+     font-size: 16px;
+     color: #5f6368;
+     cursor: pointer;
+     transition: color 0.2s;
+ }
+
+ /* Close button hover effect */
+ .tag .close-icon:hover {
+     color: #D93025;
+ }
+
+
+ .selected-tags {
+    margin-top: 20px;
+    display: flex; /* Enable flexbox for wrapping */
+    flex-wrap: wrap; /* Allow tags to wrap */
+ }
+
+
+ /* Responsive Styles */
+ @media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    .row {
+        flex-direction: column;
+    }
+
+    .col-md-8, .col-sm-8, .offset-sm-4, .col-sm-4 {
+        width: 100%;
+    }
+
+    .input-wrapper {
+        flex-direction: column; /* Stack input and button vertically */
+        max-width: 100%; /* Make input full-width */
+    }
+
+    #chatTextInput {
+        padding-right: 10px; /* Remove padding for the button */
+        border-radius: 5px; /* Adjust border radius */
+    }
+
+    .plus-btn-inside {
+        position: static; /* Remove absolute positioning */
+        transform: translateY(0); /* Reset transform */
+        margin-top: 5px; /* Add some margin */
+        border-radius: 5px;
+    }
+
+    .selected-tags {
+        flex-direction: row; /* Ensure tags are in a row */
+    }
+
+    .tag {
+        margin: 5px; /* Maintain tag spacing */
+    }
+ }
+
+
+
+
+
+
+
+
+    #tagInput {
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        border-radius: 20px;
+        border: 1px solid #c1dafc;
+        font-size: 14px;
+        font-family: Arial, sans-serif;
+        width: 100%;
+        max-width: 300px;
+        display: inline-block;
+    }
+
+    .plus-btn {
+        padding: 8px 12px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        font-size: 14px;
+        transition: background-color 0.3s ease;
+    }
+
+    .plus-btn:hover {
+        background-color: #0056b3;
+    }
+
+    /* Styling the input with the plus button inside */
+    .input-wrapper {
+        position: relative;
+        max-width: 300px;
+    }
+
+    #chatTextInput {
+        padding-right: 40px; /* Add space for the plus button */
+        border-radius: 20px;
+        border: 1px solid #c1dafc;
+        font-size: 14px;
+        width: 100%;
+    }
+
+    .plus-btn-inside {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 6px 12px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 18px;
+        transition: background-color 0.3s ease;
+    }
+
+    .plus-btn-inside:hover {
+        background-color: #0056b3;
+    }

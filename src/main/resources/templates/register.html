@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="base::layout(~{::section})">
+<head>
+  <meta charset="UTF-8">
+  <title>Register Page</title>
+</head>
+<body>
+
+<section>
+  <div class="container p-5">
+    <div class="row">
+      <div class="col-md-6 offset-md-3">
+        <div class="card">
+          <div class="card-header text-center fs-4">Register Page</div>
+
+          <div th:if="${msg}">
+            <p class="text-center fs-4 text-success" th:text="${msg}"></p>
+          </div>
+
+          <div class="card-body">
+            <form action="/createUser" method="post" onsubmit="return validateForm()">
+              <div class="mb-3">
+                <label>Username</label>
+                <input type="text" name="username" id="username" class="form-control" required>
+                <p id="usernameError" class="text-danger"></p>
+              </div>
+
+              <div class="mb-3">
+                <label>Password</label>
+                <input type="password" name="password" id="password" class="form-control" required>
+                <p id="passwordError" class="text-danger"></p>
+              </div>
+
+              <div class="mb-3">
+                <label>Email</label>
+                <input type="email" name="email" id="email" class="form-control" required>
+                <p id="emailError" class="text-danger"></p>
+              </div>
+
+              <div class="mb-3">
+                <label>Phone No</label>
+                <input type="number" name="mobile" id="mobile" class="form-control" required>
+                <p id="mobileError" class="text-danger"></p>
+              </div>
+
+              <button class="btn btn-primary col-md-12">Register</button>
+            </form>
+            <a class="nav-link" href="/signin">or use your account!</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  function validateForm() {
+      let isValid = true;
+
+      const usernameInput = document.getElementById("username");
+      const usernameError = document.getElementById("usernameError");
+      const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+      if (!usernameRegex.test(usernameInput.value)) {
+          usernameError.textContent = "Invalid username (3-20 alphanumeric and underscores).";
+          isValid = false;
+      } else {
+          usernameError.textContent = "";
+      }
+
+      const passwordInput = document.getElementById("password");
+      const passwordError = document.getElementById("passwordError");
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      if (!passwordRegex.test(passwordInput.value)) {
+          passwordError.textContent = "Invalid password (min 8 chars, at least one uppercase, one lowercase, one number and one special character).";
+          isValid = false;
+      } else {
+          passwordError.textContent = "";
+      }
+
+
+      const emailInput = document.getElementById("email");
+      const emailError = document.getElementById("emailError");
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailInput.value)) {
+          emailError.textContent = "Invalid email address.";
+          isValid = false;
+      } else {
+          emailError.textContent = "";
+      }
+
+      const mobileInput = document.getElementById("mobile");
+      const mobileError = document.getElementById("mobileError");
+      const mobileRegex = /^\d{10}$/;
+      if (!mobileRegex.test(mobileInput.value)) {
+          mobileError.textContent = "Enter a 10-digit mobile number.";
+          isValid = false;
+      } else {
+          mobileError.textContent = "";
+      }
+
+      if (!isValid) {
+          return false;
+      }
+
+      return true;
+  }
+</script>
+
+</body>
+</html>

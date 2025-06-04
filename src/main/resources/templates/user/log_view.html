@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>| Review Generation Log History |</title>
+    <link rel="stylesheet" th:href="@{/css/log_view.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Add Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<body>
+<div class="container">
+    <h1>Review Generation History</h1>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="filter-header" onclick="toggleFilters()">
+            <h2>
+                <i class="fas fa-filter"></i> Filters
+                <span class="filter-toggle-icon"><i class="fas fa-chevron-down"></i></span>
+            </h2>
+        </div>
+        <form id="filter-form" method="get" th:action="@{/user/log}" class="filter-content">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="company">Company:</label>
+                    <select id="company" name="company">
+                        <option value="">All Companies</option>
+                        <option th:each="comp : ${distinctCompanies}"
+                                th:value="${comp}"
+                                th:text="${comp}"
+                                th:selected="${filters.company} == ${comp}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="reviewLength">Review Length:</label>
+                    <select id="reviewLength" name="reviewLength">
+                        <option value="">All Lengths</option>
+                        <option value="short" th:selected="${filters.reviewLength} == 'short'">Short</option>
+                        <option value="medium" th:selected="${filters.reviewLength} == 'medium'">Medium</option>
+                        <option value="large" th:selected="${filters.reviewLength} == 'large'">Large</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="regenerated">Regenerated:</label>
+                    <select id="regenerated" name="regenerated">
+                        <option value="">All</option>
+                        <option value="yes" th:selected="${filters.regenerated} == 'yes'">Yes</option>
+                        <option value="no" th:selected="${filters.regenerated} == 'no'">No</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="keyPoints">Key Points:</label>
+                    <input type="text" id="keyPoints" name="keyPoints"
+                           th:value="${filters.keyPoints}" placeholder="Search key points">
+                </div>
+
+                <!-- Date Range Picker -->
+                <div class="filter-group">
+                    <label for="dateRange">Date Range:</label>
+                    <input type="text" id="dateRange" placeholder="Select date range">
+                    <!-- Hidden inputs for startDate and endDate -->
+                    <input type="hidden" id="startDate" name="startDate" th:value="${filters.startDate}">
+                    <input type="hidden" id="endDate" name="endDate" th:value="${filters.endDate}">
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-buttons">
+                    <button type="submit" class="apply-btn">Apply Filters</button>
+                    <button type="button" class="reset-btn" onclick="resetFilters()">Reset Filters</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="controls">
+        <div class="controls-left">
+            <label for="entries-per-page">Entries per page:</label>
+            <select id="entries-per-page" onchange="updatePageSize(this.value)">
+                <option value="10" th:selected="${logs.size} == 10">10</option>
+                <option value="25" th:selected="${logs.size} == 25">25</option>
+                <option value="50" th:selected="${logs.size} == 50">50</option>
+            </select>
+        </div>
+
+        <div class="controls-right">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search..." th:value="${filters.search}">
+                <button onclick="searchLogs()"><i class="fas fa-search"></i> <span class="sr-only">Search</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="results-count" th:if="${logs.totalElements > 0}">
+        Showing <span th:text="${logs.numberOfElements}"></span> of
+        <span th:text="${logs.totalElements}"></span> logs
+    </div>
+    <div class="no-results" th:if="${logs.totalElements == 0}">
+        <i class="fas fa-info-circle"></i> No logs found matching your filters
+    </div>
+
+    <div class="table-responsive" th:if="${logs.totalElements > 0}">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Company</th>
+                <th>Timestamp</th>
+                <th>Review Length</th>
+                <th>Key Points</th>
+                <th>Regenerated</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="log : ${logs.content}">
+                <td th:text="${log.id}"></td>
+                <td th:text="${log.companyName}"></td>
+                <td th:text="${#temporals.format(log.timestamp, 'yyyy-MM-dd HH:mm')}"></td>
+                <td>
+                <span th:text="${log.reviewLength}"
+                      th:classappend="'length-badge ' +
+                      ${log.reviewLength == 'short' ? 'badge-blue' :
+                       (log.reviewLength == 'medium' ? 'badge-green' : 'badge-red')}">
+                </span>
+                </td>
+                <td th:text="${log.keyPoints}" class="key-points-cell"></td>
+                <td th:text="${log.regenerated == 'yes' ? 'Yes' : 'No'}"
+                    th:classappend="${log.regenerated == 'yes' ? 'regenerated-yes' : 'regenerated-no'}">
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination-container" th:if="${logs.totalPages > 1}">
+        <div class="pagination">
+            <a th:if="${logs.hasPrevious()}"
+               th:href="@{/user/log(page=0, size=${logs.size},
+            search=${filters.search},
+            company=${filters.company},
+            reviewLength=${filters.reviewLength},
+            regenerated=${filters.regenerated},
+            keyPoints=${filters.keyPoints},
+            startDate=${filters.startDate},
+            endDate=${filters.endDate})}"
+               class="page-link first" title="First Page">
+                <i class="fas fa-angle-double-left"></i>
+                <span class="sr-only">First Page</span>
+            </a>
+
+            <a th:if="${logs.hasPrevious()}"
+               th:href="@{/user/log(page=${logs.number - 1}, size=${logs.size},
+            search=${filters.search},
+            company=${filters.company},
+            reviewLength=${filters.reviewLength},
+            regenerated=${filters.regenerated},
+            keyPoints=${filters.keyPoints},
+            startDate=${filters.startDate},
+            endDate=${filters.endDate})}"
+               class="page-link prev" title="Previous Page">
+                <i class="fas fa-angle-left"></i>
+                <span class="sr-only">Previous Page</span>
+            </a>
+
+            <a th:each="page : ${#numbers.sequence(0, logs.totalPages - 1)}"
+               th:href="@{/user/log(page=${page}, size=${logs.size},
+            search=${filters.search},
+            company=${filters.company},
+            reviewLength=${filters.reviewLength},
+            regenerated=${filters.regenerated},
+            keyPoints=${filters.keyPoints},
+            startDate=${filters.startDate},
+            endDate=${filters.endDate})}"
+               th:text="${page + 1}"
+               th:classappend="${page == logs.number} ? 'active' : ''"
+               class="page-link">
+            </a>
+
+            <a th:if="${logs.hasNext()}"
+               th:href="@{/user/log(page=${logs.number + 1}, size=${logs.size},
+            search=${filters.search},
+            company=${filters.company},
+            reviewLength=${filters.reviewLength},
+            regenerated=${filters.regenerated},
+            keyPoints=${filters.keyPoints},
+            startDate=${filters.startDate},
+            endDate=${filters.endDate})}"
+               class="page-link next" title="Next Page">
+                <i class="fas fa-angle-right"></i>
+                <span class="sr-only">Next Page</span>
+            </a>
+
+            <a th:if="${logs.hasNext()}"
+               th:href="@{/user/log(page=${logs.totalPages - 1}, size=${logs.size},
+            search=${filters.search},
+            company=${filters.company},
+            reviewLength=${filters.reviewLength},
+            regenerated=${filters.regenerated},
+            keyPoints=${filters.keyPoints},
+            startDate=${filters.startDate},
+            endDate=${filters.endDate})}"
+               class="page-link last" title="Last Page">
+                <i class="fas fa-angle-double-right"></i>
+                <span class="sr-only">Last Page</span>
+            </a>
+        </div>
+
+        <div class="page-info">
+            Page <span th:text="${logs.number + 1}"></span> of
+            <span th:text="${logs.totalPages}"></span>
+        </div>
+    </div>
+</div>
+
+<!-- Add Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script th:src="@{/js/log_view.js}"></script>
+</body>
+</html>

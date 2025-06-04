@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="base::layout(~{::section})">
+<head>
+  <meta charset="UTF-8">
+  <title>| Login Page |</title>
+</head>
+<body>
+
+<section>
+  <div class="container p-5">
+    <div class="row">
+      <div class="col-md-6 offset-md-3">
+        <div class="card">
+          <div class="card-header text-center fs-4">Login Page</div>
+
+          <div th:if="${msg}" class="alert alert-danger" th:text="${msg}"></div>
+
+          <div th:if="${param.logout}" class="alert alert-success">Logout Successfully</div>
+
+          <div class="card-body">
+            <form th:action="@{/signin}" method="post" onsubmit="return validateForm()">
+
+              <div class="mb-3">
+                <label>Email</label>
+                <input type="text" name="username" id="username" class="form-control" required>
+
+                <div th:if="${param.error != null}" class="alert alert-danger">Invalid username or password</div>
+
+                <p id="emailError" class="text-danger"></p>
+              </div>
+
+              <div class="mb-3">
+                <label>Password</label>
+                <input type="password" name="password" id="password" class="form-control" required>
+                <p id="passwordError" class="text-danger"></p>
+              </div>
+
+              <button class="btn btn-primary col-md-12">Login</button>
+            </form>
+
+            <!--<a class="nav-link" th:href="@{/}">Not registered yet? Create an account</a>-->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  function validateForm() {
+      let isValid = true;
+
+      const emailInput = document.getElementById("email");
+      const emailError = document.getElementById("emailError");
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailInput.value)) {
+          emailError.textContent = "Invalid email address.";
+          isValid = false;
+      } else {
+          emailError.textContent = "";
+      }
+
+      const passwordInput = document.getElementById("password");
+      const passwordError = document.getElementById("passwordError");
+      if (passwordInput.value.length === 0) {
+          passwordError.textContent = "Password is required.";
+          isValid = false;
+      } else {
+          passwordError.textContent = "";
+      }
+
+      if (!isValid) {
+          return false;
+      }
+
+      return true;
+  }
+</script>
+
+</body>
+</html>
