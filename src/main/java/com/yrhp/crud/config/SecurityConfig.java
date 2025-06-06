@@ -56,11 +56,11 @@ public class SecurityConfig {
                 .authenticationProvider(getDaoAuthProvider())
                 .authorizeHttpRequests(auth -> {
                     logger.debug("Configuring authorization rules");
-                    auth.requestMatchers("/", "/createUser", "/signin", "/css/**", "/js/**", "/images/**").permitAll()
+                    auth.requestMatchers("/", "/createUser", "/signin", "/register", "/css/**", "/js/**", "/images/**").permitAll()
                             .requestMatchers("/user/view/**", "/user/regenerate/**", "/uploads/**").permitAll()
                             .requestMatchers("/user/**").hasRole("USER")
                             .requestMatchers("/client/**").hasRole("CLIENT")
-                            .requestMatchers("/register").denyAll()
+//                            .requestMatchers("/register").denyAll()
                             .anyRequest().authenticated();
                     logger.info("Authorization rules configured");
                 })
