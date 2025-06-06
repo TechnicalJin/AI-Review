@@ -1044,7 +1044,6 @@ body {
     }
 }
 
-/* Touch Device Specific Styles */
 @media (hover: none) {
     .btn:hover {
         transform: none;
@@ -1055,7 +1054,6 @@ body {
         transform: none;
     }
 
-    /* Enhance active states for touch */
     .btn:active {
         transform: scale(0.98);
         box-shadow: var(--button-active-shadow);

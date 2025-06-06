@@ -159,7 +159,6 @@ section .signup-link a:hover {
   color: #bdbdbd !important;
 }
 
-/* Smooth transitions for all interactive elements */
 section * {
   transition: all 0.3s ease !important;
 }

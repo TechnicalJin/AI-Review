@@ -27,6 +27,7 @@ section .card {
   align-items: center !important;
 }
 
+
 section .card-header {
   background: none !important;
   color: #fff !important;
@@ -37,6 +38,7 @@ section .card-header {
   font-weight: bold !important;
   letter-spacing: 0.5px !important;
 }
+
 
 section .card-body {
   width: 100% !important;
@@ -53,6 +55,7 @@ section .mb-3 {
   flex-direction: column !important;
   align-items: center !important;
 }
+
 
 section .form-control {
   width: 95% !important;
