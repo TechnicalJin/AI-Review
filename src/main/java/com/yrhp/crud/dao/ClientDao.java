@@ -5,15 +5,21 @@ import org.springframework.web.multipart.MultipartFile;
 
 public class ClientDao {
 
-    @NotEmpty(message = "Name is required")
-    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+    private int id;
+
+    @NotBlank(message = "Name is required")
+    @Size(min = 3, max = 50, message = "Name must be between 3 and 50 characters")
     private String name;
 
-    @NotEmpty(message = "Email is required")
+    @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String email;
 
-    @NotEmpty(message = "Mobile number is required")
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must be at least 6 characters")
+    private String password;
+
+    @NotBlank(message = "Mobile number is required")
     @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Invalid mobile number format")
     private String mobile;
 
@@ -30,11 +36,22 @@ public class ClientDao {
 
     private String existingLogo;
 
+    @Size(max = 500, message = "Chat text cannot exceed 500 characters")
     private String chatText;
 
     private String generateLink;
 
+    private String role = "ROLE_CLIENT"; // Default role
+
     // Getters and Setters
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getName() {
         return name;
@@ -50,6 +67,14 @@ public class ClientDao {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getMobile() {
@@ -110,5 +135,13 @@ public class ClientDao {
 
     public void setGenerateLink(String generateLink) {
         this.generateLink = generateLink;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

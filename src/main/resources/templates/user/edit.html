@@ -281,6 +281,17 @@
             <p id="emailError" class="text-danger"></p>
           </div>
         </div>
+
+        <div class="row mb-3">
+          <label class="col-sm-4 col-form-label">Password</label>
+          <div class="col-sm-8">
+            <input type="password" class="form-control" th:field="*{password}" minlength="6" />
+            <p th:if="${#fields.hasErrors('password')}" th:errorclass="text-danger" th:errors="*{password}"></p>
+            <p id="passwordError" class="text-danger"></p>
+            <small class="text-muted">Leave blank to keep current password</small>
+          </div>
+        </div>
+
         <div class="row mb-3">
           <label class="col-sm-4 col-form-label">Mobile</label>
           <div class="col-sm-8">

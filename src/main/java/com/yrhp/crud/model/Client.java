@@ -20,6 +20,10 @@ public class Client {
     @Column(unique = true)
     private String email;
 
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must be at least 6 characters")
+    private String password;
+
     @NotBlank(message = "Mobile number is required")
     @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Invalid mobile number format")
     @Column(unique = true)
@@ -39,6 +43,9 @@ public class Client {
     private String chatText;
 
     private String generateLink;
+
+    @Column(nullable = false)
+    private String role = "ROLE_CLIENT"; // Default role
 
     public int getId() {
         return id;
@@ -62,6 +69,14 @@ public class Client {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getMobile() {
@@ -115,6 +130,14 @@ public class Client {
         this.generateLink = generateLink;
     }
 
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
     @Override
     public String toString() {
         return "Client{" +
@@ -127,6 +150,7 @@ public class Client {
                 ", logo='" + logo + '\'' +
                 ", chatText='" + chatText + '\'' +
                 ", generateLink='" + generateLink + '\'' +
+                ", role='" + role + '\'' +
                 '}';
     }
 }

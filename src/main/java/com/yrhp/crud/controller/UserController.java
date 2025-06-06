@@ -24,6 +24,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -56,6 +57,9 @@ public class UserController implements ErrorController {
     @Autowired
     private ReviewGenerationLogRepository reviewLogRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Value("${spring.servlet.multipart.location}")
     private String uploadDir;
 
@@ -79,7 +83,7 @@ public class UserController implements ErrorController {
 
 
     @GetMapping("/home")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('USER')")
     public String home(Model model,
                        @RequestParam(defaultValue = "0") int page,
                        @RequestParam(defaultValue = "10") int size,
@@ -179,9 +183,11 @@ public class UserController implements ErrorController {
         Client client = new Client();
         client.setName(clientDao.getName());
         client.setEmail(clientDao.getEmail());
+        client.setPassword(passwordEncoder.encode(clientDao.getPassword()));
         client.setMobile(clientDao.getMobile());
         client.setReviewLink(clientDao.getReviewLink());
         client.setChatText(clientDao.getChatText());
+        client.setRole(clientDao.getRole());
         client.setGenerateLink("/user/view/" + client.getName().replaceAll("\\s", "-").toLowerCase());
         return client;
     }
@@ -377,18 +383,18 @@ public class UserController implements ErrorController {
         Optional<Client> optionalClient = clientRepo.findById(id);
 
         if (optionalClient.isPresent()) {
-
             Client client = optionalClient.get();
             ClientDao clientDao = new ClientDao();
 
             clientDao.setName(client.getName());
             clientDao.setEmail(client.getEmail());
+            clientDao.setPassword(client.getPassword());
             clientDao.setMobile(client.getMobile());
             clientDao.setReviewLink(client.getReviewLink());
-            /*clientDao.setReviewCharLimit(client.getReviewCharLimit());*/
             clientDao.setChatText(client.getChatText());
             clientDao.setGenerateLink(client.getGenerateLink());
-            clientDao.setExistingLogo(client.getLogo()); // Pass existing logo
+            clientDao.setExistingLogo(client.getLogo());
+            clientDao.setRole(client.getRole());
 
             model.addAttribute("clientDao", clientDao);
             model.addAttribute("clientId", id);
@@ -439,8 +445,13 @@ public class UserController implements ErrorController {
             client.setEmail(clientDao.getEmail());
             client.setMobile(clientDao.getMobile());
             client.setReviewLink(clientDao.getReviewLink());
-            /*client.setReviewCharLimit(clientDao.getReviewCharLimit());*/
             client.setChatText(clientDao.getChatText());
+            client.setRole(clientDao.getRole());
+            
+            // Only update password if a new one is provided
+            if (clientDao.getPassword() != null && !clientDao.getPassword().trim().isEmpty()) {
+                client.setPassword(passwordEncoder.encode(clientDao.getPassword()));
+            }
 
             // Preserve or update the logo
             MultipartFile logo = clientDao.getLogo();

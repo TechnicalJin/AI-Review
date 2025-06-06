@@ -1,8 +1,8 @@
 package com.yrhp.crud.config;
 
-import com.yrhp.crud.service.UserDetailsServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -27,14 +28,12 @@ public class SecurityConfig {
     @Value("${upload.resource.handler}")
     private String resourceHandler;
 
-    @Bean
-    public UserDetailsService getUserDetailsService() {
-        logger.info("Creating UserDetailsService Bean..");
-        return new UserDetailsServiceImpl();
-    }
+    @Autowired
+    private UserDetailsService userDetailsService;
+
 
     @Bean
-    public BCryptPasswordEncoder getPasswordEncoder() {
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
@@ -42,12 +41,12 @@ public class SecurityConfig {
     public DaoAuthenticationProvider getDaoAuthProvider() {
         logger.debug("Configuring DaoAuthenticationProvider");
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-        daoAuthenticationProvider.setUserDetailsService(getUserDetailsService());
-        daoAuthenticationProvider.setPasswordEncoder(getPasswordEncoder());
-
-        logger.info("DaoAuthenticationProvider Configured with UserDetailsService and BCryptPasswordEncoder");
+        daoAuthenticationProvider.setUserDetailsService(userDetailsService);
+        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+        logger.info("DaoAuthenticationProvider Configured with CustomUserDetailsService and BCryptPasswordEncoder");
         return daoAuthenticationProvider;
     }
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -57,18 +56,35 @@ public class SecurityConfig {
                 .authenticationProvider(getDaoAuthProvider())
                 .authorizeHttpRequests(auth -> {
                     logger.debug("Configuring authorization rules");
-                    auth.requestMatchers("/", "/createUser", "/signin").permitAll()
+                    auth.requestMatchers("/", "/createUser", "/signin", "/css/**", "/js/**", "/images/**").permitAll()
                             .requestMatchers("/user/view/**", "/user/regenerate/**", "/uploads/**").permitAll()
-                            .requestMatchers("/user/**").authenticated()
+                            .requestMatchers("/user/**").hasRole("USER")
+                            .requestMatchers("/client/**").hasRole("CLIENT")
                             .requestMatchers("/register").denyAll()
-                            .anyRequest().permitAll();
+                            .anyRequest().authenticated();
                     logger.info("Authorization rules configured");
                 })
                 .formLogin(form -> {
                     logger.debug("Configuring form login");
                     form.loginPage("/signin")
                             .loginProcessingUrl("/signin")
-                            .defaultSuccessUrl("/user/home", true)
+                            .defaultSuccessUrl("/", true)
+                            .successHandler((request, response, authentication) -> {
+                                String role = authentication.getAuthorities().iterator().next().getAuthority();
+                                logger.info("User logged in with role: {}", role);
+                                
+                                if ("ROLE_USER".equals(role)) {
+                                    response.sendRedirect("/user/home");
+                                } else if ("ROLE_CLIENT".equals(role)) {
+                                    response.sendRedirect("/client/home");
+                                } else {
+                                    response.sendRedirect("/");
+                                }
+                            })
+                            .failureHandler((request, response, exception) -> {
+                                logger.error("Login failed: {}", exception.getMessage());
+                                response.sendRedirect("/signin?error=true");
+                            })
                             .permitAll();
                     logger.info("Form login configured with login page: /signin");
                 })
@@ -78,6 +94,7 @@ public class SecurityConfig {
                             .logoutSuccessUrl("/signin?logout")
                             .invalidateHttpSession(true)
                             .clearAuthentication(true)
+                            .deleteCookies("JSESSIONID")
                             .permitAll();
                     logger.info("Logout configured with URL: /logout");
                 })
