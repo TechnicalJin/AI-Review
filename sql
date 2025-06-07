@@ -1,0 +1,49 @@
+-- 1. Initial data migration: Copy existing clients to user_details
+INSERT INTO user_details (email, mobile, password, role, username)
+SELECT c.email, c.mobile, c.password, c.role, c.name
+FROM clients c
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM user_details u
+    WHERE u.email = c.email
+);
+
+-- 2. Trigger for new client insertion
+DELIMITER //
+
+CREATE TRIGGER after_client_insert
+AFTER INSERT ON clients
+FOR EACH ROW
+BEGIN
+    INSERT INTO user_details (email, mobile, password, role, username)
+    VALUES (NEW.email, NEW.mobile, NEW.password, NEW.role, NEW.name);
+END;
+//
+
+-- 3. Trigger for client deletion
+CREATE TRIGGER after_client_delete
+AFTER DELETE ON clients
+FOR EACH ROW
+BEGIN
+    DELETE FROM user_details
+    WHERE email = OLD.email;
+END;
+//
+
+-- 4. Trigger for client updates
+CREATE TRIGGER after_client_update
+AFTER UPDATE ON clients
+FOR EACH ROW
+BEGIN
+    UPDATE user_details
+    SET
+        email = NEW.email,
+        mobile = NEW.mobile,
+        password = NEW.password,
+        role = NEW.role,
+        username = NEW.name
+    WHERE email = OLD.email;
+END;
+//
+
+DELIMITER ;
