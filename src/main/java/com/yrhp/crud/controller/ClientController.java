@@ -20,4 +20,4 @@ public class ClientController {
         log.info("Accessing client home page");
         return "client/clientHome";
     }
-} 
+}

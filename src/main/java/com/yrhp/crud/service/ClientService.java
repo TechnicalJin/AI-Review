@@ -3,9 +3,12 @@ package com.yrhp.crud.service;
 import com.yrhp.crud.dao.ClientDao;
 import com.yrhp.crud.model.Client;
 import com.yrhp.crud.repository.ClientRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -17,6 +20,8 @@ import java.util.Optional;
 
 @Service
 public class ClientService {
+
+    private static final Logger log = LoggerFactory.getLogger(ClientService.class);
 
     @Autowired
     private ClientRepository clientRepository;
@@ -98,11 +103,39 @@ public class ClientService {
         return clientRepository.findAll();
     }
 
-    public Optional<Client> getClientById(int id) {
-        return clientRepository.findById(id);
+    @Transactional(readOnly = true)
+    public Client getClientByEmail(String email) {
+        log.debug("Fetching client by email: {}", email);
+        return clientRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.error("Client not found with email: {}", email);
+                    return new RuntimeException("Client not found");
+                });
+    }
+
+    @Transactional(readOnly = true)
+    public Client getClientById(int id) {
+        log.debug("Fetching client by ID: {}", id);
+        return clientRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("Client not found with ID: {}", id);
+                    return new RuntimeException("Client not found");
+                });
     }
 
     public void deleteClient(int id) {
         clientRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByEmail(String email) {
+        log.debug("Checking if client exists with email: {}", email);
+        return clientRepository.existsByEmail(email);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByMobile(String mobile) {
+        log.debug("Checking if client exists with mobile: {}", mobile);
+        return clientRepository.existsByMobile(mobile);
     }
 }
