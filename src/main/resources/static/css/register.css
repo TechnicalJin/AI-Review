@@ -92,7 +92,7 @@
             padding: 50px 40px 40px;
             width: 100%;
             max-width: 480px;
-            box-shadow: 
+            box-shadow:
                 0 20px 60px rgba(0, 0, 0, 0.5),
                 0 0 0 1px rgba(255, 255, 255, 0.05),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -225,7 +225,7 @@
         .form-control:focus {
             border-color: #4f46e5;
             background: rgba(50, 50, 50, 0.9);
-            box-shadow: 
+            box-shadow:
                 0 0 0 3px rgba(79, 70, 229, 0.2),
                 0 8px 25px rgba(0, 0, 0, 0.3);
             transform: translateY(-2px);
@@ -265,7 +265,7 @@
 
         .btn-register:hover {
             transform: translateY(-3px);
-            box-shadow: 
+            box-shadow:
                 0 12px 35px rgba(79, 70, 229, 0.4),
                 0 0 0 1px rgba(255, 255, 255, 0.1);
         }

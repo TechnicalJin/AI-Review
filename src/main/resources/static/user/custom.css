@@ -120,7 +120,7 @@
  /* Active selection effect */
  .tag:active {
      background-color: #AECBFA;
-     box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
  }
 
  /* Close button inside the tag */
