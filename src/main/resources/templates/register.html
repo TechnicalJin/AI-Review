@@ -7,53 +7,71 @@
   <link rel="stylesheet" th:href="@{/css/register.css}">
 </head>
 <body>
+<div class="bg-animation"></div>
+<div class="particles">
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+</div>
 
-<section>
-  <div class="container p-5">
-    <div class="row">
-      <div class="col-md-6 offset-md-3">
-        <div class="card">
-          <div class="card-header text-center fs-4">Register Page</div>
+<div class="container">
+  <div class="register-card">
+    <div class="card-header">
+      <h1>Create Account</h1>
+      <p>Join us today</p>
+    </div>
 
-          <div th:if="${msg}">
-            <p class="text-center fs-4 text-success" th:text="${msg}"></p>
-          </div>
+    <div th:if="${msg}" class="alert alert-success" th:text="${msg}"></div>
 
-          <div class="card-body">
-            <form action="/createUser" method="post" onsubmit="return validateForm()">
-              <div class="mb-3">
-                <label>Username</label>
-                <input type="text" name="username" id="username" class="form-control" required>
-                <p id="usernameError" class="text-danger"></p>
-              </div>
-
-              <div class="mb-3">
-                <label>Password</label>
-                <input type="password" name="password" id="password" class="form-control" required>
-                <p id="passwordError" class="text-danger"></p>
-              </div>
-
-              <div class="mb-3">
-                <label>Email</label>
-                <input type="email" name="email" id="email" class="form-control" required>
-                <p id="emailError" class="text-danger"></p>
-              </div>
-
-              <div class="mb-3">
-                <label>Phone No</label>
-                <input type="number" name="mobile" id="mobile" class="form-control" required>
-                <p id="mobileError" class="text-danger"></p>
-              </div>
-
-              <button class="btn btn-primary col-md-12">Register</button>
-            </form>
-            <a class="nav-link" href="/signin">or use your account!</a>
-          </div>
+    <form action="/createUser" method="post" onsubmit="return validateForm()">
+      <div class="form-group">
+        <div class="input-group">
+          <input type="text" name="username" id="username" class="form-control" placeholder="Enter your username" required>
+          <i class="fas fa-user input-icon"></i>
         </div>
+        <span id="usernameError" class="text-danger"></span>
       </div>
+
+      <div class="form-group">
+        <div class="input-group">
+          <input type="password" name="password" id="password" class="form-control" placeholder="Create a password" required>
+          <i class="fas fa-lock input-icon"></i>
+        </div>
+        <span id="passwordError" class="text-danger"></span>
+      </div>
+
+      <div class="form-group">
+        <div class="input-group">
+          <input type="email" name="email" id="email" class="form-control" placeholder="Enter your email" required>
+          <i class="fas fa-envelope input-icon"></i>
+        </div>
+        <span id="emailError" class="text-danger"></span>
+      </div>
+
+      <div class="form-group">
+        <div class="input-group">
+          <input type="number" name="mobile" id="mobile" class="form-control" placeholder="Enter your phone number" required>
+          <i class="fas fa-phone input-icon"></i>
+        </div>
+        <span id="mobileError" class="text-danger"></span>
+      </div>
+
+      <button type="submit" class="btn-register" id="registerBtn">
+        <span>Create Account</span>
+      </button>
+    </form>
+
+    <div class="signin-link">
+      <p>Already have an account? <a href="/signin">Sign in now</a></p>
     </div>
   </div>
-</section>
+</div>
 
 <script>
   function validateForm() {
@@ -63,50 +81,89 @@
       const usernameError = document.getElementById("usernameError");
       const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
       if (!usernameRegex.test(usernameInput.value)) {
-          usernameError.textContent = "Invalid username (3-20 alphanumeric and underscores).";
+          usernameError.textContent = "Username must be 3-20 characters with only letters, numbers, and underscores.";
+          usernameInput.style.borderColor = "#f87171";
           isValid = false;
       } else {
           usernameError.textContent = "";
+          usernameInput.style.borderColor = "rgba(255, 255, 255, 0.1)";
       }
 
       const passwordInput = document.getElementById("password");
       const passwordError = document.getElementById("passwordError");
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
       if (!passwordRegex.test(passwordInput.value)) {
-          passwordError.textContent = "Invalid password (min 8 chars, at least one uppercase, one lowercase, one number and one special character).";
+          passwordError.textContent = "Password must be at least 8 characters with uppercase, lowercase, number, and special character.";
+          passwordInput.style.borderColor = "#f87171";
           isValid = false;
       } else {
           passwordError.textContent = "";
+          passwordInput.style.borderColor = "rgba(255, 255, 255, 0.1)";
       }
-
 
       const emailInput = document.getElementById("email");
       const emailError = document.getElementById("emailError");
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(emailInput.value)) {
-          emailError.textContent = "Invalid email address.";
+          emailError.textContent = "Please enter a valid email address.";
+          emailInput.style.borderColor = "#f87171";
           isValid = false;
       } else {
           emailError.textContent = "";
+          emailInput.style.borderColor = "rgba(255, 255, 255, 0.1)";
       }
 
       const mobileInput = document.getElementById("mobile");
       const mobileError = document.getElementById("mobileError");
       const mobileRegex = /^\d{10}$/;
       if (!mobileRegex.test(mobileInput.value)) {
-          mobileError.textContent = "Enter a 10-digit mobile number.";
+          mobileError.textContent = "Please enter a valid 10-digit phone number.";
+          mobileInput.style.borderColor = "#f87171";
           isValid = false;
       } else {
           mobileError.textContent = "";
+          mobileInput.style.borderColor = "rgba(255, 255, 255, 0.1)";
       }
 
-      if (!isValid) {
-          return false;
+      if (isValid) {
+          const registerBtn = document.getElementById("registerBtn");
+          registerBtn.classList.add("loading");
+          registerBtn.querySelector("span").style.opacity = "0";
       }
 
-      return true;
+      return isValid;
   }
-</script>
 
+  // Add smooth focus effects
+  document.querySelectorAll('.form-control').forEach(input => {
+      input.addEventListener('focus', function() {
+          this.parentElement.style.transform = 'scale(1.02)';
+      });
+
+      input.addEventListener('blur', function() {
+          this.parentElement.style.transform = 'scale(1)';
+      });
+  });
+
+  // Add hover effect to card
+  const registerCard = document.querySelector('.register-card');
+  registerCard.addEventListener('mousemove', function(e) {
+      const rect = this.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+
+      const rotateX = (y - centerY) / 20;
+      const rotateY = (centerX - x) / 20;
+
+      this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1, 1, 1)`;
+  });
+
+  registerCard.addEventListener('mouseleave', function() {
+      this.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+  });
+</script>
 </body>
 </html>
