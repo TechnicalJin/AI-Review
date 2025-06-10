@@ -35,4 +35,6 @@ public interface ReviewGenerationLogRepository extends JpaRepository<ReviewGener
 
     @Query("SELECT DISTINCT l.companyName FROM ReviewGenerationLog l ORDER BY l.companyName")
     List<String> findDistinctCompanyNames();
+
+    List<ReviewGenerationLog> findByCompanyName(String companyName);
 }

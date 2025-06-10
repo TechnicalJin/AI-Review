@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log History</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/clientHome.css}">
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 4px; }
+        .animate-fade-in { animation: fadeIn 0.7s cubic-bezier(0.4,0,0.2,1) both; }
+        .filter-section { background: #fff; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 1rem; }
+        .filter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+        .filter-group label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
+        .filter-group select, .filter-group input { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; }
+        .filter-buttons { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        .apply-btn, .reset-btn { padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 500; }
+        .apply-btn { background: #3b82f6; color: #fff; }
+        .reset-btn { background: #ef4444; color: #fff; }
+        .length-badge { padding: 0.25rem 0.5rem; border-radius: 0.25rem; color: #fff; }
+        .badge-blue { background: #3b82f6; }
+        .badge-green { background: #10b981; }
+        .badge-red { background: #ef4444; }
+        .key-points-cell { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pagination-container { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+        .pagination a { padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.375rem; margin: 0 0.25rem; }
+        .pagination a.active { background: #3b82f6; color: #fff; }
+        .no-results { text-align: center; padding: 2rem; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex">
+<!-- Sidebar -->
+<aside id="sidebar" class="sidebar w-72 bg-gray-900 text-white flex flex-col py-8 px-6 transition-transform duration-300 ease-in-out shadow-xl fixed md:static h-full z-20">
+    <button id="sidebarToggle" class="md:hidden absolute top-4 right-4 text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+    </button>
+    <div class="flex items-center mb-10">
+        <img th:src="@{${client.logo != null ? '/Uploads/' + client.logo : '/images/default-logo.svg'}}"
+             class="w-10 h-10 rounded-full mr-3" alt="Company Logo"/>
+        <span class="text-2xl font-bold tracking-wide" th:text="${client.name}">YourBrand</span>
+    </div>
+    <nav class="flex-1">
+        <ul class="space-y-4">
+            <li>
+                <a th:href="@{/client/home}" class="flex items-center w-full px-4 py-2 rounded-lg hover:bg-gray-800 transition duration-200">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <a th:href="@{/client/history}" class="flex items-center w-full px-4 py-2 rounded-lg bg-gray-800 transition duration-200">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/>
+                    </svg>
+                    Log History
+                </a>
+            </li>
+            <li class="mt-8">
+                <a href="/logout" class="flex items-center px-4 py-2 rounded-lg hover:bg-red-600 bg-red-500 transition duration-200">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 12a9 9 0 0118 0 9 9 0 01-18 0z"/>
+                    </svg>
+                    Logout
+                </a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+
+<!-- Main Content -->
+<main id="mainContent" class="flex-1 p-6 md:p-10 transition-all duration-300 ease-in-out md:ml-72">
+    <button id="mobileMenuButton" class="md:hidden mb-4 text-gray-800">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M4 6h16M4 12h16m-7 6h7"/>
+        </svg>
+    </button>
+
+    <div class="filter-section animate-fade-in mb-8">
+        <h2 class="text-xl font-semibold mb-4"><i class="fas fa-filter mr-2"></i>Filters</h2>
+        <form th:action="@{/client/history}" method="get" class="filter-row">
+            <input type="hidden" name="company" th:value="${client.name}">
+            <div class="filter-group">
+                <label for="reviewLength">Review Length:</label>
+                <select id="reviewLength" name="reviewLength">
+                    <option value="">All Lengths</option>
+                    <option value="short" th:selected="${filters.reviewLength == 'short'}">Short</option>
+                    <option value="medium" th:selected="${filters.reviewLength == 'medium'}">Medium</option>
+                    <option value="large" th:selected="${filters.reviewLength == 'large'}">Large</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="regenerated">Regenerated:</label>
+                <select id="regenerated" name="regenerated">
+                    <option value="">All</option>
+                    <option value="yes" th:selected="${filters.regenerated == 'yes'}">Yes</option>
+                    <option value="no" th:selected="${filters.regenerated == 'no'}">No</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="keyPoints">Key Points:</label>
+                <input type="text" id="keyPoints" name="keyPoints" th:value="${filters.keyPoints}" placeholder="Search key points">
+            </div>
+            <div class="filter-group">
+                <label for="dateRange">Date Range:</label>
+                <input type="text" id="dateRange" class="flatpickr-input" placeholder="Select date range">
+                <input type="hidden" id="startDate" name="startDate" th:value="${filters.startDate}">
+                <input type="hidden" id="endDate" name="endDate" th:value="${filters.endDate}">
+            </div>
+            <div class="filter-buttons">
+                <button type="submit" class="apply-btn"><i class="fas fa-check mr-2"></i>Apply Filters</button>
+                <button type="button" class="reset-btn" onclick="resetFilters()"><i class="fas fa-refresh mr-2"></i>Reset Filters</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="controls-section animate-fade-in mb-8">
+        <div class="flex justify-between items-center">
+            <div>
+                <label for="entries-per-page">Entries per page:</label>
+                <select id="entries-per-page" th:value="${logs.size}" onchange="updatePageSize(this.value)">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+            <div class="search-box">
+                <input type="text" id="search-input" name="search" th:value="${filters.search}" placeholder="Search logs...">
+                <button onclick="searchLogs()"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="results-section animate-fade-in">
+        <div class="results-header" th:if="${logs.totalElements > 0}">
+            <div class="results-count">
+                Showing <span th:text="${logs.numberOfElements}"></span> of
+                <span th:text="${logs.totalElements}"></span> logs
+            </div>
+        </div>
+        <div class="no-results" th:if="${logs.totalElements == 0}">
+            <i class="fas fa-info-circle"></i>
+            <h3>No logs found</h3>
+            <p>No logs found matching your current filters. Try adjusting your search criteria.</p>
+        </div>
+        <div class="table-wrapper" th:if="${logs.totalElements > 0}">
+            <table class="min-w-full text-left text-gray-700">
+                <thead class="bg-gray-50">
+                <tr>
+                    <th class="py-3 px-4">ID</th>
+                    <th class="py-3 px-4">Timestamp</th>
+                    <th class="py-3 px-4">Review Length</th>
+                    <th class="py-3 px-4">Key Points</th>
+                    <th class="py-3 px-4">Regenerated</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="log : ${logs.content}" class="border-b hover:bg-gray-50">
+                    <td class="py-3 px-4" th:text="${log.id}"></td>
+                    <td class="py-3 px-4" th:text="${#temporals.format(log.timestamp, 'yyyy-MM-dd HH:mm')}"></td>
+                    <td class="py-3 px-4">
+                                <span th:text="${log.reviewLength}"
+                                      th:classappend="'length-badge ' +
+                                      ${log.reviewLength == 'short' ? 'badge-blue' :
+                                       (log.reviewLength == 'medium' ? 'badge-green' : 'badge-red')}">
+                                </span>
+                    </td>
+                    <td class="py-3 px-4 key-points-cell" th:text="${log.keyPoints}" th:title="${log.keyPoints}"></td>
+                    <td class="py-3 px-4" th:text="${log.regenerated == 'yes' ? 'Yes' : 'No'}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="pagination-container" th:if="${logs.totalPages > 1}">
+        <div class="pagination">
+            <a th:if="${logs.hasPrevious()}"
+               th:href="@{/client/history(page=0, size=${logs.size},
+                    search=${filters.search}, reviewLength=${filters.reviewLength},
+                    regenerated=${filters.regenerated}, keyPoints=${filters.keyPoints},
+                    startDate=${filters.startDate}, endDate=${filters.endDate})}"
+               class="page-link first" title="First Page">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            <a th:if="${logs.hasPrevious()}"
+               th:href="@{/client/history(page=${logs.number - 1}, size=${logs.size},
+                    search=${filters.search}, reviewLength=${filters.reviewLength},
+                    regenerated=${filters.regenerated}, keyPoints=${filters.keyPoints},
+                    startDate=${filters.startDate}, endDate=${filters.endDate})}"
+               class="page-link prev" title="Previous Page">
+                <i class="fas fa-angle-left"></i>
+            </a>
+            <a th:each="page : ${#numbers.sequence(0, logs.totalPages - 1)}"
+               th:href="@{/client/history(page=${page}, size=${logs.size},
+                    search=${filters.search}, reviewLength=${filters.reviewLength},
+                    regenerated=${filters.regenerated}, keyPoints=${filters.keyPoints},
+                    startDate=${filters.startDate}, endDate=${filters.endDate})}"
+               th:text="${page + 1}"
+               th:classappend="${page == logs.number} ? 'active' : ''"
+               class="page-link">
+            </a>
+            <a th:if="${logs.hasNext()}"
+               th:href="@{/client/history(page=${logs.number + 1}, size=${logs.size},
+                    search=${filters.search}, reviewLength=${filters.reviewLength},
+                    regenerated=${filters.regenerated}, keyPoints=${filters.keyPoints},
+                    startDate=${filters.startDate}, endDate=${filters.endDate})}"
+               class="page-link next" title="Next Page">
+                <i class="fas fa-angle-right"></i>
+            </a>
+            <a th:if="${logs.hasNext()}"
+               th:href="@{/client/history(page=${logs.totalPages - 1}, size=${logs.size},
+                    search=${filters.search}, reviewLength=${filters.reviewLength},
+                    regenerated=${filters.regenerated}, keyPoints=${filters.keyPoints},
+                    startDate=${filters.startDate}, endDate=${filters.endDate})}"
+               class="page-link last" title="Last Page">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+        </div>
+        <div class="page-info">
+            Page <span th:text="${logs.number + 1}"></span> of <span th:text="${logs.totalPages}"></span>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script th:src="@{/js/clientHome.js}"></script>
+<script>
+    // Sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+
+    mobileMenuButton.addEventListener('click', () => sidebar.classList.add('open'));
+    sidebarToggle.addEventListener('click', () => sidebar.classList.remove('open'));
+
+    // Flatpickr for date range
+    flatpickr('#dateRange', {
+        mode: 'range',
+        dateFormat: 'Y-m-d',
+        onChange: function(selectedDates) {
+            if (selectedDates.length === 2) {
+                document.getElementById('startDate').value = selectedDates[0].toISOString().split('T')[0] + 'T00:00:00';
+                document.getElementById('endDate').value = selectedDates[1].toISOString().split('T')[0] + 'T23:59:59';
+            }
+        }
+    });
+
+    // Update page size
+    function updatePageSize(size) {
+        const url = new URL(window.location);
+        url.searchParams.set('size', size);
+        url.searchParams.set('page', '0');
+        window.location.href = url.toString();
+    }
+
+    // Search logs
+    function searchLogs() {
+        const searchInput = document.getElementById('search-input').value;
+        const url = new URL(window.location);
+        url.searchParams.set('search', searchInput);
+        url.searchParams.set('page', '0');
+        window.location.href = url.toString();
+    }
+
+    // Reset filters
+    function resetFilters() {
+        window.location.href = '/client/history';
+    }
+</script>
+</body>
+</html>

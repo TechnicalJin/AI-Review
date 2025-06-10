@@ -4,194 +4,199 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client Dashboard</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" th:href="@{/css/clientHome.css}">
     <style>
-      /* Custom scrollbar for sidebar */
-      ::-webkit-scrollbar { width: 8px; }
-      ::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 4px; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 4px; }
+        .animate-fade-in { animation: fadeIn 0.7s cubic-bezier(0.4,0,0.2,1) both; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; }
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex">
-    <!-- Sidebar -->
-    <aside class="w-72 bg-gray-900 text-white flex flex-col py-8 px-6 transition-all duration-300 ease-in-out shadow-xl">
-        <!-- Logo -->
-        <div class="flex items-center mb-10">
-            <span class="bg-white rounded-full p-2 mr-3">
-                <!-- Placeholder SVG Logo -->
-                <svg class="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>
-            </span>
-            <span class="text-2xl font-bold tracking-wide">YourBrand</span>
-        </div>
-        <!-- Navigation -->
-        <nav class="flex-1">
-            <ul class="space-y-4">
-                <li>
-                    <button onclick="openProfileModal()" class="flex items-center w-full px-4 py-2 rounded-lg hover:bg-gray-800 transition duration-200">
-                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        View Profile
-                    </button>
-                </li>
-                <li>
-                    <button onclick="openHistoryModal()" class="flex items-center w-full px-4 py-2 rounded-lg hover:bg-gray-800 transition duration-200">
-                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
-                        History
-                    </button>
-                </li>
-                <li class="mt-8">
-                    <a href="/logout" class="flex items-center px-4 py-2 rounded-lg hover:bg-red-600 bg-red-500 transition duration-200">
-                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 12a9 9 0 0118 0 9 9 0 01-18 0z"/></svg>
-                        Logout
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    </aside>
+<!-- Sidebar -->
+<aside id="sidebar" class="sidebar w-72 bg-gray-900 text-white flex flex-col py-8 px-6 transition-transform duration-300 ease-in-out shadow-xl fixed md:static h-full z-20">
+    <button id="sidebarToggle" class="md:hidden absolute top-4 right-4 text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+    </button>
+    <div class="flex items-center mb-10">
+        <img th:src="@{${client.logo != null ? '/Uploads/' + client.logo : '/images/default-logo.svg'}}"
+             class="w-10 h-10 rounded-full mr-3" alt="Company Logo"/>
+        <span class="text-2xl font-bold tracking-wide" th:text="${client.name}">YourBrand</span>
+    </div>
+    <nav class="flex-1">
+        <ul class="space-y-4">
+            <li>
+                <button onclick="openProfileModal()"
+                        class="flex items-center w-full px-4 py-2 rounded-lg hover:bg-gray-800 transition duration-200">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    View Profile
+                </button>
+            </li>
+            <li>
+                <a th:href="@{/client/history}" class="flex items-center w-full px-4 py-2 rounded-lg hover:bg-gray-800 transition duration-200">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/>
+                    </svg>
+                    Log History
+                </a>
+            </li>
+            <li class="mt-8">
+                <a href="/logout" class="flex items-center px-4 py-2 rounded-lg hover:bg-red-600 bg-red-500 transition duration-200">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 12a9 9 0 0118 0 9 9 0 01-18 0z"/>
+                    </svg>
+                    Logout
+                </a>
+            </li>
+        </ul>
+    </nav>
+</aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 p-10 transition-all duration-300 ease-in-out">
-        <div class="flex items-center justify-between mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-1">Day-wise Reviews</h1>
-                <p class="text-gray-500">Track your review activity</p>
+<!-- Main Content -->
+<main id="mainContent" class="flex-1 p-6 md:p-10 transition-all duration-300 ease-in-out md:ml-72">
+    <button id="mobileMenuButton" class="md:hidden mb-4 text-gray-800">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M4 6h16M4 12h16m-7 6h7"/>
+        </svg>
+    </button>
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8 animate-fade-in">
+        <h2 class="text-xl font-semibold mb-4">Summary</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="text-center">
+                <p class="text-2xl font-bold" th:text="${totalReviews}">0</p>
+                <p class="text-gray-500">Total Reviews</p>
             </div>
-            <div class="flex items-center space-x-2">
-                <!-- Example avatars, replace with actual client avatars if needed -->
-                <img src="https://randomuser.me/api/portraits/men/32.jpg" class="w-10 h-10 rounded-full border-2 border-white shadow" alt="User"/>
-                <img src="https://randomuser.me/api/portraits/women/44.jpg" class="w-10 h-10 rounded-full border-2 border-white shadow" alt="User"/>
+            <div class="text-center">
+                <p class="text-2xl font-bold" th:text="${avgReviewLength}">N/A</p>
+                <p class="text-gray-500">Avg Review Length</p>
             </div>
-        </div>
-        <!-- Chart -->
-        <div class="bg-white rounded-xl shadow-lg p-8 mb-8 animate-fade-in">
-            <canvas id="reviewChart" height="100"></canvas>
-        </div>
-        <!-- History Table -->
-        <div class="bg-white rounded-xl shadow-lg p-6 animate-fade-in-up">
-            <h2 class="text-xl font-semibold mb-4">Review History</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-left text-gray-700">
-                    <thead>
-                        <tr>
-                            <th class="py-2 px-4">Date</th>
-                            <th class="py-2 px-4">Action</th>
-                            <th class="py-2 px-4">Details</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyTableBody">
-                        <!-- History rows will be injected here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
-
-    <!-- Profile Modal -->
-    <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden transition-opacity duration-300">
-        <div class="bg-white rounded-xl p-8 w-full max-w-md shadow-lg relative animate-fade-in">
-            <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
-            <h2 class="text-2xl font-bold mb-4">Client Profile</h2>
-            <div class="space-y-2">
-                <div><span class="font-semibold">Name:</span> <span id="clientName">Samantha</span></div>
-                <div><span class="font-semibold">Email:</span> <span id="clientEmail">samantha@email.com</span></div>
-                <div><span class="font-semibold">Role:</span> <span id="clientRole">Client</span></div>
-                <!-- Add more fields as needed -->
+            <div class="text-center">
+                <p class="text-2xl font-bold" th:text="${lastReviewTimestamp != null ? #temporals.format(lastReviewTimestamp, 'yyyy-MM-dd HH:mm') : '-'}">-</p>
+                <p class="text-gray-500">Last Review</p>
             </div>
         </div>
     </div>
 
-    <!-- History Modal -->
-    <div id="historyModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden transition-opacity duration-300">
-        <div class="bg-white rounded-xl p-8 w-full max-w-2xl shadow-lg relative animate-fade-in-up">
-            <button onclick="closeHistoryModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
-            <h2 class="text-2xl font-bold mb-4">Log History</h2>
-            <div class="overflow-x-auto max-h-96">
-                <table class="min-w-full text-left text-gray-700">
-                    <thead>
-                        <tr>
-                            <th class="py-2 px-4">Date</th>
-                            <th class="py-2 px-4">Action</th>
-                            <th class="py-2 px-4">Details</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyModalTableBody">
-                        <!-- Log rows will be injected here -->
-                    </tbody>
-                </table>
-            </div>
+    <div class="bg-white rounded-xl shadow-lg p-8 mb-8 animate-fade-in">
+        <h2 class="text-xl font-semibold mb-4">Day-wise Reviews</h2>
+        <canvas id="dayWiseReviewChart" height="100"></canvas>
+    </div>
+</main>
+
+<!-- Profile Modal -->
+<div id="profileModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden transition-opacity duration-300">
+    <div class="bg-white rounded-xl p-8 w-full max-w-md shadow-lg relative animate-fade-in">
+        <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+        <h2 class="text-2xl font-bold mb-4">Client Profile</h2>
+        <div class="space-y-2">
+            <div><span class="font-semibold">Username:</span> <span id="clientUsername">-</span></div>
+            <div><span class="font-semibold">Company Name:</span> <span id="clientCompanyName">-</span></div>
+            <div><span class="font-semibold">Email:</span> <span id="clientEmail">-</span></div>
+            <div><span class="font-semibold">Mobile:</span> <span id="clientMobile">-</span></div>
         </div>
     </div>
+</div>
 
-    <script th:src="@{/js/clientHome.js}"></script>
+<script th:src="@{/js/clientHome.js}"></script>
+<script>
+    // Sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
 
-    <!-- Animations -->
-    <style>
-      .animate-fade-in { animation: fadeIn 0.7s cubic-bezier(0.4,0,0.2,1) both; }
-      .animate-fade-in-up { animation: fadeInUp 0.7s cubic-bezier(0.4,0,0.2,1) both; }
-      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-      @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
-    </style>
+    mobileMenuButton.addEventListener('click', () => sidebar.classList.add('open'));
+    sidebarToggle.addEventListener('click', () => sidebar.classList.remove('open'));
 
-    <!-- Scripts for Chart and Modals -->
-    <script>
-      // Chart.js Example Data
-      const ctx = document.getElementById('reviewChart').getContext('2d');
-      const reviewChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-          datasets: [{
-            label: 'Reviews',
-            data: [12, 19, 3, 5, 2, 3, 7],
-            backgroundColor: 'rgba(99, 102, 241, 0.7)',
-            borderRadius: 8,
-            borderSkipped: false,
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          animation: { duration: 1200, easing: 'easeOutQuart' },
-          scales: {
-            y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
-            x: { grid: { display: false } }
-          }
+    // Fetch client data
+    async function fetchClientData() {
+        try {
+            const response = await fetch('/client/profile');
+            if (!response.ok) throw new Error('Failed to fetch client data');
+            const client = await response.json();
+            document.getElementById('clientUsername').textContent = client.name || '-';
+            document.getElementById('clientCompanyName').textContent = client.name || '-';
+            document.getElementById('clientEmail').textContent = client.email || '-';
+            document.getElementById('clientMobile').textContent = client.mobile || '-';
+        } catch (error) {
+            console.error('Error fetching client data:', error);
         }
-      });
+    }
 
-      // Dummy History Data
-      const historyData = [
-        { date: '2024-06-01', action: 'Login', details: 'Logged in from web' },
-        { date: '2024-06-01', action: 'Review', details: 'Submitted a review' },
-        { date: '2024-06-02', action: 'Logout', details: 'Logged out' },
-        { date: '2024-06-03', action: 'Review', details: 'Submitted a review' },
-      ];
-      function renderHistoryTable() {
-        const tbody = document.getElementById('historyTableBody');
-        tbody.innerHTML = historyData.map(row => `<tr><td class='py-2 px-4'>${row.date}</td><td class='py-2 px-4'>${row.action}</td><td class='py-2 px-4'>${row.details}</td></tr>`).join('');
-        const modalTbody = document.getElementById('historyModalTableBody');
-        modalTbody.innerHTML = tbody.innerHTML;
-      }
-      renderHistoryTable();
+    // Fetch log data
+    async function fetchLogData() {
+        try {
+            const response = await fetch('/client/logs');
+            if (!response.ok) throw new Error('Failed to fetch logs');
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching logs:', error);
+            return [];
+        }
+    }
 
-      // Modal Functions
-      function openProfileModal() {
+    // Day-wise Review Chart
+    async function renderDayWiseChart() {
+        const logs = await fetchLogData();
+        const dates = [...new Set(logs.map(log => new Date(log.timestamp).toISOString().split('T')[0]))].slice(-7);
+        const data = dates.map(date => logs.filter(log => new Date(log.timestamp).toISOString().split('T')[0] === date).length);
+
+        const ctx = document.getElementById('dayWiseReviewChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Reviews',
+                    data: data,
+                    backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                animation: { duration: 1200, easing: 'easeOutQuart' },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // Modal Functions
+    function openProfileModal() {
+        fetchClientData();
         document.getElementById('profileModal').classList.remove('hidden');
-      }
-      function closeProfileModal() {
+        sidebar.classList.remove('open');
+    }
+
+    function closeProfileModal() {
         document.getElementById('profileModal').classList.add('hidden');
-      }
-      function openHistoryModal() {
-        document.getElementById('historyModal').classList.remove('hidden');
-      }
-      function closeHistoryModal() {
-        document.getElementById('historyModal').classList.add('hidden');
-      }
-      // Close modals on background click
-      document.getElementById('profileModal').addEventListener('click', function(e) { if(e.target === this) closeProfileModal(); });
-      document.getElementById('historyModal').addEventListener('click', function(e) { if(e.target === this) closeHistoryModal(); });
-    </script>
+    }
+
+    // Close modals on background click
+    document.getElementById('profileModal').addEventListener('click', function(e) { if(e.target === this) closeProfileModal(); });
+
+    // Initialize chart
+    renderDayWiseChart();
+</script>
 </body>
 </html>
