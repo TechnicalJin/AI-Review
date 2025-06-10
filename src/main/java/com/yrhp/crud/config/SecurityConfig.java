@@ -56,11 +56,16 @@ public class SecurityConfig {
                 .authenticationProvider(getDaoAuthProvider())
                 .authorizeHttpRequests(auth -> {
                     logger.debug("Configuring authorization rules");
-                    auth.requestMatchers("/", "/createUser", "/signin", "/register", "/css/**", "/js/**", "/images/**").permitAll()
-                            .requestMatchers("/user/view/**", "/user/regenerate/**", "/uploads/**").permitAll()
+                    auth
+                            // Public resources
+                            .requestMatchers("/", "/createUser", "/signin", "/register", 
+                                    "/css/**", "/js/**", "/images/**", "/error/**", 
+                                    "/uploads/**", "/Uploads/**").permitAll()
+                            // Public pages
+                            .requestMatchers("/user/view/**", "/user/regenerate/**").permitAll()
+                            // Role-based access
                             .requestMatchers("/user/**").hasRole("USER")
                             .requestMatchers("/client/**").hasRole("CLIENT")
-//                            .requestMatchers("/register").denyAll()
                             .anyRequest().authenticated();
                     logger.info("Authorization rules configured");
                 })
@@ -97,6 +102,14 @@ public class SecurityConfig {
                             .deleteCookies("JSESSIONID")
                             .permitAll();
                     logger.info("Logout configured with URL: /logout");
+                })
+                .exceptionHandling(exception -> {
+                    exception
+                            .accessDeniedPage("/error/403")
+                            .authenticationEntryPoint((request, response, authException) -> {
+                                logger.error("Unauthorized access attempt: {}", authException.getMessage());
+                                response.sendRedirect("/signin?error=unauthorized");
+                            });
                 })
                 .csrf(csrf -> {
                     logger.debug("Disabling CSRF protection");
