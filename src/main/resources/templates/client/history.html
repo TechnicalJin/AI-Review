@@ -3,283 +3,1017 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log History</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Review Generation Log History</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/clientHome.css}">
     <style>
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 4px; }
-        .animate-fade-in { animation: fadeIn 0.7s cubic-bezier(0.4,0,0.2,1) both; }
-        .filter-section { background: #fff; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 1rem; }
-        .filter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
-        .filter-group label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
-        .filter-group select, .filter-group input { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; }
-        .filter-buttons { display: flex; gap: 0.5rem; margin-top: 1rem; }
-        .apply-btn, .reset-btn { padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 500; }
-        .apply-btn { background: #3b82f6; color: #fff; }
-        .reset-btn { background: #ef4444; color: #fff; }
-        .length-badge { padding: 0.25rem 0.5rem; border-radius: 0.25rem; color: #fff; }
-        .badge-blue { background: #3b82f6; }
-        .badge-green { background: #10b981; }
-        .badge-red { background: #ef4444; }
-        .key-points-cell { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .pagination-container { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
-        .pagination a { padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.375rem; margin: 0 0.25rem; }
-        .pagination a.active { background: #3b82f6; color: #fff; }
-        .no-results { text-align: center; padding: 2rem; }
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #1d4ed8;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #f4f5f7;
+            --bg-white: #ffffff;
+            --border-color: #d1d5db;
+            --border-light: #e5e7eb;
+            --hover-bg: #f9fafb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* Header Styles */
+        .header-section {
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-title h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0 0 0.5rem 0;
+        }
+
+        .header-title .subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            font-weight: 500;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-hover);
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: var(--bg-white);
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-light);
+        }
+
+        .filter-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .filter-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-toggle-icon {
+            transition: transform 0.2s ease;
+        }
+
+        .filter-toggle-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .filter-content {
+            display: none;
+            margin-top: 1.5rem;
+            animation: slideDown 0.3s ease;
+        }
+
+        .filter-content.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 0.625rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* Controls Section */
+        .controls-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            background: var(--bg-white);
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-light);
+        }
+
+        .controls-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .controls-left label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .controls-left select {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .search-box input {
+            padding: 0.625rem;
+            border: none;
+            font-size: 0.875rem;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+        }
+
+        .search-box button {
+            padding: 0.625rem 1rem;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-box button:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Results Section */
+        .results-section {
+            background: var(--bg-white);
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+        }
+
+        .results-header {
+            padding: 1.5rem 1.5rem 0;
+        }
+
+        .results-count {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .no-results h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .table-wrapper {
+            padding: 0 1.5rem 1.5rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-light);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .data-table th {
+            background: var(--hover-bg);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .data-table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--hover-bg);
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Badge Styles */
+        .length-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .badge-short {
+            background: var(--primary-color);
+        }
+
+        .badge-medium {
+            background: var(--success-color);
+        }
+
+        .badge-large {
+            background: var(--warning-color);
+        }
+
+        .regenerated-yes {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .regenerated-no {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        .key-points-cell {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Pagination */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-light);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 0.25rem;
+            align-items: center;
+        }
+
+        .page-link {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 2.5rem;
+        }
+
+        .page-link:hover {
+            background: var(--hover-bg);
+            border-color: var(--primary-color);
+        }
+
+        .page-link.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .page-info {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); }
-            .main-content { margin-left: 0 !important; }
+            .container {
+                padding: 1rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls-left {
+                justify-content: space-between;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .search-box input {
+                min-width: auto;
+            }
+
+            .pagination-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .data-table {
+                font-size: 0.875rem;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-title h1 {
+                font-size: 1.5rem;
+            }
+
+            .filter-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex">
-<!-- Sidebar -->
-<aside id="sidebar" class="sidebar w-72 bg-gray-900 text-white flex flex-col py-8 px-6 transition-transform duration-300 ease-in-out shadow-xl fixed md:static h-full z-20">
-    <button id="sidebarToggle" class="md:hidden absolute top-4 right-4 text-white">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-    </button>
-    <div class="flex items-center mb-10">
-        <img th:src="@{${client.logo != null ? '/Uploads/' + client.logo : '/images/default-logo.svg'}}"
-             class="w-10 h-10 rounded-full mr-3" alt="Company Logo"/>
-        <span class="text-2xl font-bold tracking-wide" th:text="${client.name}">YourBrand</span>
+<body>
+<div class="container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <div class="header-content">
+            <div class="header-title">
+                <h1>Review Generation History</h1>
+                <p class="subtitle">Manage and track your review generation logs</p>
+            </div>
+            <a class="nav-link" th:href="@{/client/home}">
+                <i class="fas fa-home"></i>
+                <span>Back to Home</span>
+            </a>
+        </div>
     </div>
-    <nav class="flex-1">
-        <ul class="space-y-4">
-            <li>
-                <a th:href="@{/client/home}" class="flex items-center w-full px-4 py-2 rounded-lg hover:bg-gray-800 transition duration-200">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
-                    Dashboard
-                </a>
-            </li>
-            <li>
-                <a th:href="@{/client/history}" class="flex items-center w-full px-4 py-2 rounded-lg bg-gray-800 transition duration-200">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/>
-                    </svg>
-                    Log History
-                </a>
-            </li>
-            <li class="mt-8">
-                <a href="/logout" class="flex items-center px-4 py-2 rounded-lg hover:bg-red-600 bg-red-500 transition duration-200">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 12a9 9 0 0118 0 9 9 0 01-18 0z"/>
-                    </svg>
-                    Logout
-                </a>
-            </li>
-        </ul>
-    </nav>
-</aside>
 
-<!-- Main Content -->
-<main id="mainContent" class="flex-1 p-6 md:p-10 transition-all duration-300 ease-in-out md:ml-72">
-    <button id="mobileMenuButton" class="md:hidden mb-4 text-gray-800">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M4 6h16M4 12h16m-7 6h7"/>
-        </svg>
-    </button>
-
-    <div class="filter-section animate-fade-in mb-8">
-        <h2 class="text-xl font-semibold mb-4"><i class="fas fa-filter mr-2"></i>Filters</h2>
-        <form th:action="@{/client/history}" method="get" class="filter-row">
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="filter-header" onclick="toggleFilters()">
+            <h2>
+                <i class="fas fa-filter"></i>
+                Filters
+            </h2>
+            <div class="filter-toggle-icon">
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+        <form id="filter-form" method="get" th:action="@{/client/history}" class="filter-content">
             <input type="hidden" name="company" th:value="${client.name}">
-            <div class="filter-group">
-                <label for="reviewLength">Review Length:</label>
-                <select id="reviewLength" name="reviewLength">
-                    <option value="">All Lengths</option>
-                    <option value="short" th:selected="${filters.reviewLength == 'short'}">Short</option>
-                    <option value="medium" th:selected="${filters.reviewLength == 'medium'}">Medium</option>
-                    <option value="large" th:selected="${filters.reviewLength == 'large'}">Large</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="regenerated">Regenerated:</label>
-                <select id="regenerated" name="regenerated">
-                    <option value="">All</option>
-                    <option value="yes" th:selected="${filters.regenerated == 'yes'}">Yes</option>
-                    <option value="no" th:selected="${filters.regenerated == 'no'}">No</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="keyPoints">Key Points:</label>
-                <input type="text" id="keyPoints" name="keyPoints" th:value="${filters.keyPoints}" placeholder="Search key points">
-            </div>
-            <div class="filter-group">
-                <label for="dateRange">Date Range:</label>
-                <input type="text" id="dateRange" class="flatpickr-input" placeholder="Select date range">
-                <input type="hidden" id="startDate" name="startDate" th:value="${filters.startDate}">
-                <input type="hidden" id="endDate" name="endDate" th:value="${filters.endDate}">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="reviewLength">Review Length:</label>
+                    <select id="reviewLength" name="reviewLength">
+                        <option value="">All Lengths</option>
+                        <option value="short" th:selected="${filters.reviewLength == 'short'}">Short</option>
+                        <option value="medium" th:selected="${filters.reviewLength == 'medium'}">Medium</option>
+                        <option value="large" th:selected="${filters.reviewLength == 'large'}">Large</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="regenerated">Regenerated:</label>
+                    <select id="regenerated" name="regenerated">
+                        <option value="">All</option>
+                        <option value="yes" th:selected="${filters.regenerated == 'yes'}">Yes</option>
+                        <option value="no" th:selected="${filters.regenerated == 'no'}">No</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="keyPoints">Key Points:</label>
+                    <input type="text" id="keyPoints" name="keyPoints" th:value="${filters.keyPoints}" placeholder="Search key points...">
+                </div>
+                <div class="filter-group">
+                    <label for="dateRange">Date Range:</label>
+                    <input type="text" id="dateRange" class="flatpickr-input" placeholder="Select date range" readonly>
+                    <input type="hidden" id="startDate" name="startDate" th:value="${filters.startDate}">
+                    <input type="hidden" id="endDate" name="endDate" th:value="${filters.endDate}">
+                </div>
             </div>
             <div class="filter-buttons">
-                <button type="submit" class="apply-btn"><i class="fas fa-check mr-2"></i>Apply Filters</button>
-                <button type="button" class="reset-btn" onclick="resetFilters()"><i class="fas fa-refresh mr-2"></i>Reset Filters</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check"></i>
+                    Apply Filters
+                </button>
+                <button type="button" class="btn btn-danger" onclick="resetFilters()">
+                    <i class="fas fa-refresh"></i>
+                    Reset Filters
+                </button>
             </div>
         </form>
     </div>
 
-    <div class="controls-section animate-fade-in mb-8">
-        <div class="flex justify-between items-center">
-            <div>
-                <label for="entries-per-page">Entries per page:</label>
-                <select id="entries-per-page" th:value="${logs.size}" onchange="updatePageSize(this.value)">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
+    <!-- Controls Section -->
+    <div class="controls-section">
+        <div class="controls">
+            <div class="controls-left">
+                <label for="entries-per-page">Show:</label>
+                <select id="entries-per-page" onchange="updatePageSize(this.value)">
+                    <option value="10" th:selected="${logs.size == 10}">10 entries</option>
+                    <option value="25" th:selected="${logs.size == 25}">25 entries</option>
+                    <option value="50" th:selected="${logs.size == 50}">50 entries</option>
+                    <option value="100" th:selected="${logs.size == 100}">100 entries</option>
                 </select>
             </div>
             <div class="search-box">
                 <input type="text" id="search-input" name="search" th:value="${filters.search}" placeholder="Search logs...">
-                <button onclick="searchLogs()"><i class="fas fa-search"></i></button>
+                <button type="button" onclick="searchLogs()">
+                    <i class="fas fa-search"></i>
+                    <span class="sr-only">Search</span>
+                </button>
             </div>
         </div>
     </div>
 
-    <div class="results-section animate-fade-in">
+    <!-- Results Section -->
+    <div class="results-section">
         <div class="results-header" th:if="${logs.totalElements > 0}">
             <div class="results-count">
-                Showing <span th:text="${logs.numberOfElements}"></span> of
-                <span th:text="${logs.totalElements}"></span> logs
+                Showing <strong th:text="${logs.numberOfElements}"></strong> of
+                <strong th:text="${logs.totalElements}"></strong> results
             </div>
         </div>
+
         <div class="no-results" th:if="${logs.totalElements == 0}">
-            <i class="fas fa-info-circle"></i>
+            <i class="fas fa-search"></i>
             <h3>No logs found</h3>
-            <p>No logs found matching your current filters. Try adjusting your search criteria.</p>
+            <p>No logs found matching your current filters. Try adjusting your search criteria or clearing filters.</p>
         </div>
+
         <div class="table-wrapper" th:if="${logs.totalElements > 0}">
-            <table class="min-w-full text-left text-gray-700">
-                <thead class="bg-gray-50">
-                <tr>
-                    <th class="py-3 px-4">ID</th>
-                    <th class="py-3 px-4">Timestamp</th>
-                    <th class="py-3 px-4">Review Length</th>
-                    <th class="py-3 px-4">Key Points</th>
-                    <th class="py-3 px-4">Regenerated</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="log : ${logs.content}" class="border-b hover:bg-gray-50">
-                    <td class="py-3 px-4" th:text="${log.id}"></td>
-                    <td class="py-3 px-4" th:text="${#temporals.format(log.timestamp, 'yyyy-MM-dd HH:mm')}"></td>
-                    <td class="py-3 px-4">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Company</th>
+                        <th>Timestamp</th>
+                        <th>Review Length</th>
+                        <th>Key Points</th>
+                        <th>Regenerated</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="log : ${logs.content}">
+                        <td th:text="${log.id}"></td>
+                        <td th:text="${log.companyName}"></td>
+                        <td th:text="${#temporals.format(log.timestamp, 'MMM dd, yyyy HH:mm')}"></td>
+                        <td>
                                 <span th:text="${log.reviewLength}"
-                                      th:classappend="'length-badge ' +
-                                      ${log.reviewLength == 'short' ? 'badge-blue' :
-                                       (log.reviewLength == 'medium' ? 'badge-green' : 'badge-red')}">
+                                      th:class="'length-badge badge-' + ${log.reviewLength}">
                                 </span>
-                    </td>
-                    <td class="py-3 px-4 key-points-cell" th:text="${log.keyPoints}" th:title="${log.keyPoints}"></td>
-                    <td class="py-3 px-4" th:text="${log.regenerated == 'yes' ? 'Yes' : 'No'}"></td>
-                </tr>
-                </tbody>
-            </table>
+                        </td>
+                        <td class="key-points-cell" th:text="${log.keyPoints}" th:title="${log.keyPoints}"></td>
+                        <td>
+                                <span th:text="${log.regenerated == 'yes' ? 'Yes' : 'No'}"
+                                      th:class="${log.regenerated == 'yes' ? 'regenerated-yes' : 'regenerated-no'}">
+                                </span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
+    <!-- Pagination -->
     <div class="pagination-container" th:if="${logs.totalPages > 1}">
         <div class="pagination">
-            <a th:if="${logs.hasPrevious()}"
+            <!-- First Page -->
+            <a th:if="${logs.number > 0}"
                th:href="@{/client/history(page=0, size=${logs.size},
-                    search=${filters.search}, reviewLength=${filters.reviewLength},
-                    regenerated=${filters.regenerated}, keyPoints=${filters.keyPoints},
-                    startDate=${filters.startDate}, endDate=${filters.endDate})}"
-               class="page-link first" title="First Page">
+                search=${filters.search}, reviewLength=${filters.reviewLength},
+                regenerated=${filters.regenerated}, keyPoints=${filters.keyPoints},
+                startDate=${filters.startDate}, endDate=${filters.endDate})}"
+               class="page-link" title="First Page">
                 <i class="fas fa-angle-double-left"></i>
+                <span class="sr-only">First Page</span>
             </a>
+
+            <!-- Previous Page -->
             <a th:if="${logs.hasPrevious()}"
                th:href="@{/client/history(page=${logs.number - 1}, size=${logs.size},
-                    search=${filters.search}, reviewLength=${filters.reviewLength},
-                    regenerated=${filters.regenerated}, keyPoints=${filters.keyPoints},
-                    startDate=${filters.startDate}, endDate=${filters.endDate})}"
-               class="page-link prev" title="Previous Page">
+                search=${filters.search}, reviewLength=${filters.reviewLength},
+                regenerated=${filters.regenerated}, keyPoints=${filters.keyPoints},
+                startDate=${filters.startDate}, endDate=${filters.endDate})}"
+               class="page-link" title="Previous Page">
                 <i class="fas fa-angle-left"></i>
+                <span class="sr-only">Previous Page</span>
             </a>
-            <a th:each="page : ${#numbers.sequence(0, logs.totalPages - 1)}"
-               th:href="@{/client/history(page=${page}, size=${logs.size},
+
+            <!-- Page Numbers -->
+            <th:block th:each="page : ${#numbers.sequence(T(java.lang.Math).max(0, logs.number - 2), T(java.lang.Math).min(logs.totalPages - 1, logs.number + 2))}">
+                <a th:href="@{/client/history(page=${page}, size=${logs.size},
                     search=${filters.search}, reviewLength=${filters.reviewLength},
                     regenerated=${filters.regenerated}, keyPoints=${filters.keyPoints},
                     startDate=${filters.startDate}, endDate=${filters.endDate})}"
-               th:text="${page + 1}"
-               th:classappend="${page == logs.number} ? 'active' : ''"
-               class="page-link">
-            </a>
+                   th:text="${page + 1}"
+                   th:class="'page-link' + (${page == logs.number} ? ' active' : '')">
+                </a>
+            </th:block>
+
+            <!-- Next Page -->
             <a th:if="${logs.hasNext()}"
                th:href="@{/client/history(page=${logs.number + 1}, size=${logs.size},
-                    search=${filters.search}, reviewLength=${filters.reviewLength},
-                    regenerated=${filters.regenerated}, keyPoints=${filters.keyPoints},
-                    startDate=${filters.startDate}, endDate=${filters.endDate})}"
-               class="page-link next" title="Next Page">
+                search=${filters.search}, reviewLength=${filters.reviewLength},
+                regenerated=${filters.regenerated}, keyPoints=${filters.keyPoints},
+                startDate=${filters.startDate}, endDate=${filters.endDate})}"
+               class="page-link" title="Next Page">
                 <i class="fas fa-angle-right"></i>
+                <span class="sr-only">Next Page</span>
             </a>
-            <a th:if="${logs.hasNext()}"
+
+            <!-- Last Page -->
+            <a th:if="${logs.number < logs.totalPages - 1}"
                th:href="@{/client/history(page=${logs.totalPages - 1}, size=${logs.size},
-                    search=${filters.search}, reviewLength=${filters.reviewLength},
-                    regenerated=${filters.regenerated}, keyPoints=${filters.keyPoints},
-                    startDate=${filters.startDate}, endDate=${filters.endDate})}"
-               class="page-link last" title="Last Page">
+                search=${filters.search}, reviewLength=${filters.reviewLength},
+                regenerated=${filters.regenerated}, keyPoints=${filters.keyPoints},
+                startDate=${filters.startDate}, endDate=${filters.endDate})}"
+               class="page-link" title="Last Page">
                 <i class="fas fa-angle-double-right"></i>
+                <span class="sr-only">Last Page</span>
             </a>
         </div>
         <div class="page-info">
-            Page <span th:text="${logs.number + 1}"></span> of <span th:text="${logs.totalPages}"></span>
+            Page <strong th:text="${logs.number + 1}"></strong> of
+            <strong th:text="${logs.totalPages}"></strong>
         </div>
     </div>
-</main>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script th:src="@{/js/clientHome.js}"></script>
 <script>
-    // Sidebar toggle
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('mainContent');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    document.addEventListener('DOMContentLoaded', function() {
+    initializePage();
+});
 
-    mobileMenuButton.addEventListener('click', () => sidebar.classList.add('open'));
-    sidebarToggle.addEventListener('click', () => sidebar.classList.remove('open'));
+function initializePage() {
+    const urlParams = new URLSearchParams(window.location.search);
 
-    // Flatpickr for date range
-    flatpickr('#dateRange', {
-        mode: 'range',
-        dateFormat: 'Y-m-d',
+    // Initialize filter toggle state
+    const hasFilters = Array.from(urlParams.keys()).some(key =>
+        key !== 'page' && key !== 'size' && key !== 'search' && key !== 'company' && urlParams.get(key)
+    );
+
+    if (hasFilters) {
+        showFilters();
+    }
+
+    // Initialize page size selector
+    const sizeParam = urlParams.get('size') || '10';
+    const entriesSelect = document.getElementById('entries-per-page');
+    if (entriesSelect) {
+        entriesSelect.value = sizeParam;
+    }
+
+    // Initialize search input
+    const searchParam = urlParams.get('search');
+    const searchInput = document.getElementById('search-input');
+    if (searchParam && searchInput) {
+        searchInput.value = searchParam;
+    }
+
+    // Initialize Flatpickr for date range
+    initializeDatePicker();
+
+    // Add event listeners
+    addEventListeners();
+}
+
+function initializeDatePicker() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const startDate = urlParams.get('startDate');
+    const endDate = urlParams.get('endDate');
+    let defaultDates = [];
+
+    if (startDate && endDate) {
+        defaultDates = [startDate.split('T')[0], endDate.split('T')[0]];
+    }
+
+    flatpickr("#dateRange", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        defaultDate: defaultDates,
+        maxDate: "today",
+        allowInput: false,
         onChange: function(selectedDates) {
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+
             if (selectedDates.length === 2) {
-                document.getElementById('startDate').value = selectedDates[0].toISOString().split('T')[0] + 'T00:00:00';
-                document.getElementById('endDate').value = selectedDates[1].toISOString().split('T')[0] + 'T23:59:59';
+                startDateInput.value = selectedDates[0].toISOString().split('T')[0] + 'T00:00:00';
+                endDateInput.value = selectedDates[1].toISOString().split('T')[0] + 'T23:59:59';
+            } else if (selectedDates.length === 1) {
+                startDateInput.value = selectedDates[0].toISOString().split('T')[0] + 'T00:00:00';
+                endDateInput.value = '';
+            } else {
+                startDateInput.value = '';
+                endDateInput.value = '';
+            }
+        },
+        onClose: function(selectedDates) {
+            if (selectedDates.length === 0) {
+                document.getElementById('startDate').value = '';
+                document.getElementById('endDate').value = '';
             }
         }
     });
+}
 
-    // Update page size
-    function updatePageSize(size) {
-        const url = new URL(window.location);
-        url.searchParams.set('size', size);
-        url.searchParams.set('page', '0');
-        window.location.href = url.toString();
+function addEventListeners() {
+    // Add enter key support for search
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchLogs();
+            }
+        });
     }
 
-    // Search logs
-    function searchLogs() {
-        const searchInput = document.getElementById('search-input').value;
-        const url = new URL(window.location);
-        url.searchParams.set('search', searchInput);
-        url.searchParams.set('page', '0');
-        window.location.href = url.toString();
+    // Add enter key support for filter inputs
+    const filterInputs = document.querySelectorAll('#filter-form input[type="text"]');
+    filterInputs.forEach(input => {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('filter-form').submit();
+            }
+        });
+    });
+}
+
+function toggleFilters() {
+    const filterContent = document.querySelector('.filter-content');
+    const toggleIcon = document.querySelector('.filter-toggle-icon i');
+
+    if (filterContent.classList.contains('show')) {
+        hideFilters();
+    } else {
+        showFilters();
+    }
+}
+
+function showFilters() {
+    const filterContent = document.querySelector('.filter-content');
+    const toggleIcon = document.querySelector('.filter-toggle-icon i');
+
+    filterContent.classList.add('show');
+    toggleIcon.classList.add('rotated');
+}
+
+function hideFilters() {
+    const filterContent = document.querySelector('.filter-content');
+    const toggleIcon = document.querySelector('.filter-toggle-icon i');
+
+    filterContent.classList.remove('show');
+    toggleIcon.classList.remove('rotated');
+}
+
+function updatePageSize(size) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('size', size);
+    url.searchParams.set('page', '0');
+    window.location.href = url.toString();
+}
+
+function resetFilters() {
+    const form = document.getElementById('filter-form');
+    if (!form) return;
+
+    // Reset form fields
+    const fields = ['reviewLength', 'regenerated', 'keyPoints'];
+    fields.forEach(fieldName => {
+        const field = form.querySelector(`[name="${fieldName}"]`);
+        if (field) {
+            field.value = '';
+        }
+    });
+
+    // Reset hidden date fields
+    const startDateField = document.getElementById('startDate');
+    const endDateField = document.getElementById('endDate');
+    if (startDateField) startDateField.value = '';
+    if (endDateField) endDateField.value = '';
+
+    // Clear flatpickr instance
+    const dateRangeInput = document.querySelector('#dateRange');
+    if (dateRangeInput && dateRangeInput._flatpickr) {
+        dateRangeInput._flatpickr.clear();
     }
 
-    // Reset filters
-    function resetFilters() {
-        window.location.href = '/client/history';
+    // Reset search input
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.value = '';
     }
+
+    // Redirect to clean URL, preserving only company
+    const companyInput = form.querySelector('input[name="company"]');
+    const company = companyInput ? companyInput.value : '';
+    window.location.href = '/client/history' + (company ? '?company=' + encodeURIComponent(company) : '');
+}
+
+function searchLogs() {
+    const form = document.getElementById('filter-form');
+    const searchInput = document.getElementById('search-input');
+    if (!form || !searchInput) return;
+
+    const searchTerm = searchInput.value.trim();
+    const url = new URL(window.location.href);
+
+    // Preserve existing filter parameters
+    const formData = new FormData(form);
+
+    // Update search parameter
+    if (searchTerm) {
+        url.searchParams.set('search', searchTerm);
+    } else {
+        url.searchParams.delete('search');
+    }
+
+    // Preserve other form parameters
+    for (let [key, value] of formData.entries()) {
+        if (key !== 'search' && value) {
+            url.searchParams.set(key, value);
+        }
+    }
+
+    // Reset to first page for new search
+    url.searchParams.set('page', '0');
+
+    window.location.href = url.toString();
+}
+
+// Utility function to get URL parameter
+function getUrlParameter(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
+
+// Utility function to update URL parameter
+function updateUrlParameter(key, value) {
+    const url = new URL(window.location.href);
+    if (value) {
+        url.searchParams.set(key, value);
+    } else {
+        url.searchParams.delete(key);
+    }
+    return url.toString();
+}
+
+// Function to handle form submission with current parameters
+function submitFormWithParams() {
+    const form = document.getElementById('filter-form');
+    if (!form) return;
+
+    const formData = new FormData(form);
+    const url = new URL(window.location.origin + form.getAttribute('action'));
+
+    // Add all form data to URL
+    for (let [key, value] of formData.entries()) {
+        if (value) {
+            url.searchParams.set(key, value);
+        }
+    }
+
+    // Add search parameter if exists
+    const searchInput = document.getElementById('search-input');
+    if (searchInput && searchInput.value.trim()) {
+        url.searchParams.set('search', searchInput.value.trim());
+    }
+
+    // Reset to first page
+    url.searchParams.set('page', '0');
+
+    window.location.href = url.toString();
+}
+
+// Enhanced filter toggle with animation
+function toggleFiltersWithAnimation() {
+    const filterContent = document.querySelector('.filter-content');
+    const toggleIcon = document.querySelector('.filter-toggle-icon');
+
+    if (!filterContent || !toggleIcon) return;
+
+    const isVisible = filterContent.classList.contains('show');
+
+    if (isVisible) {
+        filterContent.style.maxHeight = filterContent.scrollHeight + 'px';
+        setTimeout(() => {
+            filterContent.style.maxHeight = '0';
+            filterContent.classList.remove('show');
+            toggleIcon.classList.remove('rotated');
+        }, 10);
+    } else {
+        filterContent.classList.add('show');
+        filterContent.style.maxHeight = '0';
+        setTimeout(() => {
+            filterContent.style.maxHeight = filterContent.scrollHeight + 'px';
+            toggleIcon.classList.add('rotated');
+        }, 10);
+
+        setTimeout(() => {
+            filterContent.style.maxHeight = 'none';
+        }, 300);
+    }
+}
+
 </script>
 </body>
 </html>

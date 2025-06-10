@@ -52,9 +52,15 @@ public class ReviewGenerationLogService {
                                                 Pageable pageable) {
         log.info("Searching logs with filters - search: {}, company: {}, reviewLength: {}, regenerated: {}, keyPoints: {}, startDate: {}, endDate: {}",
                 search, company, reviewLength, regenerated, keyPoints, startDate, endDate);
+
+        // Log the exact parameters being passed to the repository
+        log.debug("Repository query parameters - search: '{}', company: '{}', reviewLength: '{}', regenerated: '{}', keyPoints: '{}', startDate: {}, endDate: {}",
+                search, company, reviewLength, regenerated, keyPoints, startDate, endDate);
+
         Page<ReviewGenerationLog> logs = logRepository.searchWithFilters(
                 search, company, reviewLength, regenerated, keyPoints, startDate, endDate, pageable);
-        log.debug("Retrieved {} logs with filters", logs.getTotalElements());
+
+        log.debug("Retrieved {} logs with filters (total elements: {})", logs.getContent().size(), logs.getTotalElements());
         return logs;
     }
 

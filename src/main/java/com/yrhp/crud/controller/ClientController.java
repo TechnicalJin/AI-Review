@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -100,21 +102,49 @@ public class ClientController {
             @RequestParam(required = false) String keyPoints,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
-        log.info("Accessing client history page for user: {}", authentication.getName());
-        Client client = clientService.getClientByEmail(authentication.getName());
-        Pageable pageable = PageRequest.of(page, size);
 
-        LocalDateTime start = startDate != null ? LocalDateTime.parse(startDate) : null;
-        LocalDateTime end = endDate != null ? LocalDateTime.parse(endDate) : null;
+        log.info("Accessing client history page for user: {} with filters - search: {}, reviewLength: {}, regenerated: {}, keyPoints: {}, startDate: {}, endDate: {}",
+                authentication.getName(), search, reviewLength, regenerated, keyPoints, startDate, endDate);
+
+        Client client = clientService.getClientByEmail(authentication.getName());
+
+        // Create pageable with sorting by timestamp descending
+        Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
+
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+
+        // Parse date strings safely
+        try {
+            if (startDate != null && !startDate.trim().isEmpty()) {
+                start = LocalDateTime.parse(startDate);
+            }
+            if (endDate != null && !endDate.trim().isEmpty()) {
+                end = LocalDateTime.parse(endDate);
+            }
+        } catch (DateTimeParseException e) {
+            log.warn("Error parsing date parameters: startDate={}, endDate={}", startDate, endDate, e);
+        }
+
+        // Convert empty strings to null for proper filtering
+        String searchParam = (search != null && search.trim().isEmpty()) ? null : search;
+        String reviewLengthParam = (reviewLength != null && reviewLength.trim().isEmpty()) ? null : reviewLength;
+        String regeneratedParam = (regenerated != null && regenerated.trim().isEmpty()) ? null : regenerated;
+        String keyPointsParam = (keyPoints != null && keyPoints.trim().isEmpty()) ? null : keyPoints;
 
         // Fetch logs for the current client's companyName
         Page<ReviewGenerationLog> logs = logService.searchLogs(
-                search, client.getName(), reviewLength, regenerated, keyPoints, start, end, pageable);
+                searchParam, client.getName(), reviewLengthParam, regeneratedParam, keyPointsParam, start, end, pageable);
+
+        // Add distinct company names for the dropdown
+        List<String> distinctCompanies = logService.getDistinctCompanyNames();
 
         model.addAttribute("client", client);
         model.addAttribute("logs", logs);
         model.addAttribute("filters", new Filters(search, client.getName(), reviewLength, regenerated, keyPoints, startDate, endDate));
+        model.addAttribute("distinctCompanies", distinctCompanies);
 
+        log.debug("Returning {} logs for client history", logs.getTotalElements());
         return "client/history";
     }
 
