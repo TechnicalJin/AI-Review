@@ -3,200 +3,317 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Dashboard</title>
+    <title>Analytics Dashboard | Client Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" th:href="@{/css/clientHome.css}">
-    <style>
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 4px; }
-        .animate-fade-in { animation: fadeIn 0.7s cubic-bezier(0.4,0,0.2,1) both; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); }
-            .main-content { margin-left: 0 !important; }
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'scale-in': 'scaleIn 0.3s ease-out forwards',
+                        'slide-up': 'slideUp 0.6s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: 0 },
+                            '100%': { opacity: 1 }
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.95)', opacity: 0 },
+                            '100%': { transform: 'scale(1)', opacity: 1 }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: 0 },
+                            '100%': { transform: 'translateY(0)', opacity: 1 }
+                        }
+                    }
+                }
+            }
         }
-    </style>
+    </script>
+    <link rel="stylesheet" th:href="@{/css/clientHome.css}">
 </head>
-<body class="bg-gray-100 min-h-screen flex">
-<!-- Sidebar -->
-<aside id="sidebar" class="sidebar w-72 bg-gray-900 text-white flex flex-col py-8 px-6 transition-transform duration-300 ease-in-out shadow-xl fixed md:static h-full z-20">
-    <button id="sidebarToggle" class="md:hidden absolute top-4 right-4 text-white">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-    </button>
-    <div class="flex items-center mb-10">
-        <img th:src="@{${client.logo != null ? '/Uploads/' + client.logo : '/images/default-logo.svg'}}"
-             class="w-10 h-10 rounded-full mr-3" alt="Company Logo"/>
-        <span class="text-2xl font-bold tracking-wide" th:text="${client.name}">YourBrand</span>
-    </div>
-    <nav class="flex-1">
-        <ul class="space-y-4">
-            <li>
-                <button onclick="openProfileModal()"
-                        class="flex items-center w-full px-4 py-2 rounded-lg hover:bg-gray-800 transition duration-200">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    View Profile
-                </button>
-            </li>
-            <li>
-                <a th:href="@{/client/history}" class="flex items-center w-full px-4 py-2 rounded-lg hover:bg-gray-800 transition duration-200">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/>
-                    </svg>
-                    Log History
-                </a>
-            </li>
-            <li class="mt-8">
-                <a href="/logout" class="flex items-center px-4 py-2 rounded-lg hover:bg-red-600 bg-red-500 transition duration-200">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 12a9 9 0 0118 0 9 9 0 01-18 0z"/>
-                    </svg>
-                    Logout
-                </a>
-            </li>
-        </ul>
-    </nav>
-</aside>
+<body class="bg-gray-50 dark:bg-gray-900">
+<div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar bg-gray-900 text-white w-64 flex-shrink-0 hidden md:block">
+        <div class="p-5 border-b border-gray-800">
+            <div class="flex items-center space-x-3">
+                <img th:src="@{${client.logo != null ? '/Uploads/' + client.logo : '/images/default-logo.svg'}}"
+                     class="w-10 h-10 rounded-full" alt="Company Logo"/>
+                <div>
+                    <h1 class="text-xl font-bold" th:text="${client.name}">Company Name</h1>
+                    <p class="text-gray-400 text-sm">Analytics Dashboard</p>
+                </div>
+            </div>
+        </div>
+        <nav class="p-4">
+            <ul>
+                <li class="mb-2">
+                    <a href="#" class="flex items-center p-3 bg-gray-800 rounded-lg text-white">
+                        <i class="fas fa-chart-pie mr-3"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <button onclick="openProfileModal()" class="flex items-center w-full p-3 text-gray-400 hover:bg-gray-800 rounded-lg hover:text-white transition-colors">
+                        <i class="fas fa-user mr-3"></i>
+                        <span>Profile</span>
+                    </button>
+                </li>
+                <li class="mb-2">
+                    <a th:href="@{/client/history}" class="flex items-center p-3 text-gray-400 hover:bg-gray-800 rounded-lg hover:text-white transition-colors">
+                        <i class="fas fa-history mr-3"></i>
+                        <span>Log History</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <a href="/logout" class="flex items-center p-3 text-gray-400 hover:bg-red-600 rounded-lg hover:text-white transition-colors">
+                        <i class="fas fa-sign-out-alt mr-3"></i>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
 
-<!-- Main Content -->
-<main id="mainContent" class="flex-1 p-6 md:p-10 transition-all duration-300 ease-in-out md:ml-72">
-    <button id="mobileMenuButton" class="md:hidden mb-4 text-gray-800">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M4 6h16M4 12h16m-7 6h7"/>
-        </svg>
-    </button>
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-8 animate-fade-in">
-        <h2 class="text-xl font-semibold mb-4">Summary</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="text-center">
-                <p class="text-2xl font-bold" th:text="${totalReviews}">0</p>
-                <p class="text-gray-500">Total Reviews</p>
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center p-4">
+                <div class="flex items-center">
+                    <button id="mobileMenuButton" class="md:hidden text-gray-500 dark:text-gray-300 mr-3">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-xl font-bold">Analytics Dashboard</h2>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">Welcome back, <span th:text="${client.name}">Client</span></p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                    </button>
+                    <div class="relative">
+                        <button onclick="openProfileModal()" class="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors">
+                            <div class="w-10 h-10 rounded-full gradient-bg flex items-center justify-center">
+                                <span class="text-white font-semibold" th:text="${client.name != null ? client.name.substring(0,1).toUpperCase() : 'C'}">C</span>
+                            </div>
+                            <span class="hidden md:inline font-medium" th:text="${client.name}">Client Name</span>
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="text-center">
-                <p class="text-2xl font-bold" th:text="${avgReviewLength}">N/A</p>
-                <p class="text-gray-500">Avg Review Length</p>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50 dark:bg-gray-900">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <!-- Total Reviews Card -->
+                <div class="stat-card bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-5 animate-fade-in">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">Total Reviews</p>
+                            <h3 class="text-2xl font-bold mt-1" id="totalReviewsCount" th:text="${totalReviews}">0</h3>
+                            <div class="flex items-center mt-2">
+                                    <span class="text-green-500 flex items-center text-sm" id="totalReviewsChange">
+                                        <i class="fas fa-arrow-up mr-1"></i> <span id="totalReviewsPercent">0%</span>
+                                    </span>
+                                <span class="text-gray-500 dark:text-gray-400 text-xs ml-2">vs last month</span>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                            <i class="fas fa-comment-alt text-indigo-500 dark:text-indigo-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Average Review Length Card -->
+                <div class="stat-card bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-5 animate-fade-in">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">Avg. Length</p>
+                            <h3 class="text-2xl font-bold mt-1" id="avgLength" th:text="${avgReviewLength}">Medium</h3>
+                            <div class="mt-2">
+                                <div class="flex items-center">
+                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                        <div class="bg-amber-500 h-2 rounded-full transition-all duration-500" id="avgLengthBar" style="width: 65%"></div>
+                                    </div>
+                                    <span class="text-xs ml-2 text-gray-500 dark:text-gray-400" id="avgLengthPercent">65%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                            <i class="fas fa-ruler text-amber-500 dark:text-amber-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Today's Reviews Card -->
+                <div class="stat-card bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-5 animate-fade-in">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">Today's Reviews</p>
+                            <h3 class="text-2xl font-bold mt-1" id="todayReviewsCount">0</h3>
+                            <div class="flex items-center mt-2">
+                                    <span class="flex items-center text-sm" id="todayReviewsChange">
+                                        <i class="fas fa-arrow-up mr-1"></i> <span id="todayReviewsPercent">0%</span>
+                                    </span>
+                                <span class="text-gray-500 dark:text-gray-400 text-xs ml-2">vs yesterday</span>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                            <i class="fas fa-calendar-day text-green-500 dark:text-green-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- This Month's Reviews Card -->
+                <div class="stat-card bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-5 animate-fade-in">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">This Month</p>
+                            <h3 class="text-2xl font-bold mt-1" id="thisMonthCount">0</h3>
+                            <div class="flex items-center mt-2">
+                                    <span class="flex items-center text-sm" id="thisMonthChange">
+                                        <i class="fas fa-arrow-up mr-1"></i> <span id="thisMonthPercent">0%</span>
+                                    </span>
+                                <span class="text-gray-500 dark:text-gray-400 text-xs ml-2">vs last month</span>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                            <i class="fas fa-calendar-alt text-purple-500 dark:text-purple-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="text-center">
-                <p class="text-2xl font-bold" th:text="${lastReviewTimestamp != null ? #temporals.format(lastReviewTimestamp, 'yyyy-MM-dd HH:mm') : '-'}">-</p>
-                <p class="text-gray-500">Last Review</p>
+
+            <!-- Middle Row: Combined Chart -->
+            <div class="grid grid-cols-1 gap-6 mb-6">
+                <div class="bg-white dark:bg-gray-800 shadow-md rounded-2xl p-5 animate-slide-up">
+                    <div class="flex justify-between items-center mb-5">
+                        <h3 class="text-lg font-semibold">Daily Review Generation</h3>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 text-sm bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-lg">Last 7 Days</button>
+                            <button onclick="loadMonthlyChart()" class="px-3 py-1 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Monthly</button>
+                        </div>
+                    </div>
+                    <div class="chart-container h-80">
+                        <canvas id="combinedChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Left: Review Length Distribution -->
+                <div class="bg-white dark:bg-gray-800 shadow-md rounded-2xl p-5 animate-slide-up">
+                    <h3 class="text-lg font-semibold mb-5">Review Length Distribution</h3>
+                    <div class="flex flex-col md:flex-row items-center">
+                        <div class="w-full md:w-1/2 h-64">
+                            <canvas id="donutChart"></canvas>
+                        </div>
+                        <div class="w-full md:w-1/2 mt-4 md:mt-0">
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                                    <p class="text-gray-500 dark:text-gray-400 text-sm">Most Common</p>
+                                    <p class="font-semibold mt-1" id="mostCommonLength">Medium</p>
+                                    <p class="text-indigo-500 flex items-center mt-1">
+                                        <i class="fas fa-percentage mr-1 text-xs"></i> <span id="mostCommonPercent">45%</span> of reviews
+                                    </p>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                                    <p class="text-gray-500 dark:text-gray-400 text-sm">Short Reviews</p>
+                                    <p class="font-semibold mt-1" id="shortReviewsCount">0</p>
+                                    <p class="text-gray-500 dark:text-gray-400 text-sm mt-1" id="shortReviewsPercent">0% of total</p>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                                    <p class="text-gray-500 dark:text-gray-400 text-sm">Long Reviews</p>
+                                    <p class="font-semibold mt-1" id="longReviewsCount">0</p>
+                                    <p class="text-gray-500 dark:text-gray-400 text-sm mt-1" id="longReviewsPercent">0% of total</p>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                                    <p class="text-gray-500 dark:text-gray-400 text-sm">Regenerated</p>
+                                    <div class="flex items-center mt-1">
+                                        <div class="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
+                                            <i class="fas fa-redo text-white text-xs"></i>
+                                        </div>
+                                        <span class="ml-2 text-sm" id="regeneratedCount">0 reviews</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Recent Activity -->
+                <div class="bg-white dark:bg-gray-800 shadow-md rounded-2xl p-5 animate-slide-up">
+                    <h3 class="text-lg font-semibold mb-5">Recent Activity</h3>
+                    <div class="space-y-4" id="recentActivity">
+                        <!-- Recent activity items will be populated by JavaScript -->
+                    </div>
+                    <div class="mt-6 text-center">
+                        <a th:href="@{/client/history}" class="inline-flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
+                            <span>View All History</span>
+                            <i class="fas fa-arrow-right ml-2 text-sm"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
-    <div class="bg-white rounded-xl shadow-lg p-8 mb-8 animate-fade-in">
-        <h2 class="text-xl font-semibold mb-4">Day-wise Reviews</h2>
-        <canvas id="dayWiseReviewChart" height="100"></canvas>
-    </div>
-</main>
+</div>
 
 <!-- Profile Modal -->
 <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden transition-opacity duration-300">
-    <div class="bg-white rounded-xl p-8 w-full max-w-md shadow-lg relative animate-fade-in">
-        <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-8 w-full max-w-md shadow-lg relative animate-scale-in">
+        <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M6 18L18 6M6 6l12 12"/>
             </svg>
         </button>
-        <h2 class="text-2xl font-bold mb-4">Client Profile</h2>
-        <div class="space-y-2">
-            <div><span class="font-semibold">Username:</span> <span id="clientUsername">-</span></div>
-            <div><span class="font-semibold">Company Name:</span> <span id="clientCompanyName">-</span></div>
-            <div><span class="font-semibold">Email:</span> <span id="clientEmail">-</span></div>
-            <div><span class="font-semibold">Mobile:</span> <span id="clientMobile">-</span></div>
+        <h2 class="text-2xl font-bold mb-4 dark:text-white">Client Profile</h2>
+        <div class="space-y-3">
+            <div class="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <i class="fas fa-user text-gray-500 dark:text-gray-400 mr-3"></i>
+                <div>
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Username:</span>
+                    <span class="ml-2 dark:text-white" id="clientUsername">-</span>
+                </div>
+            </div>
+            <div class="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <i class="fas fa-building text-gray-500 dark:text-gray-400 mr-3"></i>
+                <div>
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Company:</span>
+                    <span class="ml-2 dark:text-white" id="clientCompanyName">-</span>
+                </div>
+            </div>
+            <div class="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <i class="fas fa-envelope text-gray-500 dark:text-gray-400 mr-3"></i>
+                <div>
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Email:</span>
+                    <span class="ml-2 dark:text-white" id="clientEmail">-</span>
+                </div>
+            </div>
+            <div class="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <i class="fas fa-phone text-gray-500 dark:text-gray-400 mr-3"></i>
+                <div>
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">Mobile:</span>
+                    <span class="ml-2 dark:text-white" id="clientMobile">-</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script th:src="@{/js/clientHome.js}"></script>
-<script>
-    // Sidebar toggle
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('mainContent');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const mobileMenuButton = document.getElementById('mobileMenuButton');
-
-    mobileMenuButton.addEventListener('click', () => sidebar.classList.add('open'));
-    sidebarToggle.addEventListener('click', () => sidebar.classList.remove('open'));
-
-    // Fetch client data
-    async function fetchClientData() {
-        try {
-            const response = await fetch('/client/profile');
-            if (!response.ok) throw new Error('Failed to fetch client data');
-            const client = await response.json();
-            document.getElementById('clientUsername').textContent = client.name || '-';
-            document.getElementById('clientCompanyName').textContent = client.name || '-';
-            document.getElementById('clientEmail').textContent = client.email || '-';
-            document.getElementById('clientMobile').textContent = client.mobile || '-';
-        } catch (error) {
-            console.error('Error fetching client data:', error);
-        }
-    }
-
-    // Fetch log data
-    async function fetchLogData() {
-        try {
-            const response = await fetch('/client/logs');
-            if (!response.ok) throw new Error('Failed to fetch logs');
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching logs:', error);
-            return [];
-        }
-    }
-
-    // Day-wise Review Chart
-    async function renderDayWiseChart() {
-        const logs = await fetchLogData();
-        const dates = [...new Set(logs.map(log => new Date(log.timestamp).toISOString().split('T')[0]))].slice(-7);
-        const data = dates.map(date => logs.filter(log => new Date(log.timestamp).toISOString().split('T')[0] === date).length);
-
-        const ctx = document.getElementById('dayWiseReviewChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: dates,
-                datasets: [{
-                    label: 'Reviews',
-                    data: data,
-                    backgroundColor: 'rgba(99, 102, 241, 0.7)',
-                    borderRadius: 8,
-                    borderSkipped: false,
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                animation: { duration: 1200, easing: 'easeOutQuart' },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-    }
-
-    // Modal Functions
-    function openProfileModal() {
-        fetchClientData();
-        document.getElementById('profileModal').classList.remove('hidden');
-        sidebar.classList.remove('open');
-    }
-
-    function closeProfileModal() {
-        document.getElementById('profileModal').classList.add('hidden');
-    }
-
-    // Close modals on background click
-    document.getElementById('profileModal').addEventListener('click', function(e) { if(e.target === this) closeProfileModal(); });
-
-    // Initialize chart
-    renderDayWiseChart();
-</script>
 </body>
 </html>
