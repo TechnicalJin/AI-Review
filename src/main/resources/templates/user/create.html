@@ -182,7 +182,7 @@ function validateForm() {
     const emailInput = document.querySelector('input[type="email"]');
     const emailError = document.getElementById('emailError');
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
+
     if (!emailRegex.test(emailInput.value.trim())) {
         emailError.textContent = "Invalid email address.";
         isValid = false;
@@ -194,7 +194,7 @@ function validateForm() {
     const mobileInput = document.getElementById('mobile');
     const mobileError = document.getElementById('mobileError');
     const mobileRegex = /^\d{10}$/;
-    
+
     if (!mobileRegex.test(mobileInput.value.trim())) {
         mobileError.textContent = "Enter a valid 10-digit mobile number.";
         isValid = false;
@@ -205,7 +205,7 @@ function validateForm() {
     // Review Link validation
     const reviewLink = document.querySelector('input[name="reviewLink"]').value;
     const reviewLinkError = document.getElementById('reviewLinkError');
-    
+
     if (!isValidURL(reviewLink)) {
         reviewLinkError.textContent = "Please enter a valid URL.";
         isValid = false;
@@ -228,7 +228,7 @@ function addTag() {
     const input = document.getElementById("chatTextInput");
     const tagsInput = document.getElementById("tagsInput");
     let tagValue = input.value.trim();
-    
+
     if (tagValue && !tagSet.has(tagValue)) {
         tagSet.add(tagValue);
         tagsInput.value = Array.from(tagSet).join(", ");
@@ -240,7 +240,7 @@ function addTag() {
 function updateDisplayedTags() {
     const container = document.querySelector('.selected-tags');
     container.innerHTML = "<h5>Selected Tags</h5>";
-    
+
     tagSet.forEach(tag => {
         const tagElement = document.createElement('span');
         tagElement.className = 'tag';

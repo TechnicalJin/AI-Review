@@ -2,19 +2,20 @@
 let combinedChartInstance = null;
 let donutChartInstance = null;
 let clientLogs = [];
+let currentView = 'weekly'; // Track current view
 
-// Theme toggle
+// Theme toggle (unchanged)
 document.getElementById('theme-toggle').addEventListener('click', function() {
     document.body.classList.toggle('dark');
     localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
 });
 
-// Load saved theme
+// Load saved theme (unchanged)
 if (localStorage.getItem('theme') === 'dark') {
     document.body.classList.add('dark');
 }
 
-// Mobile menu
+// Mobile menu (unchanged)
 const sidebar = document.getElementById('sidebar');
 const mobileMenuButton = document.getElementById('mobileMenuButton');
 
@@ -23,20 +24,20 @@ mobileMenuButton?.addEventListener('click', () => {
     sidebar.classList.toggle('hidden');
 });
 
-// Close sidebar when clicking outside on mobile
+// Close sidebar when clicking outside on mobile (unchanged)
 document.addEventListener('click', (e) => {
     if (window.innerWidth < 768 && !sidebar.contains(e.target) && !mobileMenuButton.contains(e.target)) {
-        sidebar.classList.add('hidden');
         sidebar.classList.remove('open');
+        sidebar.classList.add('hidden');
     }
 });
 
-// Profile Modal Functions
+// Profile Modal Functions (unchanged)
 function openProfileModal() {
     const modal = document.getElementById('profileModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-    fetchClientData(); // Fetch latest client data when opening modal
+    fetchClientData();
 }
 
 function closeProfileModal() {
@@ -45,14 +46,13 @@ function closeProfileModal() {
     modal.classList.remove('flex');
 }
 
-// Close modal when clicking outside
 document.getElementById('profileModal')?.addEventListener('click', function(e) {
     if (e.target === this) {
         closeProfileModal();
     }
 });
 
-// Fetch client data
+// Fetch client data (unchanged)
 async function fetchClientData() {
     try {
         const response = await fetch('/client/profile');
@@ -67,60 +67,168 @@ async function fetchClientData() {
         return client;
     } catch (error) {
         console.error('Error fetching client data:', error);
-        // Fallback to mock data if API fails
-        const mockClient = {
-            name: 'Demo Client',
-            email: 'demo@example.com',
-            mobile: '+1234567890'
-        };
-        document.getElementById('clientUsername').textContent = mockClient.name;
-        document.getElementById('clientCompanyName').textContent = mockClient.name;
-        document.getElementById('clientEmail').textContent = mockClient.email;
-        document.getElementById('clientMobile').textContent = mockClient.mobile;
-        return mockClient;
+        document.getElementById('clientUsername').textContent = 'Error loading data';
+        document.getElementById('clientCompanyName').textContent = 'Error loading data';
+        document.getElementById('clientEmail').textContent = 'Error loading data';
+        document.getElementById('clientMobile').textContent = 'Error loading data';
+        return null;
     }
 }
 
-// Fetch log data
+// Fetch log data (unchanged)
 async function fetchLogData() {
     try {
         const response = await fetch('/client/logs');
-        if (!response.ok) throw new Error('Failed to fetch logs');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const logs = await response.json();
-        clientLogs = logs;
-        return logs;
+        console.log('Fetched logs from API:', logs);
+
+        const transformedLogs = logs.map(log => {
+            let timestamp;
+            try {
+                if (typeof log.timestamp === 'string') {
+                    if (log.timestamp.includes('[')) {
+                        const dateArray = JSON.parse(log.timestamp.replace(/\[|\]/g, '').split(',').map(n => parseInt(n.trim())));
+                        timestamp = new Date(dateArray[0], dateArray[1] - 1, dateArray[2], dateArray[3] || 0, dateArray[4] || 0, dateArray[5] || 0);
+                    } else {
+                        timestamp = new Date(log.timestamp);
+                    }
+                } else if (Array.isArray(log.timestamp)) {
+                    timestamp = new Date(log.timestamp[0], log.timestamp[1] - 1, log.timestamp[2], log.timestamp[3] || 0, log.timestamp[4] || 0, log.timestamp[5] || 0);
+                } else {
+                    timestamp = new Date(log.timestamp);
+                }
+                if (isNaN(timestamp.getTime())) {
+                    console.warn('Invalid timestamp for log:', log);
+                    timestamp = new Date();
+                }
+            } catch (e) {
+                console.warn('Error parsing timestamp:', log.timestamp, e);
+                timestamp = new Date();
+            }
+
+            return {
+                id: log.id,
+                timestamp: timestamp.toISOString(),
+                reviewLength: log.reviewLength || 'medium',
+                regenerated: log.regenerated || false,
+                reviewText: log.keyPoints || 'Review generated',
+                keyPoints: log.keyPoints,
+                companyName: log.companyName
+            };
+        });
+
+        clientLogs = transformedLogs;
+        return transformedLogs;
     } catch (error) {
         console.error('Error fetching logs:', error);
-        // Return mock data if API fails
-        return generateMockLogs();
+        clientLogs = [];
+        return [];
     }
 }
 
-// Generate mock logs for demonstration
-function generateMockLogs() {
-    const mockLogs = [];
+// Get start of current week (Monday) (unchanged)
+function getStartOfWeek(date = new Date()) {
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    const startOfWeek = new Date(date.setDate(diff));
+    startOfWeek.setHours(0, 0, 0, 0);
+    return startOfWeek;
+}
+
+// Get start of current month (unchanged)
+function getStartOfMonth(date = new Date()) {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+// Calculate weekly statistics (unchanged)
+function calculateWeeklyStats(logs) {
+    const weeklyData = {};
+    const startOfWeek = getStartOfWeek();
+
+    const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(startOfWeek);
+        date.setDate(startOfWeek.getDate() + i);
+        const dateKey = date.toISOString().split('T')[0];
+        weeklyData[dateKey] = {
+            count: 0,
+            dayName: daysOfWeek[i]
+        };
+    }
+
+    logs.forEach(log => {
+        let logDate;
+        if (typeof log.timestamp === 'string') {
+            if (log.timestamp.includes('[')) {
+                const dateArray = JSON.parse(log.timestamp.replace(/\[|\]/g, '').split(',').map(n => parseInt(n.trim())));
+                logDate = new Date(dateArray[0], dateArray[1] - 1, dateArray[2], dateArray[3] || 0, dateArray[4] || 0, dateArray[5] || 0);
+            } else {
+                logDate = new Date(log.timestamp);
+            }
+        } else if (Array.isArray(log.timestamp)) {
+            logDate = new Date(log.timestamp[0], log.timestamp[1] - 1, log.timestamp[2], log.timestamp[3] || 0, log.timestamp[4] || 0, log.timestamp[5] || 0);
+        } else {
+            logDate = new Date(log.timestamp);
+        }
+
+        if (!isNaN(logDate.getTime())) {
+            const dateKey = logDate.toISOString().split('T')[0];
+            if (weeklyData[dateKey]) {
+                weeklyData[dateKey].count++;
+            }
+        }
+    });
+
+    return weeklyData;
+}
+
+// Calculate monthly statistics (unchanged)
+function calculateMonthlyStats(logs) {
+    const monthlyData = {};
     const now = new Date();
-    const reviewLengths = ['short', 'medium', 'large'];
-    const regeneratedOptions = ['yes', 'no'];
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 
-    for (let i = 0; i < 50; i++) {
-        const daysAgo = Math.floor(Math.random() * 30);
-        const timestamp = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
-
-        mockLogs.push({
-            id: i + 1,
-            timestamp: timestamp.toISOString(),
-            reviewLength: reviewLengths[Math.floor(Math.random() * reviewLengths.length)],
-            regenerated: regeneratedOptions[Math.floor(Math.random() * regeneratedOptions.length)],
-            reviewText: `Sample review text ${i + 1}`,
-            rating: Math.floor(Math.random() * 5) + 1
-        });
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(now.getFullYear(), now.getMonth(), day);
+        const dateKey = date.toISOString().split('T')[0];
+        monthlyData[dateKey] = {
+            count: 0,
+            day: day
+        };
     }
 
-    return mockLogs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    logs.forEach(log => {
+        let logDate;
+        if (typeof log.timestamp === 'string') {
+            if (log.timestamp.includes('[')) {
+                const dateArray = JSON.parse(log.timestamp.replace(/\[|\]/g, '').split(',').map(n => parseInt(n.trim())));
+                logDate = new Date(dateArray[0], dateArray[1] - 1, dateArray[2], dateArray[3] || 0, dateArray[4] || 0, dateArray[5] || 0);
+            } else {
+                logDate = new Date(log.timestamp);
+            }
+        } else if (Array.isArray(log.timestamp)) {
+            logDate = new Date(log.timestamp[0], log.timestamp[1] - 1, log.timestamp[2], log.timestamp[3] || 0, log.timestamp[4] || 0, log.timestamp[5] || 0);
+        } else {
+            logDate = new Date(log.timestamp);
+        }
+
+        if (!isNaN(logDate.getTime()) &&
+            logDate.getFullYear() === now.getFullYear() &&
+            logDate.getMonth() === now.getMonth()) {
+            const dateKey = logDate.toISOString().split('T')[0];
+            if (monthlyData[dateKey]) {
+                monthlyData[dateKey].count++;
+            }
+        }
+    });
+
+    return monthlyData;
 }
 
-// Calculate statistics from logs
+// Calculate statistics from logs (unchanged)
 function calculateStats(logs) {
     if (!logs || logs.length === 0) {
         return {
@@ -132,7 +240,7 @@ function calculateStats(logs) {
             avgLength: 'N/A',
             lengthDistribution: { short: 0, medium: 0, large: 0 },
             regeneratedCount: 0,
-            dailyData: [],
+            dailyData: {},
             recentActivity: []
         };
     }
@@ -153,51 +261,67 @@ function calculateStats(logs) {
     let dailyData = {};
 
     logs.forEach(log => {
-        const logDate = new Date(log.timestamp);
+        let logDate;
+        if (typeof log.timestamp === 'string') {
+            if (log.timestamp.includes('[')) {
+                const dateArray = JSON.parse(log.timestamp.replace(/\[|\]/g, '').split(',').map(n => parseInt(n.trim())));
+                logDate = new Date(dateArray[0], dateArray[1] - 1, dateArray[2], dateArray[3] || 0, dateArray[4] || 0, dateArray[5] || 0);
+            } else {
+                logDate = new Date(log.timestamp);
+            }
+        } else if (Array.isArray(log.timestamp)) {
+            logDate = new Date(log.timestamp[0], log.timestamp[1] - 1, log.timestamp[2], log.timestamp[3] || 0, log.timestamp[4] || 0, log.timestamp[5] || 0);
+        } else {
+            logDate = new Date(log.timestamp);
+        }
+
+        if (isNaN(logDate.getTime())) {
+            console.warn('Invalid date for log:', log);
+            return;
+        }
+
         const logDateOnly = new Date(logDate.getFullYear(), logDate.getMonth(), logDate.getDate());
 
-        // Today's reviews
         if (logDateOnly.getTime() === today.getTime()) {
             todayReviews++;
         }
 
-        // Yesterday's reviews
         if (logDateOnly.getTime() === yesterday.getTime()) {
             yesterdayReviews++;
         }
 
-        // This month's reviews
         if (logDate >= thisMonth) {
             thisMonthReviews++;
         }
 
-        // Last month's reviews
         if (logDate >= lastMonth && logDate <= lastMonthEnd) {
             lastMonthReviews++;
         }
 
-        // Length distribution
-        if (lengthDistribution.hasOwnProperty(log.reviewLength)) {
-            lengthDistribution[log.reviewLength]++;
+        const length = log.reviewLength ? log.reviewLength.toLowerCase() : 'medium';
+        if (lengthDistribution.hasOwnProperty(length)) {
+            lengthDistribution[length]++;
+        } else {
+            lengthDistribution.medium++;
         }
 
-        // Regenerated count
-        if (log.regenerated === 'yes') {
+        const regenerated = log.regenerated ? log.regenerated.toLowerCase() : 'no';
+        if (regenerated === 'yes' || regenerated === 'true' || regenerated === true) {
             regeneratedCount++;
         }
 
-        // Daily data for chart (last 30 days)
         const dateKey = logDateOnly.toISOString().split('T')[0];
         dailyData[dateKey] = (dailyData[dateKey] || 0) + 1;
     });
 
-    // Most common length
     let avgLength = 'Medium';
-    let maxCount = Math.max(lengthDistribution.short, lengthDistribution.medium, lengthDistribution.large);
-    if (lengthDistribution.short === maxCount) avgLength = 'Short';
-    else if (lengthDistribution.large === maxCount) avgLength = 'Large';
+    const maxCount = Math.max(...Object.values(lengthDistribution));
+    if (lengthDistribution.short === maxCount && maxCount > 0) {
+        avgLength = 'Short';
+    } else if (lengthDistribution.large === maxCount && maxCount > 0) {
+        avgLength = 'Large';
+    }
 
-    // Recent activity (last 5 logs)
     const recentActivity = logs.slice(-5).reverse();
 
     return {
@@ -214,7 +338,331 @@ function calculateStats(logs) {
     };
 }
 
-// Update change indicator
+// Simplified helper function to calculate dynamic stepSize
+function calculateStepSize(maxValue) {
+    if (maxValue <= 0) return { stepSize: 1, suggestedMax: 5 };
+
+    // Aim for 4-6 ticks
+    const rawStep = maxValue / 5;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    let stepSize = Math.ceil(rawStep / magnitude) * magnitude;
+
+    // Adjust stepSize for small values
+    if (maxValue < 10) {
+        stepSize = 1;
+    } else if (maxValue < 50) {
+        stepSize = Math.ceil(rawStep / 2) * 2; // Round to nearest even number
+    } else if (maxValue < 100) {
+        stepSize = 10;
+    } else if (maxValue < 500) {
+        stepSize = 50;
+    } else {
+        stepSize = 100;
+    }
+
+    const suggestedMax = Math.ceil(maxValue / stepSize) * stepSize + stepSize;
+
+    return { stepSize, suggestedMax };
+}
+
+// Create weekly chart
+function createWeeklyChart(weeklyData) {
+    const ctx = document.getElementById('combinedChart');
+    if (!ctx) return;
+
+    if (combinedChartInstance) {
+        combinedChartInstance.destroy();
+    }
+
+    const labels = [];
+    const data = [];
+
+    Object.keys(weeklyData).sort().forEach(dateKey => {
+        labels.push(weeklyData[dateKey].dayName);
+        data.push(weeklyData[dateKey].count);
+    });
+
+    const maxValue = Math.max(...data, 1);
+    const { stepSize, suggestedMax } = calculateStepSize(maxValue);
+
+    const isDark = document.body.classList.contains('dark');
+    const textColor = isDark ? '#f9fafb' : '#1f2937';
+    const gridColor = isDark ? '#374151' : '#e5e7eb';
+
+    combinedChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Daily Reviews',
+                data: data,
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#6366f1',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 500, // Reduced animation duration
+                easing: 'easeOutQuad',
+                scale: false // Disable scale animation to prevent size jumps
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label;
+                        },
+                        label: function(context) {
+                            return `Reviews: ${context.parsed.y}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: suggestedMax,
+                    ticks: {
+                        color: textColor,
+                        stepSize: stepSize,
+                        callback: function(value) {
+                            return Number.isInteger(value) ? value : '';
+                        }
+                    },
+                    grid: {
+                        color: gridColor
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: textColor
+                    },
+                    grid: {
+                        color: gridColor
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Create monthly chart
+function createMonthlyChart(monthlyData) {
+    const ctx = document.getElementById('combinedChart');
+    if (!ctx) return;
+
+    if (combinedChartInstance) {
+        combinedChartInstance.destroy();
+    }
+
+    const labels = [];
+    const data = [];
+
+    const weeklyGrouped = {};
+    let currentWeek = 1;
+    let weekStart = 1;
+
+    Object.keys(monthlyData).sort().forEach((dateKey, index) => {
+        const day = monthlyData[dateKey].day;
+        const date = new Date(dateKey);
+        const weekDay = date.getDay();
+
+        if (weekDay === 0 || index === 0) {
+            if (index > 0) currentWeek++;
+            weekStart = day;
+        }
+
+        const weekLabel = `Week ${currentWeek}`;
+        if (!weeklyGrouped[weekLabel]) {
+            weeklyGrouped[weekLabel] = 0;
+        }
+        weeklyGrouped[weekLabel] += monthlyData[dateKey].count;
+    });
+
+    const useDailyView = Object.keys(monthlyData).length <= 31;
+
+    if (useDailyView && Object.keys(monthlyData).length <= 15) {
+        const sortedDates = Object.keys(monthlyData).sort().slice(-15);
+        sortedDates.forEach(dateKey => {
+            labels.push(`${monthlyData[dateKey].day}`);
+            data.push(monthlyData[dateKey].count);
+        });
+    } else {
+        Object.keys(weeklyGrouped).forEach(weekLabel => {
+            labels.push(weekLabel);
+            data.push(weeklyGrouped[weekLabel]);
+        });
+    }
+
+    const maxValue = Math.max(...data, 1);
+    const { stepSize, suggestedMax } = calculateStepSize(maxValue);
+
+    const isDark = document.body.classList.contains('dark');
+    const textColor = isDark ? '#f9fafb' : '#1f2937';
+    const gridColor = isDark ? '#374151' : '#e5e7eb';
+
+    combinedChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: useDailyView ? 'Daily Reviews' : 'Weekly Reviews',
+                data: data,
+                backgroundColor: 'rgba(99, 102, 241, 0.6)',
+                borderColor: '#6366f1',
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 500, // Reduced animation duration
+                easing: 'easeOutQuad',
+                scale: false // Disable scale animation
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label;
+                        },
+                        label: function(context) {
+                            return `Reviews: ${context.parsed.y}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: suggestedMax,
+                    ticks: {
+                        color: textColor,
+                        stepSize: stepSize,
+                        callback: function(value) {
+                            return Number.isInteger(value) ? value : '';
+                        }
+                    },
+                    grid: {
+                        color: gridColor
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: textColor
+                    },
+                    grid: {
+                        color: gridColor
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Update button states (unchanged)
+function updateButtonStates(activeButton) {
+    const weeklyBtn = document.getElementById('weeklyBtn');
+    const monthlyBtn = document.getElementById('monthlyBtn');
+
+    if (!weeklyBtn || !monthlyBtn) return;
+
+    weeklyBtn.className = 'px-3 py-1 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors';
+    monthlyBtn.className = 'px-3 py-1 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors';
+
+    if (activeButton === 'weekly') {
+        weeklyBtn.className = 'px-3 py-1 text-sm bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-lg transition-colors';
+        const chartTitle = document.getElementById('chartTitle');
+        if (chartTitle) chartTitle.textContent = "This Week's Review Generation";
+    } else {
+        monthlyBtn.className = 'px-3 py-1 text-sm bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-lg transition-colors';
+        const chartTitle = document.getElementById('chartTitle');
+        if (chartTitle) chartTitle.textContent = "This Month's Review Generation";
+    }
+}
+
+// Load weekly chart
+function loadWeeklyChart() {
+    currentView = 'weekly';
+    updateButtonStates('weekly');
+
+    if (clientLogs.length > 0) {
+        const weeklyStats = calculateWeeklyStats(clientLogs);
+        createWeeklyChart(weeklyStats);
+    } else {
+        const emptyWeeklyData = {};
+        const startOfWeek = getStartOfWeek();
+        const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(startOfWeek);
+            date.setDate(startOfWeek.getDate() + i);
+            const dateKey = date.toISOString().split('T')[0];
+            emptyWeeklyData[dateKey] = {
+                count: 0,
+                dayName: daysOfWeek[i]
+            };
+        }
+        createWeeklyChart(emptyWeeklyData);
+    }
+}
+
+// Load monthly chart
+function loadMonthlyChart() {
+    currentView = 'monthly';
+    updateButtonStates('monthly');
+
+    if (clientLogs.length > 0) {
+        const monthlyStats = calculateMonthlyStats(clientLogs);
+        createMonthlyChart(monthlyStats);
+    } else {
+        const emptyMonthlyData = {};
+        const now = new Date();
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(now.getFullYear(), now.getMonth(), day);
+            const dateKey = date.toISOString().split('T')[0];
+            emptyMonthlyData[dateKey] = {
+                count: 0,
+                day: day
+            };
+        }
+        createMonthlyChart(emptyMonthlyData);
+    }
+}
+
+// Create combined chart
+function createCombinedChart(stats) {
+    if (currentView === 'weekly') {
+        const weeklyStats = calculateWeeklyStats(clientLogs);
+        createWeeklyChart(weeklyStats);
+    } else {
+        const monthlyStats = calculateMonthlyStats(clientLogs);
+        createMonthlyChart(monthlyStats);
+    }
+}
+
+// Update change indicator (unchanged)
 function updateChangeIndicator(changeElementId, percentElementId, changeValue) {
     const changeElement = document.getElementById(changeElementId);
     const percentElement = document.getElementById(percentElementId);
@@ -235,30 +683,26 @@ function updateChangeIndicator(changeElementId, percentElementId, changeValue) {
     percentElement.textContent = Math.abs(changeValue) + '%';
 }
 
-// Update dashboard statistics
+// Update dashboard statistics (unchanged)
 function updateDashboardStats(logs) {
     const stats = calculateStats(logs);
 
-    // Update cards
     document.getElementById('totalReviewsCount').textContent = stats.totalReviews;
     document.getElementById('avgLength').textContent = stats.avgLength;
     document.getElementById('todayReviewsCount').textContent = stats.todayReviews;
     document.getElementById('thisMonthCount').textContent = stats.thisMonthReviews;
 
-    // Calculate percentage changes
     const totalReviewsChange = stats.lastMonthReviews > 0 ?
         (((stats.thisMonthReviews - stats.lastMonthReviews) / stats.lastMonthReviews) * 100).toFixed(1) : 0;
     const todayReviewsChange = stats.yesterdayReviews > 0 ?
         (((stats.todayReviews - stats.yesterdayReviews) / stats.yesterdayReviews) * 100).toFixed(1) : 0;
 
-    // Update change indicators
     updateChangeIndicator('totalReviewsChange', 'totalReviewsPercent', totalReviewsChange);
     updateChangeIndicator('todayReviewsChange', 'todayReviewsPercent', todayReviewsChange);
     updateChangeIndicator('thisMonthChange', 'thisMonthPercent', totalReviewsChange);
 
-    // Update average length bar
     const totalLengthReviews = stats.lengthDistribution.short + stats.lengthDistribution.medium + stats.lengthDistribution.large;
-    let avgLengthPercent = 50; // Default
+    let avgLengthPercent = 50;
 
     if (totalLengthReviews > 0) {
         if (stats.avgLength === 'Short') avgLengthPercent = 25;
@@ -269,7 +713,6 @@ function updateDashboardStats(logs) {
     document.getElementById('avgLengthBar').style.width = avgLengthPercent + '%';
     document.getElementById('avgLengthPercent').textContent = avgLengthPercent + '%';
 
-    // Update length distribution details
     document.getElementById('mostCommonLength').textContent = stats.avgLength;
     document.getElementById('mostCommonPercent').textContent =
         totalLengthReviews > 0 ? Math.round((Math.max(...Object.values(stats.lengthDistribution)) / totalLengthReviews) * 100) : 0;
@@ -284,13 +727,12 @@ function updateDashboardStats(logs) {
 
     document.getElementById('regeneratedCount').textContent = stats.regeneratedCount + ' reviews';
 
-    // Update recent activity
     updateRecentActivity(stats.recentActivity);
 
     return stats;
 }
 
-// Update recent activity section
+// Update recent activity (unchanged)
 function updateRecentActivity(recentActivity) {
     const container = document.getElementById('recentActivity');
     if (!container) return;
@@ -301,9 +743,24 @@ function updateRecentActivity(recentActivity) {
     }
 
     container.innerHTML = recentActivity.map(activity => {
-        const date = new Date(activity.timestamp);
+        let date;
+        if (typeof activity.timestamp === 'string') {
+            if (activity.timestamp.includes('[')) {
+                const dateArray = JSON.parse(activity.timestamp.replace(/\[|\]/g, '').split(',').map(n => parseInt(n.trim())));
+                date = new Date(dateArray[0], dateArray[1] - 1, dateArray[2], dateArray[3] || 0, dateArray[4] || 0, dateArray[5] || 0);
+            } else {
+                date = new Date(activity.timestamp);
+            }
+        } else if (Array.isArray(activity.timestamp)) {
+            date = new Date(activity.timestamp[0], activity.timestamp[1] - 1, activity.timestamp[2], activity.timestamp[3] || 0, activity.timestamp[4] || 0, activity.timestamp[5] || 0);
+        } else {
+            date = new Date(activity.timestamp);
+        }
+
         const timeAgo = getTimeAgo(date);
-        const icon = activity.regenerated === 'yes' ? 'fa-redo text-amber-500' : 'fa-plus text-green-500';
+        const regenerated = activity.regenerated ? activity.regenerated.toLowerCase() : 'no';
+        const isRegenerated = regenerated === 'yes' || regenerated === 'true' || regenerated === true;
+        const icon = isRegenerated ? 'fa-redo text-amber-500' : 'fa-plus text-green-500';
 
         return `
             <div class="flex items-center space-x-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors">
@@ -312,114 +769,31 @@ function updateRecentActivity(recentActivity) {
                 </div>
                 <div class="flex-1">
                     <p class="text-sm font-medium">
-                        ${activity.regenerated === 'yes' ? 'Regenerated' : 'Generated'} ${activity.reviewLength} review
+                        ${isRegenerated ? 'Regenerated' : 'Generated'} ${activity.reviewLength || 'medium'} review
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">${timeAgo}</p>
                 </div>
                 <div class="text-xs text-gray-400 dark:text-gray-500">
-                    ${activity.rating ? `★ ${activity.rating}` : ''}
+                    ${activity.companyName ? activity.companyName.substring(0, 10) + (activity.companyName.length > 10 ? '...' : '') : ''}
                 </div>
             </div>
         `;
     }).join('');
 }
 
-// Get time ago string
+// Get time ago string (unchanged)
 function getTimeAgo(date) {
     const now = new Date();
     const diffInSeconds = Math.floor((now - date) / 1000);
 
     if (diffInSeconds < 60) return 'Just now';
     if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + ' min ago';
-    if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + ' hour ago';
-    if (diffInSeconds < 2592000) return Math.floor(diffInSeconds / 86400) + ' day ago';
-    return Math.floor(diffInSeconds / 2592000) + ' month ago';
+    if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + ' hours ago';
+    if (diffInSeconds < 2592000) return Math.floor(diffInSeconds / 86400) + ' days ago';
+    return Math.floor(diffInSeconds / 2592000) + ' months ago';
 }
 
-// Create combined chart (line chart for daily reviews)
-function createCombinedChart(stats) {
-    const ctx = document.getElementById('combinedChart');
-    if (!ctx) return;
-
-    if (combinedChartInstance) {
-        combinedChartInstance.destroy();
-    }
-
-    // Generate last 7 days data
-    const last7Days = [];
-    const dailyData = [];
-    const now = new Date();
-
-    for (let i = 6; i >= 0; i--) {
-        const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-        const dateKey = date.toISOString().split('T')[0];
-        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-
-        last7Days.push(dayName);
-        dailyData.push(stats.dailyData[dateKey] || 0);
-    }
-
-    const isDark = document.body.classList.contains('dark');
-    const textColor = isDark ? '#f9fafb' : '#1f2937';
-    const gridColor = isDark ? '#374151' : '#e5e7eb';
-
-    combinedChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: last7Days,
-            datasets: [{
-                label: 'Daily Reviews',
-                data: dailyData,
-                borderColor: '#6366f1',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#6366f1',
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 2,
-                pointRadius: 6,
-                pointHoverRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        color: textColor,
-                        stepSize: 1
-                    },
-                    grid: {
-                        color: gridColor
-                    }
-                },
-                x: {
-                    ticks: {
-                        color: textColor
-                    },
-                    grid: {
-                        color: gridColor
-                    }
-                }
-            },
-            elements: {
-                point: {
-                    hoverBackgroundColor: '#6366f1'
-                }
-            }
-        }
-    });
-}
-
-// Create donut chart for review length distribution
+// Create donut chart
 function createDonutChart(stats) {
     const ctx = document.getElementById('donutChart');
     if (!ctx) return;
@@ -452,6 +826,10 @@ function createDonutChart(stats) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: {
+                duration: 500, // Reduced animation duration
+                easing: 'easeOutQuad'
+            },
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -460,59 +838,53 @@ function createDonutChart(stats) {
                         padding: 20,
                         usePointStyle: true
                     }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
+                            return `${context.label}: ${context.parsed} (${percentage}%)`;
+                        }
+                    }
                 }
             }
         }
     });
 }
 
-// Load monthly chart (placeholder function)
-function loadMonthlyChart() {
-    // This would load monthly data instead of daily
-    // For now, we'll just update the button states
-    const buttons = document.querySelectorAll('.px-3.py-1.text-sm');
-    buttons.forEach(btn => {
-        btn.className = 'px-3 py-1 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors';
-    });
-    event.target.className = 'px-3 py-1 text-sm bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-lg';
-
-    // Here you would typically load monthly data and update the chart
-    console.log('Loading monthly chart data...');
-}
-
 // Initialize dashboard
 async function initializeDashboard() {
     try {
-        // Show loading state
+        console.log('Initializing dashboard...');
         document.body.style.opacity = '0.7';
 
-        // Fetch data
         const logs = await fetchLogData();
-        clientLogs = logs;
-
-        // Update all dashboard components
         const stats = updateDashboardStats(logs);
         createCombinedChart(stats);
         createDonutChart(stats);
 
-        // Fetch client data for profile
         await fetchClientData();
-
-        // Hide loading state
         document.body.style.opacity = '1';
-
-        console.log('Dashboard initialized successfully');
     } catch (error) {
         console.error('Error initializing dashboard:', error);
         document.body.style.opacity = '1';
+
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+        errorMessage.textContent = 'Failed to load dashboard data. Please refresh the page.';
+        document.body.appendChild(errorMessage);
+
+        setTimeout(() => {
+            errorMessage.remove();
+        }, 5000);
     }
 }
 
-// Theme change listener for charts
+// Theme change listener
 const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            // Recreate charts with new theme colors
             if (clientLogs.length > 0) {
                 const stats = calculateStats(clientLogs);
                 createCombinedChart(stats);
@@ -527,10 +899,25 @@ observer.observe(document.body, {
     attributeFilter: ['class']
 });
 
+// Resize handler to maintain chart size
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        if (combinedChartInstance) {
+            combinedChartInstance.resize();
+        }
+        if (donutChartInstance) {
+            donutChartInstance.resize();
+        }
+    }, 200);
+});
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', initializeDashboard);
 
 // Refresh dashboard every 5 minutes
 setInterval(() => {
+    console.log('Auto-refreshing dashboard...');
     initializeDashboard();
 }, 5 * 60 * 1000);
