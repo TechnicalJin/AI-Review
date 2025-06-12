@@ -1,3 +1,5 @@
+const { DateTime } = luxon;
+
 // Global variables
 let combinedChartInstance = null;
 let donutChartInstance = null;
@@ -75,7 +77,7 @@ async function fetchClientData() {
     }
 }
 
-// Fetch log data (unchanged)
+// Fetch log data (updated for IST)
 async function fetchLogData() {
     try {
         const response = await fetch('/client/logs');
@@ -91,27 +93,41 @@ async function fetchLogData() {
                 if (typeof log.timestamp === 'string') {
                     if (log.timestamp.includes('[')) {
                         const dateArray = JSON.parse(log.timestamp.replace(/\[|\]/g, '').split(',').map(n => parseInt(n.trim())));
-                        timestamp = new Date(dateArray[0], dateArray[1] - 1, dateArray[2], dateArray[3] || 0, dateArray[4] || 0, dateArray[5] || 0);
+                        timestamp = DateTime.fromObject({
+                            year: dateArray[0],
+                            month: dateArray[1],
+                            day: dateArray[2],
+                            hour: dateArray[3] || 0,
+                            minute: dateArray[4] || 0,
+                            second: dateArray[5] || 0
+                        }, { zone: 'Asia/Kolkata' });
                     } else {
-                        timestamp = new Date(log.timestamp);
+                        timestamp = DateTime.fromISO(log.timestamp, { zone: 'Asia/Kolkata' });
                     }
                 } else if (Array.isArray(log.timestamp)) {
-                    timestamp = new Date(log.timestamp[0], log.timestamp[1] - 1, log.timestamp[2], log.timestamp[3] || 0, log.timestamp[4] || 0, log.timestamp[5] || 0);
+                    timestamp = DateTime.fromObject({
+                        year: log.timestamp[0],
+                        month: log.timestamp[1],
+                        day: log.timestamp[2],
+                        hour: log.timestamp[3] || 0,
+                        minute: log.timestamp[4] || 0,
+                        second: log.timestamp[5] || 0
+                    }, { zone: 'Asia/Kolkata' });
                 } else {
-                    timestamp = new Date(log.timestamp);
+                    timestamp = DateTime.fromJSDate(new Date(log.timestamp), { zone: 'Asia/Kolkata' });
                 }
-                if (isNaN(timestamp.getTime())) {
+                if (!timestamp.isValid) {
                     console.warn('Invalid timestamp for log:', log);
-                    timestamp = new Date();
+                    timestamp = DateTime.now().setZone('Asia/Kolkata');
                 }
             } catch (e) {
                 console.warn('Error parsing timestamp:', log.timestamp, e);
-                timestamp = new Date();
+                timestamp = DateTime.now().setZone('Asia/Kolkata');
             }
 
             return {
                 id: log.id,
-                timestamp: timestamp.toISOString(),
+                timestamp: timestamp.toISO(),
                 reviewLength: log.reviewLength || 'medium',
                 regenerated: log.regenerated || false,
                 reviewText: log.keyPoints || 'Review generated',
@@ -129,30 +145,28 @@ async function fetchLogData() {
     }
 }
 
-// Get start of current week (Monday) (unchanged)
-function getStartOfWeek(date = new Date()) {
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-    const startOfWeek = new Date(date.setDate(diff));
-    startOfWeek.setHours(0, 0, 0, 0);
+// Get start of current week (Monday) in IST
+function getStartOfWeek(date = DateTime.now().setZone('Asia/Kolkata')) {
+    const day = date.weekday; // 1 = Monday, 7 = Sunday
+    const diff = (day === 7 ? -6 : 1 - day);
+    const startOfWeek = date.plus({ days: diff }).startOf('day');
     return startOfWeek;
 }
 
-// Get start of current month (unchanged)
-function getStartOfMonth(date = new Date()) {
-    return new Date(date.getFullYear(), date.getMonth(), 1);
+// Get start of current month in IST
+function getStartOfMonth(date = DateTime.now().setZone('Asia/Kolkata')) {
+    return date.startOf('month');
 }
 
-// Calculate weekly statistics (unchanged)
+// Calculate weekly statistics (updated for IST)
 function calculateWeeklyStats(logs) {
     const weeklyData = {};
     const startOfWeek = getStartOfWeek();
 
     const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     for (let i = 0; i < 7; i++) {
-        const date = new Date(startOfWeek);
-        date.setDate(startOfWeek.getDate() + i);
-        const dateKey = date.toISOString().split('T')[0];
+        const date = startOfWeek.plus({ days: i });
+        const dateKey = date.toISODate();
         weeklyData[dateKey] = {
             count: 0,
             dayName: daysOfWeek[i]
@@ -160,40 +174,30 @@ function calculateWeeklyStats(logs) {
     }
 
     logs.forEach(log => {
-        let logDate;
-        if (typeof log.timestamp === 'string') {
-            if (log.timestamp.includes('[')) {
-                const dateArray = JSON.parse(log.timestamp.replace(/\[|\]/g, '').split(',').map(n => parseInt(n.trim())));
-                logDate = new Date(dateArray[0], dateArray[1] - 1, dateArray[2], dateArray[3] || 0, dateArray[4] || 0, dateArray[5] || 0);
-            } else {
-                logDate = new Date(log.timestamp);
-            }
-        } else if (Array.isArray(log.timestamp)) {
-            logDate = new Date(log.timestamp[0], log.timestamp[1] - 1, log.timestamp[2], log.timestamp[3] || 0, log.timestamp[4] || 0, log.timestamp[5] || 0);
-        } else {
-            logDate = new Date(log.timestamp);
+        const logDate = DateTime.fromISO(log.timestamp, { zone: 'Asia/Kolkata' });
+        if (!logDate.isValid) {
+            console.warn('Invalid date for log:', log);
+            return;
         }
 
-        if (!isNaN(logDate.getTime())) {
-            const dateKey = logDate.toISOString().split('T')[0];
-            if (weeklyData[dateKey]) {
-                weeklyData[dateKey].count++;
-            }
+        const dateKey = logDate.toISODate();
+        if (weeklyData[dateKey]) {
+            weeklyData[dateKey].count++;
         }
     });
 
     return weeklyData;
 }
 
-// Calculate monthly statistics (unchanged)
+// Calculate monthly statistics (updated for IST)
 function calculateMonthlyStats(logs) {
     const monthlyData = {};
-    const now = new Date();
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const now = DateTime.now().setZone('Asia/Kolkata');
+    const daysInMonth = now.daysInMonth;
 
     for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(now.getFullYear(), now.getMonth(), day);
-        const dateKey = date.toISOString().split('T')[0];
+        const date = now.set({ day });
+        const dateKey = date.toISODate();
         monthlyData[dateKey] = {
             count: 0,
             day: day
@@ -201,34 +205,23 @@ function calculateMonthlyStats(logs) {
     }
 
     logs.forEach(log => {
-        let logDate;
-        if (typeof log.timestamp === 'string') {
-            if (log.timestamp.includes('[')) {
-                const dateArray = JSON.parse(log.timestamp.replace(/\[|\]/g, '').split(',').map(n => parseInt(n.trim())));
-                logDate = new Date(dateArray[0], dateArray[1] - 1, dateArray[2], dateArray[3] || 0, dateArray[4] || 0, dateArray[5] || 0);
-            } else {
-                logDate = new Date(log.timestamp);
-            }
-        } else if (Array.isArray(log.timestamp)) {
-            logDate = new Date(log.timestamp[0], log.timestamp[1] - 1, log.timestamp[2], log.timestamp[3] || 0, log.timestamp[4] || 0, log.timestamp[5] || 0);
-        } else {
-            logDate = new Date(log.timestamp);
+        const logDate = DateTime.fromISO(log.timestamp, { zone: 'Asia/Kolkata' });
+        if (!logDate.isValid ||
+            logDate.year !== now.year ||
+            logDate.month !== now.month) {
+            return;
         }
 
-        if (!isNaN(logDate.getTime()) &&
-            logDate.getFullYear() === now.getFullYear() &&
-            logDate.getMonth() === now.getMonth()) {
-            const dateKey = logDate.toISOString().split('T')[0];
-            if (monthlyData[dateKey]) {
-                monthlyData[dateKey].count++;
-            }
+        const dateKey = logDate.toISODate();
+        if (monthlyData[dateKey]) {
+            monthlyData[dateKey].count++;
         }
     });
 
     return monthlyData;
 }
 
-// Calculate statistics from logs (unchanged)
+// Calculate statistics from logs (updated for IST)
 function calculateStats(logs) {
     if (!logs || logs.length === 0) {
         return {
@@ -245,12 +238,12 @@ function calculateStats(logs) {
         };
     }
 
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+    const now = DateTime.now().setZone('Asia/Kolkata');
+    const today = now.startOf('day');
+    const yesterday = today.minus({ days: 1 });
+    const thisMonth = now.startOf('month');
+    const lastMonth = thisMonth.minus({ months: 1 });
+    const lastMonthEnd = thisMonth.minus({ days: 1 });
 
     let todayReviews = 0;
     let yesterdayReviews = 0;
@@ -261,32 +254,19 @@ function calculateStats(logs) {
     let dailyData = {};
 
     logs.forEach(log => {
-        let logDate;
-        if (typeof log.timestamp === 'string') {
-            if (log.timestamp.includes('[')) {
-                const dateArray = JSON.parse(log.timestamp.replace(/\[|\]/g, '').split(',').map(n => parseInt(n.trim())));
-                logDate = new Date(dateArray[0], dateArray[1] - 1, dateArray[2], dateArray[3] || 0, dateArray[4] || 0, dateArray[5] || 0);
-            } else {
-                logDate = new Date(log.timestamp);
-            }
-        } else if (Array.isArray(log.timestamp)) {
-            logDate = new Date(log.timestamp[0], log.timestamp[1] - 1, log.timestamp[2], log.timestamp[3] || 0, log.timestamp[4] || 0, log.timestamp[5] || 0);
-        } else {
-            logDate = new Date(log.timestamp);
-        }
-
-        if (isNaN(logDate.getTime())) {
+        const logDate = DateTime.fromISO(log.timestamp, { zone: 'Asia/Kolkata' });
+        if (!logDate.isValid) {
             console.warn('Invalid date for log:', log);
             return;
         }
 
-        const logDateOnly = new Date(logDate.getFullYear(), logDate.getMonth(), logDate.getDate());
+        const logDateOnly = logDate.startOf('day');
 
-        if (logDateOnly.getTime() === today.getTime()) {
+        if (logDateOnly.toISODate() === today.toISODate()) {
             todayReviews++;
         }
 
-        if (logDateOnly.getTime() === yesterday.getTime()) {
+        if (logDateOnly.toISODate() === yesterday.toISODate()) {
             yesterdayReviews++;
         }
 
@@ -310,7 +290,7 @@ function calculateStats(logs) {
             regeneratedCount++;
         }
 
-        const dateKey = logDateOnly.toISOString().split('T')[0];
+        const dateKey = logDateOnly.toISODate();
         dailyData[dateKey] = (dailyData[dateKey] || 0) + 1;
     });
 
@@ -338,7 +318,7 @@ function calculateStats(logs) {
     };
 }
 
-// Simplified helper function to calculate dynamic stepSize
+// Simplified helper function to calculate dynamic stepSize (unchanged)
 function calculateStepSize(maxValue) {
     if (maxValue <= 0) return { stepSize: 1, suggestedMax: 5 };
 
@@ -365,7 +345,7 @@ function calculateStepSize(maxValue) {
     return { stepSize, suggestedMax };
 }
 
-// Create weekly chart
+// Create weekly chart (updated for IST)
 function createWeeklyChart(weeklyData) {
     const ctx = document.getElementById('combinedChart');
     if (!ctx) return;
@@ -412,9 +392,9 @@ function createWeeklyChart(weeklyData) {
             responsive: true,
             maintainAspectRatio: false,
             animation: {
-                duration: 500, // Reduced animation duration
+                duration: 500,
                 easing: 'easeOutQuad',
-                scale: false // Disable scale animation to prevent size jumps
+                scale: false
             },
             plugins: {
                 legend: {
@@ -459,7 +439,7 @@ function createWeeklyChart(weeklyData) {
     });
 }
 
-// Create monthly chart
+// Create monthly chart (updated for IST)
 function createMonthlyChart(monthlyData) {
     const ctx = document.getElementById('combinedChart');
     if (!ctx) return;
@@ -477,10 +457,10 @@ function createMonthlyChart(monthlyData) {
 
     Object.keys(monthlyData).sort().forEach((dateKey, index) => {
         const day = monthlyData[dateKey].day;
-        const date = new Date(dateKey);
-        const weekDay = date.getDay();
+        const date = DateTime.fromISO(dateKey, { zone: 'Asia/Kolkata' });
+        const weekDay = date.weekday;
 
-        if (weekDay === 0 || index === 0) {
+        if (weekDay === 7 || index === 0) {
             if (index > 0) currentWeek++;
             weekStart = day;
         }
@@ -532,9 +512,9 @@ function createMonthlyChart(monthlyData) {
             responsive: true,
             maintainAspectRatio: false,
             animation: {
-                duration: 500, // Reduced animation duration
+                duration: 500,
                 easing: 'easeOutQuad',
-                scale: false // Disable scale animation
+                scale: false
             },
             plugins: {
                 legend: {
@@ -614,9 +594,8 @@ function loadWeeklyChart() {
         const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
         for (let i = 0; i < 7; i++) {
-            const date = new Date(startOfWeek);
-            date.setDate(startOfWeek.getDate() + i);
-            const dateKey = date.toISOString().split('T')[0];
+            const date = startOfWeek.plus({ days: i });
+            const dateKey = date.toISODate();
             emptyWeeklyData[dateKey] = {
                 count: 0,
                 dayName: daysOfWeek[i]
@@ -636,12 +615,12 @@ function loadMonthlyChart() {
         createMonthlyChart(monthlyStats);
     } else {
         const emptyMonthlyData = {};
-        const now = new Date();
-        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        const now = DateTime.now().setZone('Asia/Kolkata');
+        const daysInMonth = now.daysInMonth;
 
         for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(now.getFullYear(), now.getMonth(), day);
-            const dateKey = date.toISOString().split('T')[0];
+            const date = now.set({ day });
+            const dateKey = date.toISODate();
             emptyMonthlyData[dateKey] = {
                 count: 0,
                 day: day
@@ -732,7 +711,7 @@ function updateDashboardStats(logs) {
     return stats;
 }
 
-// Update recent activity (unchanged)
+// Update recent activity (updated for IST)
 function updateRecentActivity(recentActivity) {
     const container = document.getElementById('recentActivity');
     if (!container) return;
@@ -743,20 +722,7 @@ function updateRecentActivity(recentActivity) {
     }
 
     container.innerHTML = recentActivity.map(activity => {
-        let date;
-        if (typeof activity.timestamp === 'string') {
-            if (activity.timestamp.includes('[')) {
-                const dateArray = JSON.parse(activity.timestamp.replace(/\[|\]/g, '').split(',').map(n => parseInt(n.trim())));
-                date = new Date(dateArray[0], dateArray[1] - 1, dateArray[2], dateArray[3] || 0, dateArray[4] || 0, dateArray[5] || 0);
-            } else {
-                date = new Date(activity.timestamp);
-            }
-        } else if (Array.isArray(activity.timestamp)) {
-            date = new Date(activity.timestamp[0], activity.timestamp[1] - 1, activity.timestamp[2], activity.timestamp[3] || 0, activity.timestamp[4] || 0, activity.timestamp[5] || 0);
-        } else {
-            date = new Date(activity.timestamp);
-        }
-
+        const date = DateTime.fromISO(activity.timestamp, { zone: 'Asia/Kolkata' });
         const timeAgo = getTimeAgo(date);
         const regenerated = activity.regenerated ? activity.regenerated.toLowerCase() : 'no';
         const isRegenerated = regenerated === 'yes' || regenerated === 'true' || regenerated === true;
@@ -781,10 +747,10 @@ function updateRecentActivity(recentActivity) {
     }).join('');
 }
 
-// Get time ago string (unchanged)
+// Get time ago string (updated for IST)
 function getTimeAgo(date) {
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
+    const now = DateTime.now().setZone('Asia/Kolkata');
+    const diffInSeconds = Math.floor(now.diff(date, 'seconds').seconds);
 
     if (diffInSeconds < 60) return 'Just now';
     if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + ' min ago';
@@ -793,7 +759,7 @@ function getTimeAgo(date) {
     return Math.floor(diffInSeconds / 2592000) + ' months ago';
 }
 
-// Create donut chart
+// Create donut chart (unchanged)
 function createDonutChart(stats) {
     const ctx = document.getElementById('donutChart');
     if (!ctx) return;
@@ -827,7 +793,7 @@ function createDonutChart(stats) {
             responsive: true,
             maintainAspectRatio: false,
             animation: {
-                duration: 500, // Reduced animation duration
+                duration: 500,
                 easing: 'easeOutQuad'
             },
             plugins: {
