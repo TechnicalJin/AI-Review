@@ -211,41 +211,46 @@
     .form-control {
       width: 100%;
       height: 60px;
-      background: rgba(30, 30, 30, 0.9);
-      border: 2px solid rgba(255, 255, 255, 0.1);
+      background: rgba(30, 30, 30, 0.9) !important;
+      border: 2px solid rgba(255, 255, 255, 0.1) !important;
       border-radius: 18px !important;
-      padding: 0 25px 0 58px;
-      font-size: 1.05rem;
-      font-weight: 500;
-      color: #ffffff;
-      outline: none;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 0 25px 0 58px !important;
+      font-size: 1.05rem !important;
+      font-weight: 500 !important;
+      color: #ffffff !important;
+      outline: none !important;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
       backdrop-filter: blur(15px);
       box-shadow:
         inset 0 2px 8px rgba(0, 0, 0, 0.3),
-        0 0 0 0 rgba(79, 70, 229, 0);
+        0 0 0 0 rgba(79, 70, 229, 0) !important;
       position: relative;
       z-index: 2;
+      -webkit-text-fill-color: #ffffff !important;
+      -webkit-appearance: none !important;
     }
 
     .form-control::placeholder {
-      color: #777;
-      font-weight: 400;
+      color: #777 !important;
+      font-weight: 400 !important;
       transition: all 0.3s ease;
+      opacity: 1 !important;
     }
 
     .form-control:focus {
-      border-color: #4f46e5;
-      background: rgba(40, 40, 40, 0.95);
+      border-color: #4f46e5 !important;
+      background: rgba(40, 40, 40, 0.95) !important;
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
       box-shadow:
         inset 0 2px 8px rgba(0, 0, 0, 0.2),
         0 0 0 4px rgba(79, 70, 229, 0.15),
-        0 8px 30px rgba(79, 70, 229, 0.2);
+        0 8px 30px rgba(79, 70, 229, 0.2) !important;
       transform: translateY(-2px);
     }
 
     .form-control:focus::placeholder {
-      color: #999;
+      color: #999 !important;
       transform: translateX(5px);
     }
 
@@ -255,8 +260,39 @@
     }
 
     .input-group:hover .form-control {
-      border-color: rgba(79, 70, 229, 0.3);
-      background: rgba(35, 35, 35, 0.9);
+      border-color: rgba(79, 70, 229, 0.3) !important;
+      background: rgba(35, 35, 35, 0.9) !important;
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+    }
+
+    /* Additional input text visibility fixes */
+    input[type="email"], input[type="password"] {
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      background-color: rgba(30, 30, 30, 0.9) !important;
+    }
+
+    input[type="email"]:focus, input[type="password"]:focus {
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      background-color: rgba(40, 40, 40, 0.95) !important;
+    }
+
+    input[type="email"]:active, input[type="password"]:active {
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+    }
+
+    /* Webkit autofill override */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 30px rgba(30, 30, 30, 0.9) inset !important;
+      -webkit-text-fill-color: #ffffff !important;
+      color: #ffffff !important;
+      background-color: rgba(30, 30, 30, 0.9) !important;
     }
 
     .btn-login {
@@ -456,10 +492,10 @@
       }
 
       .form-control {
-        height: 48px;
-        font-size: 0.9rem;
-        padding: 0 18px 0 45px;
-        border-radius: 14px;
+        height: 48px !important;
+        font-size: 0.9rem !important;
+        padding: 0 18px 0 45px !important;
+        border-radius: 14px !important;
       }
 
       .input-icon {
@@ -495,7 +531,7 @@
       .particle {
         width: 4px;
         height: 4px;
-        animation-duration: 6s; /* Faster animation for mobile */
+        animation-duration: 6s;
       }
     }
 
@@ -515,10 +551,10 @@
       }
 
       .form-control {
-        height: 44px;
-        font-size: 0.85rem;
-        padding: 0 15px 0 40px;
-        border-radius: 12px;
+        height: 44px !important;
+        font-size: 0.85rem !important;
+        padding: 0 15px 0 40px !important;
+        border-radius: 12px !important;
       }
 
       .input-icon {
@@ -555,10 +591,10 @@
       }
 
       .bg-animation::before {
-        animation: none; /* Disable heavy background animation on small screens */
+        animation: none;
       }
 
       .particles {
-        display: none; /* Hide particles on very small screens for performance */
+        display: none;
       }
     }
