@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Chat Text | Client Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            background-color: #D2E3FC;
+            border: 1px solid #AECBFA;
+            color: #202124;
+            padding: 5px 12px;
+            margin: 4px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+
+        .tag:hover {
+            background-color: #C0D8FC;
+        }
+
+        .tag:active {
+            background-color: #AECBFA;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .tag .close-icon {
+            margin-left: 8px;
+            font-size: 16px;
+            color: #5f6368;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .tag .close-icon:hover {
+            color: #D93025;
+        }
+
+        .selected-tags {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            min-height: 50px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 12px;
+            background-color: #f8fafc;
+        }
+
+        .input-wrapper {
+            position: relative;
+            max-width: 100%;
+        }
+
+        #chatTextInput {
+            padding-right: 40px;
+            border-radius: 20px;
+            border: 1px solid #c1dafc;
+            font-size: 14px;
+            width: 100%;
+            padding: 10px 15px;
+        }
+
+        .plus-btn-inside {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 6px 12px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 18px;
+            transition: background-color 0.3s ease;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .plus-btn-inside:hover {
+            background-color: #0056b3;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tag-pulse {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .dark .selected-tags {
+            background-color: #1e293b;
+            border-color: #334155;
+        }
+
+        .dark #chatTextInput {
+            background-color: #1e293b;
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+
+        .dark .tag {
+            background-color: #334155;
+            border-color: #475569;
+            color: #e2e8f0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+<div class="flex h-screen">
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center p-4">
+                <div class="flex items-center">
+                    <div>
+                        <h2 class="text-xl font-bold">Update Chat Text</h2>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">Welcome back, Client Name</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                    </button>
+                    <div class="relative">
+                        <button class="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors">
+                            <div class="w-10 h-10 rounded-full gradient-bg flex items-center justify-center">
+                                <span class="text-white font-semibold">C</span>
+                            </div>
+                            <span class="hidden md:inline font-medium">Client Name</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50 dark:bg-gray-900">
+            <div class="max-w-4xl mx-auto">
+                <!-- Success Message -->
+                <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg hidden" id="successMessage">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <span>Chat text updated successfully!</span>
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hidden" id="errorMessage">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        <span id="errorText"></span>
+                    </div>
+                </div>
+
+                <!-- Chat Text Form -->
+                <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 animate-fade-in">
+                    <h3 class="text-xl font-bold mb-4">Update Chat Text</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-6">
+                        Customize the tags that appear in your chat widget. Each tag will be visible to your customers.
+                    </p>
+
+                    <form id="chatTextForm" method="post" th:action="@{/client/chatText}">
+                        <div class="mb-6">
+                            <label for="chatTextInput" class="block text-gray-700 dark:text-gray-300 mb-2 font-medium">
+                                Add Chat Tags
+                            </label>
+
+                            <div class="input-wrapper">
+                                <input type="text" id="chatTextInput" placeholder="Enter a tag and press Enter or click +" />
+                                <button type="button" class="plus-btn-inside" id="addTagBtn">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+
+                            <div class="mt-3">
+                                <label class="block text-gray-700 dark:text-gray-300 mb-2 font-medium">
+                                    Selected Tags
+                                </label>
+                                <div class="selected-tags" id="selectedTags">
+                                    <div class="text-gray-400 text-sm py-3 px-4">No tags added yet. Add at least 10 tags.</div>
+                                </div>
+                            </div>
+
+                            <!-- Hidden input to store the actual chat text -->
+                            <input type="hidden" name="chatText" id="hiddenChatText" th:value="${chatText}" />
+
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                Minimum 10 tags required. Current count:
+                                <span id="tagCount">0</span>/500
+                            </p>
+                        </div>
+
+                        <div class="flex justify-between items-center mt-8">
+                            <div>
+            <span class="text-gray-500 dark:text-gray-400 text-sm">
+                <i class="fas fa-lightbulb mr-1"></i>
+                Tip: Use descriptive tags that represent your services!
+            </span>
+                            </div>
+                            <div>
+                                <button type="submit" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors">
+                                    <i class="fas fa-save mr-2"></i> Update Chat Text
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tagSet = new Set();
+        const selectedTagsContainer = document.getElementById('selectedTags');
+        const tagCountElement = document.getElementById('tagCount');
+        const chatTextInput = document.getElementById('chatTextInput');
+        const addTagBtn = document.getElementById('addTagBtn');
+        const chatTextForm = document.getElementById('chatTextForm');
+        const hiddenChatText = document.getElementById('hiddenChatText');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+
+        // Initialize with existing chat text if available
+        const existingChatText = hiddenChatText.value;
+        if (existingChatText && existingChatText.trim() !== '') {
+            const existingTags = existingChatText.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
+            existingTags.forEach(tag => addTagToSet(tag));
+        } else {
+            // Initialize with sample tags for demonstration if no existing data
+            const sampleTags = ['friendly', 'support', 'quick response', 'helpful', 'professional',
+                               'knowledgeable', 'efficient', 'reliable', '24/7 service', 'expert advice'];
+            sampleTags.forEach(tag => addTagToSet(tag));
+        }
+        updateTagDisplay();
+
+        // Add tag when button is clicked
+        addTagBtn.addEventListener('click', function() {
+            addTagFromInput();
+        });
+
+        // Add tag when Enter key is pressed
+        chatTextInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addTagFromInput();
+            }
+        });
+
+        // Form submission
+        chatTextForm.addEventListener('submit', function(e) {
+            if (tagSet.size < 10) {
+                e.preventDefault();
+                showError("You must add at least 10 tags.");
+                return;
+            }
+
+            // Update hidden input with comma-separated tags
+            hiddenChatText.value = Array.from(tagSet).join(', ');
+        });
+
+        // Theme toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function() {
+                document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            });
+        }
+
+        function addTagFromInput() {
+            const tagValue = chatTextInput.value.trim();
+            if (tagValue === '') return;
+
+            if (tagSet.has(tagValue)) {
+                showError('This tag has already been added!');
+                return;
+            }
+
+            if (tagValue.length > 30) {
+                showError('Tags must be under 30 characters');
+                return;
+            }
+
+            if (tagSet.size >= 500) {
+                showError('Maximum of 500 tags reached');
+                return;
+            }
+
+            addTagToSet(tagValue);
+            chatTextInput.value = '';
+            chatTextInput.focus();
+            updateTagDisplay();
+        }
+
+        function addTagToSet(tag) {
+            tagSet.add(tag);
+        }
+
+        function removeTag(tagToRemove) {
+            tagSet.delete(tagToRemove);
+            updateTagDisplay();
+        }
+
+        function updateTagDisplay() {
+            // Update tag count
+            tagCountElement.textContent = tagSet.size;
+
+            // Clear container
+            selectedTagsContainer.innerHTML = '';
+
+            // Add tags
+            if (tagSet.size === 0) {
+                selectedTagsContainer.innerHTML = '<div class="text-gray-400 text-sm py-3 px-4">No tags added yet. Add at least 10 tags.</div>';
+                return;
+            }
+
+            tagSet.forEach(tag => {
+                const tagElement = document.createElement('div');
+                tagElement.className = 'tag tag-pulse';
+                tagElement.innerHTML = `
+                    ${tag}
+                    <span class="close-icon" data-tag="${tag}">&times;</span>
+                `;
+                selectedTagsContainer.appendChild(tagElement);
+            });
+
+            // Add event listeners to close buttons
+            document.querySelectorAll('.close-icon').forEach(icon => {
+                icon.addEventListener('click', function() {
+                    const tagToRemove = this.getAttribute('data-tag');
+                    removeTag(tagToRemove);
+                });
+            });
+        }
+
+        function showError(message) {
+            if (errorText && errorMessage) {
+                errorText.textContent = message;
+                errorMessage.classList.remove('hidden');
+                if (successMessage) successMessage.classList.add('hidden');
+
+                // Auto-hide error after 5 seconds
+                setTimeout(() => {
+                    errorMessage.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        // Initialize theme
+        if (localStorage.getItem('theme') === 'dark' ||
+            (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    });
+</script>
+</body>
+</html>
