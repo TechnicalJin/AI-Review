@@ -67,6 +67,8 @@ public class ClientService {
     }
 
     public Client updateClient(Client client, MultipartFile file) throws IOException {
+        log.debug("Updating client with ID: {}", client.getId());
+
         Optional<Client> existingClient = clientRepository.findById(client.getId());
         if (existingClient.isPresent()) {
             Client updatedClient = existingClient.get();
@@ -137,5 +139,20 @@ public class ClientService {
     public boolean existsByMobile(String mobile) {
         log.debug("Checking if client exists with mobile: {}", mobile);
         return clientRepository.existsByMobile(mobile);
+    }
+
+    // Add this method to ClientService
+    @Transactional
+    public Client saveClient(Client client) {
+        log.debug("Saving client: {} with ID: {}", client.getName(), client.getId());
+
+        try {
+            Client savedClient = clientRepository.save(client);
+            log.info("Successfully saved client: {} with ID: {}", savedClient.getName(), savedClient.getId());
+            return savedClient;
+        } catch (Exception e) {
+            log.error("Error saving client: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to save client", e);
+        }
     }
 }
