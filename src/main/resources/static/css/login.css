@@ -71,9 +71,9 @@
     .particle:nth-child(9) { left: 90%; animation-delay: 2.5s; }
 
     @keyframes float {
-      0%, 100% { 
-        transform: translateY(100vh) rotate(0deg); 
-        opacity: 0; 
+      0%, 100% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
       }
       10% { opacity: 0.7; }
       50% { opacity: 1; }
@@ -221,7 +221,7 @@
       outline: none;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       backdrop-filter: blur(15px);
-      box-shadow: 
+      box-shadow:
         inset 0 2px 8px rgba(0, 0, 0, 0.3),
         0 0 0 0 rgba(79, 70, 229, 0);
       position: relative;
@@ -437,59 +437,128 @@
     /* Responsive Design */
     @media (max-width: 768px) {
       .container {
-        padding: 15px;
+        padding: 10px;
       }
 
       .login-card {
-        padding: 40px 35px 35px;
-        margin: 10px;
-        border-radius: 24px;
-        max-width: 400px;
+        padding: 30px 20px;
+        max-width: 360px;
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
       }
 
       .card-header h1 {
-        font-size: 2.3rem;
+        font-size: 1.8rem;
       }
 
       .card-header p {
-        font-size: 1.05rem;
+        font-size: 0.9rem;
       }
 
       .form-control {
-        height: 56px;
+        height: 48px;
+        font-size: 0.9rem;
+        padding: 0 18px 0 45px;
+        border-radius: 14px;
+      }
+
+      .input-icon {
+        left: 12px;
         font-size: 1rem;
-        padding: 0 22px 0 55px;
       }
 
       .btn-login {
-        height: 56px;
-        font-size: 1.05rem;
+        height: 48px;
+        font-size: 0.95rem;
+        border-radius: 14px;
+        min-height: 44px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .signup-link {
+        margin-top: 20px;
+      }
+
+      .signup-link p {
+        font-size: 0.9rem;
+      }
+
+      .alert {
+        padding: 12px 15px;
+        font-size: 0.85rem;
+        margin-bottom: 15px;
+      }
+
+      .particle {
+        width: 4px;
+        height: 4px;
+        animation-duration: 6s; /* Faster animation for mobile */
       }
     }
 
     @media (max-width: 480px) {
       .login-card {
-        padding: 35px 25px 30px;
-        border-radius: 20px;
+        padding: 25px 15px;
+        max-width: 320px;
+        border-radius: 16px;
       }
 
       .card-header h1 {
-        font-size: 2rem;
+        font-size: 1.6rem;
+      }
+
+      .card-header p {
+        font-size: 0.85rem;
       }
 
       .form-control {
-        height: 52px;
-        padding: 0 18px 0 52px;
-        border-radius: 16px !important;
+        height: 44px;
+        font-size: 0.85rem;
+        padding: 0 15px 0 40px;
+        border-radius: 12px;
       }
 
       .input-icon {
-        left: 18px;
-        font-size: 1.1rem;
+        left: 10px;
+        font-size: 0.9rem;
       }
 
       .btn-login {
-        height: 52px;
-        border-radius: 16px;
+        height: 44px;
+        font-size: 0.9rem;
+        border-radius: 12px;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .signup-link {
+        margin-top: 15px;
+      }
+
+      .signup-link p {
+        font-size: 0.85rem;
+      }
+
+      .alert {
+        padding: 10px 12px;
+        font-size: 0.8rem;
+      }
+
+      .text-danger {
+        font-size: 0.8rem;
+        margin-top: 6px;
+      }
+
+      .bg-animation::before {
+        animation: none; /* Disable heavy background animation on small screens */
+      }
+
+      .particles {
+        display: none; /* Hide particles on very small screens for performance */
       }
     }

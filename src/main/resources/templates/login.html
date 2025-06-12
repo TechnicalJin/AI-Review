@@ -2,8 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>| Login Page |</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" th:href="@{/css/login.css}">
 </head>
 <body>
@@ -61,56 +63,59 @@
 
 <script>
   function validateForm() {
-      let isValid = true;
+    let isValid = true;
 
-      const emailInput = document.getElementById("username");
-      const emailError = document.getElementById("emailError");
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailInput = document.getElementById("username");
+    const emailError = document.getElementById("emailError");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-      if (!emailRegex.test(emailInput.value)) {
-          emailError.textContent = "Please enter a valid email address.";
-          emailInput.style.borderColor = "#f87171";
-          isValid = false;
-      } else {
-          emailError.textContent = "";
-          emailInput.style.borderColor = "rgba(255, 255, 255, 0.1)";
-      }
+    if (!emailRegex.test(emailInput.value)) {
+      emailError.textContent = "Please enter a valid email address.";
+      emailInput.style.borderColor = "#f87171";
+      isValid = false;
+    } else {
+      emailError.textContent = "";
+      emailInput.style.borderColor = "rgba(255, 255, 255, 0.1)";
+    }
 
-      const passwordInput = document.getElementById("password");
-      const passwordError = document.getElementById("passwordError");
+    const passwordInput = document.getElementById("password");
+    const passwordError = document.getElementById("passwordError");
 
-      if (passwordInput.value.length === 0) {
-          passwordError.textContent = "Password is required.";
-          passwordInput.style.borderColor = "#f87171";
-          isValid = false;
-      } else {
-          passwordError.textContent = "";
-          passwordInput.style.borderColor = "rgba(255, 255, 255, 0.1)";
-      }
+    if (passwordInput.value.length === 0) {
+      passwordError.textContent = "Password is required.";
+      passwordInput.style.borderColor = "#f87171";
+      isValid = false;
+    } else {
+      passwordError.textContent = "";
+      passwordInput.style.borderColor = "rgba(255, 255, 255, 0.1)";
+    }
 
-      if (isValid) {
-          const loginBtn = document.getElementById("loginBtn");
-          loginBtn.classList.add("loading");
-          loginBtn.querySelector("span").style.opacity = "0";
-      }
+    if (isValid) {
+      const loginBtn = document.getElementById("loginBtn");
+      loginBtn.classList.add("loading");
+      loginBtn.querySelector("span").style.opacity = "0";
+    }
 
-      return isValid;
+    return isValid;
   }
 
   // Add smooth focus effects
   document.querySelectorAll('.form-control').forEach(input => {
-      input.addEventListener('focus', function() {
-          this.parentElement.style.transform = 'scale(1.02)';
-      });
+    input.addEventListener('focus', function() {
+      this.parentElement.style.transform = 'scale(1.02)';
+    });
 
-      input.addEventListener('blur', function() {
-          this.parentElement.style.transform = 'scale(1)';
-      });
+    input.addEventListener('blur', function() {
+      this.parentElement.style.transform = 'scale(1)';
+    });
   });
 
-  // Add hover effect to card
+  // Conditionally apply 3D tilt effect only on non-mobile devices
   const loginCard = document.querySelector('.login-card');
-  loginCard.addEventListener('mousemove', function(e) {
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+  if (!isMobile) {
+    loginCard.addEventListener('mousemove', function(e) {
       const rect = this.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -122,11 +127,12 @@
       const rotateY = (centerX - x) / 20;
 
       this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1, 1, 1)`;
-  });
+    });
 
-  loginCard.addEventListener('mouseleave', function() {
+    loginCard.addEventListener('mouseleave', function() {
       this.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
-  });
+    });
+  }
 </script>
 </body>
 </html>
