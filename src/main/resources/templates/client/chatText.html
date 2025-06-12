@@ -95,16 +95,27 @@
         }
 
         .tag-modern {
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
-            color: #4b5563;
-            transition: all 0.3s ease;
+            background: #e0e7ff; /* Lighter primary color */
+            border: 1px solid #c7d2fe; /* Slightly darker border */
+            color: #3730a3; /* Darker text for contrast */
+            transition: all 0.2s ease-in-out;
+            cursor: default; /* Indicate it's not directly clickable for navigation */
         }
 
         .tag-modern:hover {
-            background: #e5e7eb;
+            background: #c7d2fe; /* Even lighter on hover */
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2); /* Subtle shadow on hover */
             transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tag-modern .remove-tag-btn {
+            color: #6366f1; /* Primary color for close icon */
+            transition: color 0.2s ease;
+        }
+
+        .tag-modern .remove-tag-btn:hover {
+            color: #ef4444; /* Red on hover for removal */
+            background-color: rgba(239, 68, 68, 0.1); /* Light red background on hover */
         }
 
         .selected-tags-area {
@@ -170,7 +181,6 @@
 <body class="min-h-screen bg-gray-50">
 <div class="min-h-screen py-4 px-4 sm:px-6">
     <div class="max-w-3xl mx-auto">
-        <!-- Back Button & Page Title -->
         <div class="mb-6">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <button onclick="window.history.back()" class="btn-secondary flex items-center space-x-2 px-4 py-2 rounded-lg font-medium text-sm sm:text-base animate-slide-in-left">
@@ -181,44 +191,40 @@
 
             <div class="text-center animate-fade-in">
                 <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                    Update Chat Text
+                    Manage Chat Widget Tags
                 </h1>
                 <p class="text-sm sm:text-base text-gray-600">
-                    Customize your chat widget tags for better customer engagement
+                    Customize the tags that appear in your chat widget to guide customer conversations.
                 </p>
             </div>
         </div>
 
-        <!-- Success Message -->
-        <div class="mb-4 p-3 bg-green-50 text-green-800 rounded-lg border border-green-200 hidden animate-slide-up" id="successMessage">
+        <div class="mb-4 p-3 bg-green-100 text-green-800 rounded-lg border border-green-300 hidden animate-slide-up" id="successMessage">
             <div class="flex items-center">
                 <i class="fas fa-check-circle mr-2 text-base"></i>
-                <span class="font-medium text-sm">Chat text updated successfully!</span>
+                <span class="font-medium text-sm">Chat tags updated successfully!</span>
             </div>
         </div>
 
-        <!-- Error Message -->
-        <div class="mb-4 p-3 bg-red-50 text-red-800 rounded-lg border border-red-200 hidden animate-slide-up" id="errorMessage">
+        <div class="mb-4 p-3 bg-red-100 text-red-800 rounded-lg border border-red-300 hidden animate-slide-up" id="errorMessage">
             <div class="flex items-center">
                 <i class="fas fa-exclamation-triangle mr-2 text-base"></i>
                 <span id="errorText" class="font-medium text-sm"></span>
             </div>
         </div>
 
-        <!-- Main Form Section -->
         <div class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm animate-fade-in">
             <div class="mb-6">
                 <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 flex items-center">
                     <i class="fas fa-tags mr-2 text-primary"></i>
-                    Tag Management
+                    Tag Configuration
                 </h2>
                 <p class="text-gray-600 text-sm">
-                    Create engaging tags that represent your brand and services.
+                    Add relevant tags to improve your chat bot's interaction and topic understanding.
                 </p>
             </div>
 
             <form id="chatTextForm" method="post" th:action="@{/client/chatText}">
-                <!-- Tag Input Section -->
                 <div class="mb-6">
                     <label for="chatTextInput" class="block text-gray-900 mb-2 font-semibold text-sm sm:text-base">
                         <i class="fas fa-plus-circle mr-1 text-primary"></i>
@@ -229,7 +235,7 @@
                         <input
                                 type="text"
                                 id="chatTextInput"
-                                placeholder="Enter a descriptive tag..."
+                                placeholder="e.g., Billing Inquiry, Technical Support..."
                                 class="input-modern w-full py-2 sm:py-3 px-3 sm:px-4 pr-10 sm:pr-12 rounded-lg font-medium text-sm sm:text-base"
                                 maxlength="30"
                         />
@@ -244,15 +250,14 @@
 
                     <p class="mt-1 text-xs text-gray-500 flex items-center">
                         <i class="fas fa-info-circle mr-1"></i>
-                        Press Enter or click + to add the tag (max 30 characters)
+                        Type your tag and press Enter or click the '+' button (max 30 characters per tag).
                     </p>
                 </div>
 
-                <!-- Selected Tags Display -->
                 <div class="mb-6">
                     <label class="block text-gray-900 mb-2 font-semibold text-sm sm:text-base">
                         <i class="fas fa-collection mr-1 text-primary"></i>
-                        Your Tags
+                        Current Tags
                     </label>
 
                     <div class="selected-tags-area rounded-lg p-4" id="selectedTags">
@@ -263,7 +268,6 @@
                         </div>
                     </div>
 
-                    <!-- Tag Counter -->
                     <div class="mt-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div class="flex flex-wrap items-center gap-2">
                             <div class="bg-gray-50 rounded-full px-3 py-1 border border-gray-200">
@@ -284,20 +288,18 @@
                                 onclick="clearAllTags()"
                         >
                             <i class="fas fa-trash-alt mr-1"></i>
-                            Clear All
+                            Clear All Tags
                         </button>
                     </div>
                 </div>
 
-                <!-- Hidden Input -->
                 <input type="hidden" name="chatText" id="hiddenChatText" th:value="${chatText}" />
 
-                <!-- Submit Section -->
                 <div class="border-t border-gray-200 pt-4">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div class="flex items-start text-gray-500 text-xs sm:text-sm order-2 sm:order-1">
-                            <i class="fas fa-lightbulb text-yellow-400 mr-1 mt-0.5"></i>
-                            <span>Use specific, descriptive tags that showcase your expertise</span>
+                            <i class="fas fa-lightbulb text-yellow-500 mr-1 mt-0.5"></i>
+                            <span>Tip: Use clear and concise tags to help your customers quickly find what they need.</span>
                         </div>
 
                         <button
@@ -305,7 +307,7 @@
                                 class="btn-primary font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg text-sm sm:text-base flex items-center space-x-2 hover:scale-105 transition-transform w-full sm:w-auto justify-center order-1 sm:order-2"
                         >
                             <i class="fas fa-save"></i>
-                            <span>Update Chat Text</span>
+                            <span>Save Tags</span>
                         </button>
                     </div>
                 </div>
@@ -334,8 +336,8 @@
             existingTags.forEach(tag => addTagToSet(tag));
         } else {
             // Initialize with sample tags for demonstration
-            const sampleTags = ['friendly support', 'quick response', 'expert help', 'professional service', '24/7 available',
-                              'knowledgeable team', 'efficient solutions', 'reliable assistance', 'customer focused', 'problem solver'];
+            const sampleTags = ['General Inquiry', 'Technical Support', 'Billing Questions', 'Product Information', 'Account Help',
+                                'Returns & Refunds', 'Order Status', 'Feedback', 'Partnership Opportunities', 'Career Inquiries'];
             sampleTags.forEach(tag => addTagToSet(tag));
         }
         updateTagDisplay();
@@ -357,6 +359,10 @@
                 return;
             }
             hiddenChatText.value = Array.from(tagSet).join(', ');
+            // In a real application, you'd send this to the server.
+            // For this example, we'll just simulate success.
+            // e.preventDefault(); // Uncomment this line if you want to prevent actual form submission for testing
+            // showSuccess("Chat tags updated successfully!");
         });
 
         function addTagFromInput() {
@@ -382,6 +388,7 @@
             chatTextInput.value = '';
             chatTextInput.focus();
             updateTagDisplay();
+            hideMessages(); // Hide messages after successful tag add
         }
 
         function addTagToSet(tag) {
@@ -391,12 +398,14 @@
         function removeTag(tagToRemove) {
             tagSet.delete(tagToRemove);
             updateTagDisplay();
+            hideMessages(); // Hide messages after tag removal
         }
 
         window.clearAllTags = function() {
             if (confirm('Are you sure you want to remove all tags?')) {
                 tagSet.clear();
                 updateTagDisplay();
+                hideMessages(); // Hide messages after clearing all tags
             }
         }
 
@@ -426,12 +435,12 @@
 
             Array.from(tagSet).forEach((tag, index) => {
                 const tagElement = document.createElement('div');
-                tagElement.className = 'tag-modern flex items-center px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs font-medium animate-tag-bounce';
-                tagElement.style.animationDelay = `${index * 0.1}s`;
+                tagElement.className = 'tag-modern flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium animate-tag-bounce';
+                tagElement.style.animationDelay = `${index * 0.05}s`; // Slightly faster animation for tags
                 tagElement.innerHTML = `
-                    <span class="mr-1 sm:mr-2">${tag}</span>
-                    <button type="button" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50" onclick="removeTagByValue('${tag}')">
-                        <i class="fas fa-times text-xs"></i>
+                    <span class="mr-1.5 sm:mr-2">${tag}</span>
+                    <button type="button" class="remove-tag-btn w-5 h-5 flex items-center justify-center rounded-full text-xs" onclick="removeTagByValue('${tag}')">
+                        <i class="fas fa-times"></i>
                     </button>
                 `;
                 tagsGrid.appendChild(tagElement);
@@ -450,6 +459,27 @@
             errorMessage.classList.remove('hidden');
             successMessage.classList.add('hidden');
             setTimeout(() => errorMessage.classList.add('hidden'), 5000);
+        }
+
+        function showSuccess(message) {
+            successMessage.querySelector('span').textContent = message;
+            successMessage.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+            setTimeout(() => successMessage.classList.add('hidden'), 5000);
+        }
+
+        function hideMessages() {
+            successMessage.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+        }
+
+        // Check for success message from server-side (if applicable)
+        // This assumes a 'success' parameter might be added to the URL after a successful form submission
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('success') && urlParams.get('success') === 'true') {
+            showSuccess("Chat tags updated successfully!");
+            // Optionally, remove the success parameter from the URL after showing the message
+            // history.replaceState({}, document.title, window.location.pathname);
         }
     });
 </script>
