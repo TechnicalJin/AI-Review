@@ -1,241 +1,315 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Update Chat Text | Client Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in': 'fadeIn 0.6s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'tag-bounce': 'tagBounce 0.4s ease-out',
+                        'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
+                        'slide-in-left': 'slideInLeft 0.5s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        slideInLeft: {
+                            '0%': { opacity: '0', transform: 'translateX(-20px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' }
+                        },
+                        tagBounce: {
+                            '0%': { transform: 'scale(0.8)', opacity: '0' },
+                            '50%': { transform: 'scale(1.05)' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        },
+                        pulseSoft: {
+                            '0%, 100%': { opacity: '1' },
+                            '50%': { opacity: '0.7' }
+                        }
+                    },
+                    colors: {
+                        'primary': '#4f46e5',
+                        'primary-hover': '#4338ca',
+                        'secondary': '#f3f4f6',
+                        'secondary-hover': '#e5e7eb',
+                        'accent': '#10b981',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        body {
+            background: #f9fafb;
         }
 
-        .tag {
-            display: inline-flex;
-            align-items: center;
-            background-color: #D2E3FC;
-            border: 1px solid #AECBFA;
-            color: #202124;
-            padding: 5px 12px;
-            margin: 4px;
-            border-radius: 16px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s, box-shadow 0.2s;
+        .input-modern {
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+            color: #1f2937;
         }
 
-        .tag:hover {
-            background-color: #C0D8FC;
+        .input-modern:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            outline: none;
         }
 
-        .tag:active {
-            background-color: #AECBFA;
-            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+        .btn-primary {
+            background: #4f46e5;
+            color: #ffffff;
+            transition: all 0.3s ease;
         }
 
-        .tag .close-icon {
-            margin-left: 8px;
-            font-size: 16px;
-            color: #5f6368;
-            cursor: pointer;
-            transition: color 0.2s;
+        .btn-primary:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
         }
 
-        .tag .close-icon:hover {
-            color: #D93025;
+        .btn-secondary {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            color: #4b5563;
+            transition: all 0.3s ease;
         }
 
-        .selected-tags {
-            margin-top: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            min-height: 50px;
-            border: 1px dashed #cbd5e1;
-            border-radius: 8px;
-            padding: 12px;
-            background-color: #f8fafc;
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .input-wrapper {
-            position: relative;
-            max-width: 100%;
+        .tag-modern {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            color: #4b5563;
+            transition: all 0.3s ease;
         }
 
-        #chatTextInput {
-            padding-right: 40px;
-            border-radius: 20px;
-            border: 1px solid #c1dafc;
-            font-size: 14px;
-            width: 100%;
-            padding: 10px 15px;
+        .tag-modern:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .plus-btn-inside {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            padding: 6px 12px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 18px;
-            transition: background-color 0.3s ease;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .selected-tags-area {
+            background: #ffffff;
+            border: 2px dashed #d1d5db;
+            min-height: 100px;
+            transition: all 0.3s ease;
         }
 
-        .plus-btn-inside:hover {
-            background-color: #0056b3;
+        .selected-tags-area.has-tags {
+            border-style: solid;
+            border-color: #e5e7eb;
+            background: #f9fafb;
         }
 
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-in-out;
+        .tags-scroll-container {
+            max-height: 200px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #d1d5db #f3f4f6;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .tags-scroll-container::-webkit-scrollbar {
+            width: 6px;
         }
 
-        .tag-pulse {
-            animation: pulse 0.5s ease-in-out;
+        .tags-scroll-container::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 3px;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        .tags-scroll-container::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
         }
 
-        .dark .selected-tags {
-            background-color: #1e293b;
-            border-color: #334155;
+        .tags-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
         }
 
-        .dark #chatTextInput {
-            background-color: #1e293b;
-            border-color: #334155;
-            color: #e2e8f0;
-        }
+        @media (max-width: 640px) {
+            .tags-scroll-container {
+                max-height: 150px;
+            }
 
-        .dark .tag {
-            background-color: #334155;
-            border-color: #475569;
-            color: #e2e8f0;
+            .input-modern {
+                font-size: 0.875rem;
+                padding: 0.75rem 1rem;
+            }
+
+            .btn-primary, .btn-secondary {
+                font-size: 0.875rem;
+                padding: 0.75rem 1.5rem;
+            }
+
+            .tag-modern {
+                font-size: 0.75rem;
+                padding: 0.5rem 0.75rem;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900">
-<div class="flex h-screen">
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- Header -->
-        <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-            <div class="flex justify-between items-center p-4">
-                <div class="flex items-center">
-                    <div>
-                        <h2 class="text-xl font-bold">Update Chat Text</h2>
-                        <p class="text-gray-500 dark:text-gray-400 text-sm">Welcome back, Client Name</p>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                        <i class="fas fa-moon dark:hidden"></i>
-                        <i class="fas fa-sun hidden dark:block"></i>
-                    </button>
+<body class="min-h-screen bg-gray-50">
+<div class="min-h-screen py-4 px-4 sm:px-6">
+    <div class="max-w-3xl mx-auto">
+        <!-- Back Button & Page Title -->
+        <div class="mb-6">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <button onclick="window.history.back()" class="btn-secondary flex items-center space-x-2 px-4 py-2 rounded-lg font-medium text-sm sm:text-base animate-slide-in-left">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Home</span>
+                </button>
+            </div>
+
+            <div class="text-center animate-fade-in">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                    Update Chat Text
+                </h1>
+                <p class="text-sm sm:text-base text-gray-600">
+                    Customize your chat widget tags for better customer engagement
+                </p>
+            </div>
+        </div>
+
+        <!-- Success Message -->
+        <div class="mb-4 p-3 bg-green-50 text-green-800 rounded-lg border border-green-200 hidden animate-slide-up" id="successMessage">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle mr-2 text-base"></i>
+                <span class="font-medium text-sm">Chat text updated successfully!</span>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="mb-4 p-3 bg-red-50 text-red-800 rounded-lg border border-red-200 hidden animate-slide-up" id="errorMessage">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle mr-2 text-base"></i>
+                <span id="errorText" class="font-medium text-sm"></span>
+            </div>
+        </div>
+
+        <!-- Main Form Section -->
+        <div class="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm animate-fade-in">
+            <div class="mb-6">
+                <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 flex items-center">
+                    <i class="fas fa-tags mr-2 text-primary"></i>
+                    Tag Management
+                </h2>
+                <p class="text-gray-600 text-sm">
+                    Create engaging tags that represent your brand and services.
+                </p>
+            </div>
+
+            <form id="chatTextForm" method="post" th:action="@{/client/chatText}">
+                <!-- Tag Input Section -->
+                <div class="mb-6">
+                    <label for="chatTextInput" class="block text-gray-900 mb-2 font-semibold text-sm sm:text-base">
+                        <i class="fas fa-plus-circle mr-1 text-primary"></i>
+                        Add New Tag
+                    </label>
+
                     <div class="relative">
-                        <button class="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors">
-                            <div class="w-10 h-10 rounded-full gradient-bg flex items-center justify-center">
-                                <span class="text-white font-semibold">C</span>
+                        <input
+                                type="text"
+                                id="chatTextInput"
+                                placeholder="Enter a descriptive tag..."
+                                class="input-modern w-full py-2 sm:py-3 px-3 sm:px-4 pr-10 sm:pr-12 rounded-lg font-medium text-sm sm:text-base"
+                                maxlength="30"
+                        />
+                        <button
+                                type="button"
+                                class="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 btn-primary text-white rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center text-xs sm:text-sm hover:scale-105 transition-transform"
+                                id="addTagBtn"
+                        >
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <p class="mt-1 text-xs text-gray-500 flex items-center">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Press Enter or click + to add the tag (max 30 characters)
+                    </p>
+                </div>
+
+                <!-- Selected Tags Display -->
+                <div class="mb-6">
+                    <label class="block text-gray-900 mb-2 font-semibold text-sm sm:text-base">
+                        <i class="fas fa-collection mr-1 text-primary"></i>
+                        Your Tags
+                    </label>
+
+                    <div class="selected-tags-area rounded-lg p-4" id="selectedTags">
+                        <div class="text-gray-500 text-center py-6 animate-pulse-soft">
+                            <i class="fas fa-tag text-2xl sm:text-3xl mb-3 opacity-50"></i>
+                            <p class="text-sm sm:text-base font-medium">No tags added yet</p>
+                            <p class="text-xs">Add at least 10 tags to get started</p>
+                        </div>
+                    </div>
+
+                    <!-- Tag Counter -->
+                    <div class="mt-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="bg-gray-50 rounded-full px-3 py-1 border border-gray-200">
+                                <span class="text-xs font-medium text-gray-600">
+                                    Tags: <span id="tagCount" class="font-bold text-primary">0</span>/500
+                                </span>
                             </div>
-                            <span class="hidden md:inline font-medium">Client Name</span>
+                            <div class="bg-gray-50 rounded-full px-3 py-1 border border-gray-200">
+                                <span class="text-xs font-medium text-gray-600">
+                                    Required: <span class="font-bold text-accent">10 minimum</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <button
+                                type="button"
+                                class="text-xs text-red-600 hover:text-red-700 font-medium transition-colors"
+                                onclick="clearAllTags()"
+                        >
+                            <i class="fas fa-trash-alt mr-1"></i>
+                            Clear All
                         </button>
                     </div>
                 </div>
-            </div>
-        </header>
 
-        <!-- Main Content Area -->
-        <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50 dark:bg-gray-900">
-            <div class="max-w-4xl mx-auto">
-                <!-- Success Message -->
-                <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg hidden" id="successMessage">
-                    <div class="flex items-center">
-                        <i class="fas fa-check-circle mr-2"></i>
-                        <span>Chat text updated successfully!</span>
-                    </div>
-                </div>
+                <!-- Hidden Input -->
+                <input type="hidden" name="chatText" id="hiddenChatText" th:value="${chatText}" />
 
-                <!-- Error Message -->
-                <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hidden" id="errorMessage">
-                    <div class="flex items-center">
-                        <i class="fas fa-exclamation-circle mr-2"></i>
-                        <span id="errorText"></span>
-                    </div>
-                </div>
-
-                <!-- Chat Text Form -->
-                <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 animate-fade-in">
-                    <h3 class="text-xl font-bold mb-4">Update Chat Text</h3>
-                    <p class="text-gray-600 dark:text-gray-300 mb-6">
-                        Customize the tags that appear in your chat widget. Each tag will be visible to your customers.
-                    </p>
-
-                    <form id="chatTextForm" method="post" th:action="@{/client/chatText}">
-                        <div class="mb-6">
-                            <label for="chatTextInput" class="block text-gray-700 dark:text-gray-300 mb-2 font-medium">
-                                Add Chat Tags
-                            </label>
-
-                            <div class="input-wrapper">
-                                <input type="text" id="chatTextInput" placeholder="Enter a tag and press Enter or click +" />
-                                <button type="button" class="plus-btn-inside" id="addTagBtn">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
-
-                            <div class="mt-3">
-                                <label class="block text-gray-700 dark:text-gray-300 mb-2 font-medium">
-                                    Selected Tags
-                                </label>
-                                <div class="selected-tags" id="selectedTags">
-                                    <div class="text-gray-400 text-sm py-3 px-4">No tags added yet. Add at least 10 tags.</div>
-                                </div>
-                            </div>
-
-                            <!-- Hidden input to store the actual chat text -->
-                            <input type="hidden" name="chatText" id="hiddenChatText" th:value="${chatText}" />
-
-                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                Minimum 10 tags required. Current count:
-                                <span id="tagCount">0</span>/500
-                            </p>
+                <!-- Submit Section -->
+                <div class="border-t border-gray-200 pt-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div class="flex items-start text-gray-500 text-xs sm:text-sm order-2 sm:order-1">
+                            <i class="fas fa-lightbulb text-yellow-400 mr-1 mt-0.5"></i>
+                            <span>Use specific, descriptive tags that showcase your expertise</span>
                         </div>
 
-                        <div class="flex justify-between items-center mt-8">
-                            <div>
-            <span class="text-gray-500 dark:text-gray-400 text-sm">
-                <i class="fas fa-lightbulb mr-1"></i>
-                Tip: Use descriptive tags that represent your services!
-            </span>
-                            </div>
-                            <div>
-                                <button type="submit" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors">
-                                    <i class="fas fa-save mr-2"></i> Update Chat Text
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                        <button
+                                type="submit"
+                                class="btn-primary font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg text-sm sm:text-base flex items-center space-x-2 hover:scale-105 transition-transform w-full sm:w-auto justify-center order-1 sm:order-2"
+                        >
+                            <i class="fas fa-save"></i>
+                            <span>Update Chat Text</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
@@ -259,19 +333,15 @@
             const existingTags = existingChatText.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
             existingTags.forEach(tag => addTagToSet(tag));
         } else {
-            // Initialize with sample tags for demonstration if no existing data
-            const sampleTags = ['friendly', 'support', 'quick response', 'helpful', 'professional',
-                               'knowledgeable', 'efficient', 'reliable', '24/7 service', 'expert advice'];
+            // Initialize with sample tags for demonstration
+            const sampleTags = ['friendly support', 'quick response', 'expert help', 'professional service', '24/7 available',
+                              'knowledgeable team', 'efficient solutions', 'reliable assistance', 'customer focused', 'problem solver'];
             sampleTags.forEach(tag => addTagToSet(tag));
         }
         updateTagDisplay();
 
-        // Add tag when button is clicked
-        addTagBtn.addEventListener('click', function() {
-            addTagFromInput();
-        });
-
-        // Add tag when Enter key is pressed
+        // Add tag event listeners
+        addTagBtn.addEventListener('click', addTagFromInput);
         chatTextInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -283,34 +353,23 @@
         chatTextForm.addEventListener('submit', function(e) {
             if (tagSet.size < 10) {
                 e.preventDefault();
-                showError("You must add at least 10 tags.");
+                showError("You must add at least 10 tags before updating.");
                 return;
             }
-
-            // Update hidden input with comma-separated tags
             hiddenChatText.value = Array.from(tagSet).join(', ');
         });
-
-        // Theme toggle
-        const themeToggle = document.getElementById('theme-toggle');
-        if (themeToggle) {
-            themeToggle.addEventListener('click', function() {
-                document.documentElement.classList.toggle('dark');
-                localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-            });
-        }
 
         function addTagFromInput() {
             const tagValue = chatTextInput.value.trim();
             if (tagValue === '') return;
 
             if (tagSet.has(tagValue)) {
-                showError('This tag has already been added!');
+                showError('This tag already exists!');
                 return;
             }
 
             if (tagValue.length > 30) {
-                showError('Tags must be under 30 characters');
+                showError('Tags must be 30 characters or less');
                 return;
             }
 
@@ -334,57 +393,63 @@
             updateTagDisplay();
         }
 
-        function updateTagDisplay() {
-            // Update tag count
-            tagCountElement.textContent = tagSet.size;
+        window.clearAllTags = function() {
+            if (confirm('Are you sure you want to remove all tags?')) {
+                tagSet.clear();
+                updateTagDisplay();
+            }
+        }
 
-            // Clear container
+        function updateTagDisplay() {
+            tagCountElement.textContent = tagSet.size;
             selectedTagsContainer.innerHTML = '';
 
-            // Add tags
             if (tagSet.size === 0) {
-                selectedTagsContainer.innerHTML = '<div class="text-gray-400 text-sm py-3 px-4">No tags added yet. Add at least 10 tags.</div>';
+                selectedTagsContainer.className = 'selected-tags-area rounded-lg p-4';
+                selectedTagsContainer.innerHTML = `
+                    <div class="text-gray-500 text-center py-6 animate-pulse-soft">
+                        <i class="fas fa-tag text-2xl sm:text-3xl mb-3 opacity-50"></i>
+                        <p class="text-sm sm:text-base font-medium">No tags added yet</p>
+                        <p class="text-xs">Add at least 10 tags to get started</p>
+                    </div>
+                `;
                 return;
             }
 
-            tagSet.forEach(tag => {
+            selectedTagsContainer.className = 'selected-tags-area has-tags rounded-lg p-4';
+
+            const scrollContainer = document.createElement('div');
+            scrollContainer.className = 'tags-scroll-container';
+
+            const tagsGrid = document.createElement('div');
+            tagsGrid.className = 'flex flex-wrap gap-2';
+
+            Array.from(tagSet).forEach((tag, index) => {
                 const tagElement = document.createElement('div');
-                tagElement.className = 'tag tag-pulse';
+                tagElement.className = 'tag-modern flex items-center px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs font-medium animate-tag-bounce';
+                tagElement.style.animationDelay = `${index * 0.1}s`;
                 tagElement.innerHTML = `
-                    ${tag}
-                    <span class="close-icon" data-tag="${tag}">&times;</span>
+                    <span class="mr-1 sm:mr-2">${tag}</span>
+                    <button type="button" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50" onclick="removeTagByValue('${tag}')">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
                 `;
-                selectedTagsContainer.appendChild(tagElement);
+                tagsGrid.appendChild(tagElement);
             });
 
-            // Add event listeners to close buttons
-            document.querySelectorAll('.close-icon').forEach(icon => {
-                icon.addEventListener('click', function() {
-                    const tagToRemove = this.getAttribute('data-tag');
-                    removeTag(tagToRemove);
-                });
-            });
+            scrollContainer.appendChild(tagsGrid);
+            selectedTagsContainer.appendChild(scrollContainer);
+        }
+
+        window.removeTagByValue = function(tagValue) {
+            removeTag(tagValue);
         }
 
         function showError(message) {
-            if (errorText && errorMessage) {
-                errorText.textContent = message;
-                errorMessage.classList.remove('hidden');
-                if (successMessage) successMessage.classList.add('hidden');
-
-                // Auto-hide error after 5 seconds
-                setTimeout(() => {
-                    errorMessage.classList.add('hidden');
-                }, 5000);
-            }
-        }
-
-        // Initialize theme
-        if (localStorage.getItem('theme') === 'dark' ||
-            (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+            successMessage.classList.add('hidden');
+            setTimeout(() => errorMessage.classList.add('hidden'), 5000);
         }
     });
 </script>
