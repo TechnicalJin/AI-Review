@@ -13,12 +13,6 @@
 </head>
 <body>
 <div class="container">
-    <!-- Add back button -->
-    <!-- <div class="mb-3">
-        <a href="/user/home" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div> -->
 
     <div th:if="${clients != null and clients.size() > 0}">
         <div th:each="client : ${clients}" class="client-info" th:data-review-link="${client.reviewLink}">
