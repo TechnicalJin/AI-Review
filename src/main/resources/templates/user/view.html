@@ -17,12 +17,6 @@
     <div th:if="${clients != null and clients.size() > 0}">
         <div th:each="client : ${clients}" class="client-info" th:data-review-link="${client.reviewLink}">
             <h2 class="client-name" th:text="${client.name}"></h2>
-            <!-- <p><strong>Email:</strong> <span th:text="${client.email}"></span></p>
-            <p><strong>Mobile:</strong> <span th:text="${client.mobile}"></span></p>
-            <p><strong>Review Link:</strong>
-                <a th:href="${client.reviewLink}" target="_blank" th:text="${client.reviewLink}"></a>
-            </p>
-            <img th:src="@{'/uploads/' + ${client.logo}}" alt="Client Logo" onerror="this.src='/default-logo.png'"> -->
 
             <hr/>
 
