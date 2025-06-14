@@ -26,7 +26,7 @@
                     Select Tags for Review Generation
                     <span class="tags-counter">0 selected</span>
                 </h4>
-                <p class="text-muted mb-3">Choose at least 3 tags that best describe the review you want to generate.</p>
+                <p class="text-muted mb-3">Choose at least 3 tags.</p>
                 <div class="tags-container" th:if="${client.chatText != null}">
                     <div th:each="tag : ${#strings.arraySplit(client.chatText, ',')}" class="tag-item form-check form-check-inline">
                         <input class="form-check-input tag-checkbox" type="checkbox" th:value="${#strings.trim(tag)}" th:id="${'tag-' + tagStat.index}">
