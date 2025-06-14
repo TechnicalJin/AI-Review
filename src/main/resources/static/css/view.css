@@ -1,5 +1,6 @@
 /* =====================================================
-   CSS VARIABLES & ROOT CONFIGURATION
+   ROOT VARIABLES FOR CONSISTENT THEMING
+   Defines CSS custom properties for colors, gradients, shadows, and transitions
    ===================================================== */
 :root {
     /* Primary Colors */
@@ -24,10 +25,15 @@
 
     /* Transitions */
     --transition-speed: 0.3s;
+
+    /* Tag Colors */
+    --tag-bg: #f8f9fa;
+    --tag-selected-bg: var(--primary-gradient);
 }
 
 /* =====================================================
    GLOBAL BASE STYLES & TYPOGRAPHY
+   Sets up font imports, base HTML, and body styles
    ===================================================== */
 @import url("https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700");
 
@@ -42,93 +48,55 @@ body {
     color: var(--text-color);
     background: var(--background-color);
     min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
 }
 
 /* =====================================================
-   ANIMATED BACKGROUND
-   ===================================================== */
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background:
-        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
-    animation: backgroundFlow 20s ease-in-out infinite;
-    z-index: -1;
-}
-
-@keyframes backgroundFlow {
-    0%, 100% {
-        background:
-            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
-    }
-    50% {
-        background:
-            radial-gradient(circle at 80% 20%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 20% 80%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 60% 60%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
-    }
-}
-
-/* =====================================================
-   MOBILE-FIRST MAIN CONTAINER LAYOUT
+   MAIN CONTAINER LAYOUT
+   Defines the main container's layout and animation
    ===================================================== */
 .container {
     max-width: 1000px;
-    margin: 10px;
-    padding: 12px;
+    margin: 40px auto;
+    padding: 0 15px; /* Ensure consistent padding on both sides */
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
     position: relative;
-    border-radius: 12px;
+    overflow: visible;
+    box-sizing: border-box; /* Ensure padding is included in width calculations */
 }
 
-/* Glass Morphism Container Effect */
-.container::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: 0;
-    right: 0;
-    bottom: -10px;
-    background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%),
-        linear-gradient(225deg, rgba(120, 119, 198, 0.1) 0%, rgba(255, 119, 198, 0.05) 50%, rgba(120, 219, 255, 0.1) 100%);
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-    z-index: -1;
-}
-
-/* Inner Container Content */
-.container > * {
-    position: relative;
-    z-index: 2;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+@keyframes containerGlow {
+    0% {
+        box-shadow:
+            0 25px 50px rgba(0, 0, 0, 0.15),
+            0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+            0 5px 20px rgba(0, 0, 0, 0.08);
+    }
+    100% {
+        box-shadow:
+            0 30px 60px rgba(0, 0, 0, 0.2),
+            0 0 0 1px rgba(255, 255, 255, 0.15) inset,
+            0 8px 30px rgba(0, 0, 0, 0.12),
+            0 0 50px rgba(79, 70, 229, 0.1);
+    }
 }
 
 /* =====================================================
    CLIENT INFO SECTION
+   Styles for the client info card with hover effects
    ===================================================== */
 .client-info {
-    padding: 20px;
-    border-radius: 16px;
+    padding: 40px;
+    border-radius: 24px;
     background:
         linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%),
         linear-gradient(225deg, rgba(79, 70, 229, 0.02) 0%, rgba(99, 102, 241, 0.02) 100%);
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     border: 1px solid rgba(255, 255, 255, 0.4);
     position: relative;
     overflow: hidden;
@@ -137,16 +105,57 @@ body::before {
         0 0 0 1px rgba(255, 255, 255, 0.2) inset;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     animation: slideUpFade 0.8s ease-out;
-    will-change: transform, box-shadow;
+}
+
+.client-info:hover {
+    transform: translateY(-8px);
+    box-shadow:
+        0 30px 60px rgba(0, 0, 0, 0.12),
+        0 0 0 1px rgba(255, 255, 255, 0.3) inset,
+        0 0 40px rgba(79, 70, 229, 0.1);
+}
+
+/* Animated Border Effect for Client Info */
+.client-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg,
+        rgba(79, 70, 229, 0.1) 0%,
+        rgba(99, 102, 241, 0.1) 25%,
+        rgba(129, 140, 248, 0.1) 50%,
+        rgba(165, 180, 252, 0.1) 75%,
+        rgba(79, 70, 229, 0.1) 100%);
+    border-radius: 24px;
+    padding: 2px;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    animation: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.client-info:hover::before {
+    opacity: 0.6;
+}
+
+@keyframes borderRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* =====================================================
    CLIENT NAME STYLING
+   Styles for the client name with gradient text and decorative lines
    ===================================================== */
 .client-name {
     text-align: center;
-    margin: 15px 0;
-    font-size: 1.5rem;
+    /*margin: 30px 0;
+    padding: 20px 0;
+    font-size: 2.5rem;*/
     font-weight: 700;
     background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
     -webkit-background-clip: text;
@@ -154,45 +163,20 @@ body::before {
     background-clip: text;
     text-transform: capitalize;
     position: relative;
-    padding: 15px 0;
-}
 
-.client-name::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 50px;
-    height: 3px;
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    border-radius: 2px;
-    box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3);
-}
-
-.client-name::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 2px;
-    background: linear-gradient(135deg, #7c3aed, #ec4899);
-    border-radius: 2px;
-    box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3);
 }
 
 /* =====================================================
    SECTION HEADERS
+   Styles for section headers with decorative left bar
    ===================================================== */
 .section-header {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
     font-weight: 600;
     color: #1e293b;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     position: relative;
-    padding-left: 16px;
+    padding-left: 20px;
 }
 
 .section-header::before {
@@ -201,7 +185,7 @@ body::before {
     left: 0;
     top: 50%;
     transform: translateY(-50%);
-    width: 3px;
+    width: 4px;
     height: 100%;
     background: linear-gradient(135deg, #4f46e5, #7c3aed);
     border-radius: 2px;
@@ -209,11 +193,12 @@ body::before {
 
 /* =====================================================
    CONTENT SECTIONS
+   Styles for content sections with hover effects
    ===================================================== */
 .content-section {
     background: rgba(255, 255, 255, 0.9);
-    border-radius: 16px;
-    padding: 20px;
+    border-radius: 20px;
+    padding: 30px;
     border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow:
         0 15px 35px rgba(0, 0, 0, 0.06),
@@ -221,7 +206,7 @@ body::before {
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .content-section::after {
@@ -238,25 +223,30 @@ body::before {
     transition: left 0.6s ease;
 }
 
+.content-section:hover::after {
+    left: 100%;
+}
+
 /* =====================================================
    TAG SELECTION SYSTEM
+   Styles for the tag selection container and its components
    ===================================================== */
 .tag-selection {
     background: rgba(255, 255, 255, 0.9);
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 20px;
+    padding: 25px;
+    border-radius: 16px;
+    margin-bottom: 25px;
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
 }
 
 .tag-selection h4 {
     color: #2d3436;
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     font-weight: 600;
-    margin-bottom: 0.8rem;
+    margin-bottom: 1rem;
     position: relative;
-    padding-bottom: 8px;
+    padding-bottom: 10px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -267,8 +257,8 @@ body::before {
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 40px;
-    height: 2px;
+    width: 50px;
+    height: 3px;
     background: var(--primary-color);
     border-radius: 2px;
 }
@@ -280,9 +270,10 @@ body::before {
     justify-content: center;
     background: var(--primary-color);
     color: white;
-    border-radius: 12px;
-    padding: 2px 8px;
-    font-size: 0.75rem;
+    border-radius: 15px;
+    padding: 3px 10px;
+    font-size: 0.8rem;
+    margin-left: 10px;
     opacity: 0;
     transform: scale(0.8);
     transition: all 0.3s ease;
@@ -297,30 +288,30 @@ body::before {
 .tags-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 15px;
-    padding: 5px 2px;
-    max-height: 200px;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 5px;
+    max-height: 250px;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--primary-color) #f0f0f0;
     -webkit-overflow-scrolling: touch;
 }
 
-/* Custom scrollbar styling */
+/* Custom Scrollbar Styling */
 .tags-container::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 
 .tags-container::-webkit-scrollbar-track {
     background: #f0f0f0;
-    border-radius: 3px;
+    border-radius: 4px;
 }
 
 .tags-container::-webkit-scrollbar-thumb {
     background-color: var(--primary-color);
-    border-radius: 3px;
-    border: 1px solid #f0f0f0;
+    border-radius: 4px;
+    border: 2px solid #f0f0f0;
 }
 
 .tags-container::-webkit-scrollbar-thumb:hover {
@@ -348,13 +339,13 @@ body::before {
 }
 
 .form-check-label {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 10px 16px;
+    padding: 10px 20px;
     background: white;
     border: 2px solid var(--border-color);
-    border-radius: 20px;
+    border-radius: 25px;
     color: var(--text-color);
     font-size: 0.95rem;
     font-weight: 500;
@@ -366,7 +357,13 @@ body::before {
     overflow: hidden;
     min-height: 44px;
     -webkit-tap-highlight-color: transparent;
-    will-change: transform, box-shadow;
+}
+
+.form-check-label:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--hover-shadow);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 .form-check-input:checked + .form-check-label {
@@ -376,36 +373,53 @@ body::before {
     box-shadow: var(--button-shadow);
 }
 
+/* Ripple Effect for Tags */
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.7);
+    transform: scale(0);
+    animation: ripple 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
 /* Tag Warning */
 #tag-warning {
     background: #fff3cd;
     color: #856404;
     border: none;
-    border-radius: 10px;
-    padding: 12px 15px;
-    margin-top: 12px;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-top: 15px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     animation: slideIn 0.3s ease-out;
-    font-size: 0.9rem;
 }
 
 #tag-warning::before {
     content: '⚠️';
-    font-size: 1.1rem;
+    font-size: 1.2rem;
 }
 
 /* =====================================================
    GENERATED MESSAGE BOX
+   Styles for the generated message textarea
    ===================================================== */
 .generated-msg-box {
     width: 100%;
-    min-height: 150px;
+    min-height: 200px;
     border: 2px solid var(--border-color);
-    border-radius: 12px;
-    padding: 12px;
+    border-radius: 16px;
+    padding: 15px;
     resize: vertical;
     font-family: 'Inter', monospace;
     white-space: pre-wrap;
@@ -417,7 +431,6 @@ body::before {
     font-size: 1rem;
     line-height: 1.6;
     -webkit-appearance: none;
-    margin-bottom: 15px;
 }
 
 .generated-msg-box:focus {
@@ -427,10 +440,11 @@ body::before {
 }
 
 /* =====================================================
-   MOBILE-FIRST BUTTON SYSTEM
+   BUTTON SYSTEM
+   General button styles and specific button types
    ===================================================== */
 .btn {
-    padding: 12px 20px;
+    padding: 12px 25px;
     border-radius: 12px;
     font-weight: 600;
     letter-spacing: 0.5px;
@@ -448,7 +462,16 @@ body::before {
     gap: 8px;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
-    will-change: transform, box-shadow;
+}
+
+.btn:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: var(--hover-shadow);
+}
+
+.btn:active {
+    transform: translateY(-1px) scale(0.98);
+    box-shadow: var(--button-active-shadow);
 }
 
 .btn:focus-visible {
@@ -459,25 +482,23 @@ body::before {
 /* Button Container */
 .btn-container {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 15px;
-    align-items: stretch;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    align-items: flex-start;
 }
 
 /* Copy Button */
 #copy-btn {
     background: var(--primary-gradient);
     color: white;
-    width: 100%;
-    height: 50px;
-    font-size: 1rem;
-    font-weight: 700;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
-    margin-bottom: 5px;
+    min-width: 160px;
     position: relative;
     z-index: 1;
+    font-weight: 700;
+    padding: 14px 28px;
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
 }
 
 #copy-btn::before {
@@ -501,17 +522,22 @@ body::before {
     left: 100%;
 }
 
+#copy-btn:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+}
+
 /* Review Length Controls */
 .review-length-controls {
-    width: 100%;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+    min-width: 320px;
 }
 
 .btn-group {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
     gap: 8px;
     width: 100%;
     border-radius: 12px;
@@ -525,19 +551,18 @@ body::before {
     color: var(--text-color);
     border: 2px solid var(--border-color);
     font-weight: 600;
-    padding: 0;
+    padding: 12px 20px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
     z-index: 1;
+    flex: 1;
     border-radius: 10px;
     margin: 2px;
     height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.9rem;
-    -webkit-tap-highlight-color: transparent;
 }
 
 .length-btn::after {
@@ -553,10 +578,22 @@ body::before {
     z-index: -1;
 }
 
+.length-btn:hover {
+    color: white;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: var(--hover-shadow);
+}
+
+.length-btn:hover::after {
+    opacity: 1;
+}
+
 .length-btn.active {
     background: var(--primary-gradient);
     color: white;
     border: none;
+    transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
 }
 
@@ -570,15 +607,13 @@ body::before {
     color: white;
     width: 100%;
     font-weight: 700;
+    padding: 14px 20px;
     border-radius: 12px;
     position: relative;
     z-index: 1;
     overflow: hidden;
     box-shadow: 0 6px 20px rgba(240, 147, 251, 0.3);
     height: 50px;
-    font-size: 1rem;
-    margin-top: 5px;
-    -webkit-tap-highlight-color: transparent;
 }
 
 .regenerate-btn::before {
@@ -601,36 +636,52 @@ body::before {
     left: 100%;
 }
 
-/* =====================================================
-   MOBILE TOUCH FEEDBACK
-   ===================================================== */
-.btn:active {
-    transform: scale(0.98);
-    transition: transform 0.1s;
+.regenerate-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(240, 147, 251, 0.4);
 }
 
-.form-check-label:active {
-    transform: scale(0.98);
+/* Loading Animation for Regenerate */
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.8;
 }
 
-@keyframes buttonPress {
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    animation: pulse 1s infinite;
+}
+
+/* Success Animation */
+.copy-success {
+    animation: successPulse 0.5s ease-out;
+    background-color: #28a745 !important;
+    transform: scale(1.05);
+}
+
+@keyframes successPulse {
     0% { transform: scale(1); }
-    50% { transform: scale(0.98); }
+    50% { transform: scale(1.1); }
     100% { transform: scale(1); }
-}
-
-.btn-press {
-    animation: buttonPress 0.2s ease-out;
 }
 
 /* =====================================================
    FOOTER SECTION
+   Styles for the footer with CTA links and animations
    ===================================================== */
 .footer {
-    margin-top: 25px;
-    padding: 20px 15px;
+    /* margin-top: 50px;
+    padding: 40px 15px; Consistent padding on all sides */
     background: var(--primary-gradient);
-    border-radius: 12px;
+    border-radius: 25px;
     box-shadow:
         0 20px 40px rgba(0, 0, 0, 0.1),
         0 0 0 1px rgba(255, 255, 255, 0.1) inset;
@@ -639,6 +690,8 @@ body::before {
     overflow: hidden;
     backdrop-filter: blur(10px);
     animation: slideUpFade 0.8s ease-out;
+    width: 100%;
+    box-sizing: border-box; /* Ensure padding doesn't cause overflow */
 }
 
 .footer::before {
@@ -667,28 +720,33 @@ body::before {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    margin: 15px auto 20px;
-    padding: 15px;
+    margin: 10px auto;
+    padding: 10px 10px;
     background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
     color: white;
-    border-radius: 10px;
+    border-radius: 50px;
     text-decoration: none;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 1.1rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow:
         0 8px 25px rgba(37, 211, 102, 0.3),
         0 0 0 1px rgba(255, 255, 255, 0.1) inset;
     position: relative;
     overflow: hidden;
-    width: 100%;
+    max-width: 95%;
     transform: translateY(0);
     animation: float 3s ease-in-out infinite;
     touch-action: manipulation;
+    text-align: center;
+    flex-wrap: wrap; /* Allow wrapping for smaller screens */
 }
 
 .footer .cta-link:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow:
+        0 15px 35px rgba(37, 211, 102, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.2) inset;
     color: white;
 }
 
@@ -697,7 +755,7 @@ body::before {
 }
 
 .footer .cta-link i {
-    font-size: 1.4rem;
+    font-size: 1.6rem;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
     animation: bounce 2s infinite;
     flex-shrink: 0;
@@ -707,87 +765,44 @@ body::before {
     font-weight: 600;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     line-height: 1.4;
+    white-space: normal; /* Allow text to wrap */
 }
 
 /* Website Link */
 .footer .website-link {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
     font-weight: 500;
-    font-size: 0.9rem;
-    padding: 10px;
-    border-radius: 12px;
+    font-size: 1.1rem;
+    padding: 6px 10px;
+    border-radius: 15px;
     transition: all 0.3s ease;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(5px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    margin: 8px 0;
     touch-action: manipulation;
 }
 
 .footer .website-link:hover {
     background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     color: white;
 }
 
 .footer .website-link i {
-    font-size: 1.2rem;
-    color: rgba(255, 255, 255, 0.9);
-    transition: transform 0.3s ease;
+    font-size: 1.3rem;
+    color: rgba(255, 255, :checked + .form-check-label {
+    background: var(--primary-gradient);
+    color: white;
+    border-color: transparent;
+    box-shadow: var(--button-shadow);
 }
 
-.footer .website-link:hover i {
-    transform: rotate(15deg) scale(1.1);
-}
-
-/* Copyright Text */
-.footer p:last-child {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.9rem;
-    margin: 15px 0 0 0;
-    font-weight: 400;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* =====================================================
-   LOADING & SUCCESS STATES
-   ===================================================== */
-.loading {
-    position: relative;
-    pointer-events: none;
-    opacity: 0.8;
-}
-
-.loading::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    animation: pulse 1s infinite;
-}
-
-.loading .spinner-border {
-    width: 1rem;
-    height: 1rem;
-    margin-right: 8px;
-    animation: spin 1s linear infinite;
-}
-
-/* Success Animation */
-.copy-success {
-    animation: successPulse 0.3s ease-out;
-    background-color: #28a745 !important;
-    transform: scale(1.05);
-}
-
-/* Ripple effect */
+/* Ripple Effect for Tags */
 .ripple {
     position: absolute;
     border-radius: 50%;
@@ -797,88 +812,6 @@ body::before {
     pointer-events: none;
 }
 
-/* =====================================================
-   KEYFRAME ANIMATIONS
-   ===================================================== */
-@keyframes slideUpFade {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes shimmer {
-    0% {
-        left: -100%;
-    }
-    100% {
-        left: 100%;
-    }
-}
-
-@keyframes float {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-10px);
-    }
-}
-
-@keyframes bounce {
-    0%, 20%, 50%, 80%, 100% {
-        transform: translateY(0);
-    }
-    40% {
-        transform: translateY(-10px);
-    }
-    60% {
-        transform: translateY(-5px);
-    }
-}
-
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.5;
-    }
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 @keyframes ripple {
     to {
         transform: scale(4);
@@ -886,75 +819,202 @@ body::before {
     }
 }
 
-@keyframes successPulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+/* Tag Warning */
+#tag-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: none;
+    border-radius: 12px;
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    animation: slideIn 0.3s ease-out;
 }
 
-/* =====================================================
-   SAFE AREA INSETS FOR MODERN MOBILE BROWSERS
-   ===================================================== */
+#tag-warning::before {
+    content: '⚠️';
+    font-size: 1.2rem;
+}
+
+/* Generated Message Box */
+.generated-msg-box {
+    min-height: 150px;
+    padding: 12px;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    -webkit-appearance: none;
+}
+
+/* Button Container */
+.btn-container {
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+/* Copy Button */
+#copy-btn {
+    width: 100%;
+    height: 50px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Review Length Controls */
+.review-length-controls {
+    width: 100%;
+    gap: 10px;
+}
+
+.btn-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+}
+
+.length-btn {
+    height: 44px;
+    padding: 0;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Regenerate Button */
+.regenerate-btn {
+    height: 50px;
+    font-size: 1rem;
+    margin-top: 5px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Footer */
+.footer {
+    margin-top: 25px;
+    padding: 20px 15px;
+    border-radius: 12px;
+    width: 100%; /* Ensure footer fits within container */
+}
+
+.footer .cta-link {
+    padding: 15px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    width: 100%;
+    gap: 10px;
+    max-width: 100%; /* Prevent overflow */
+    box-sizing: border-box;
+}
+
+.footer .website-link {
+    padding: 10px;
+    font-size: 0.9rem;
+}
+
+/* Safe Area Insets */
 @supports(padding: max(0px)) {
     .container {
-        padding-left: max(12px, env(safe-area-inset-left));
-        padding-right: max(12px, env(safe-area-inset-right));
-        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        padding-left: max(15px, env(safe-area-inset-left));
+        padding-right: max(15px, env(safe-area-inset-right));
+        padding-bottom: max(15px, env(safe-area-inset-bottom));
+    }
+
+    .footer {
+        padding-left: max(15px, env(safe-area-inset-left));
+        padding-right: max(15px, env(safe-area-inset-right));
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
     }
 }
+}
 
-/* =====================================================
-   SMALL MOBILE SCREENS (< 380px)
-   ===================================================== */
+@media (max-width: 480px) {
+/* Tag Selection */
+.tag-selection h4 {
+    font-size: 1rem;
+}
+
+.form-check-label {
+    padding: 6px 14px;
+    font-size: 0.85rem;
+}
+
+#tag-warning {
+    padding: 12px 15px;
+    font-size: 0.9rem;
+}
+
+/* Client Name */
+.client-name {
+    font-size: 1.5rem;
+}
+}
+
 @media (max-width: 380px) {
-    .container {
-        padding: 10px;
-        margin: 6px;
-    }
+/* Container */
+.container {
+    padding: 12px;
+    margin: 8px;
+}
 
-    .client-name {
-        font-size: 1.3rem;
-    }
+/* Client Name */
+.client-name {
+    font-size: 1.3rem;
+}
 
-    .form-check-label {
-        padding: 8px 14px;
-        font-size: 0.85rem;
-    }
+/* Buttons and Inputs */
+.form-check-label {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+}
 
-    .btn {
-        font-size: 0.85rem;
-    }
+.btn {
+    font-size: 0.9rem;
+}
 
-    .generated-msg-box {
-        font-size: 0.95rem;
-    }
+.generated-msg-box {
+    font-size: 0.95rem;
+}
 }
 
 /* =====================================================
-   TABLET AND DESKTOP ENHANCEMENTS (768px+)
+   NON-HOVER DEVICE SUPPORT
+   Styles for devices without hover capability
    ===================================================== */
-@media (min-width: 768px) {
-    .container {
-        margin: 40px auto;
-        padding: 0 20px;
-    }
+@media (hover: none) {
+.btn:hover {
+    transform: none;
+    box-shadow: var(--button-shadow);
+}
 
-    .container::before {
-        top: -20px;
-        bottom: -20px;
-        border-radius: 30px;
-    }
+.form-check-label:hover {
+    transform: none;
+}
 
-    .container > * {
-        padding: 35px;
-        border-radius: 25px;
-    }
+.btn:active {
+    transform: scale(0.98);
+    box-shadow: var(--button-active-shadow);
+}
 
-    .client-info {
-        padding: 40px;
-        margin-bottom: 30px;
-        border-radius: 24px;
-    }
+.form-check-label:active {
+    transform: scale(0.98);
+}
+}
 
-    .client-info:hover {
-        transform: translateY(-8px);
+/* Optimize Performance */
+.client-info,
+.btn,
+.form-check-label {
+    will-change: transform, box-shadow;
+}
