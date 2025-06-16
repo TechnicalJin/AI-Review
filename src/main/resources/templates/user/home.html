@@ -1,899 +1,3 @@
-<!--<!DOCTYPE html>-->
-<!--<html lang="en" xmlns:th="http://www.thymeleaf.org">-->
-<!--<head>-->
-<!--    <meta charset="UTF-8">-->
-<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
-<!--    <title>| Review Generator |</title>-->
-<!--    <script src="https://cdn.tailwindcss.com"></script>-->
-<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">-->
-<!--    <script>-->
-<!--        tailwind.config = {-->
-<!--            theme: {-->
-<!--                extend: {-->
-<!--                    colors: {-->
-<!--                        primary: '#3b82f6',-->
-<!--                        secondary: '#6366f1',-->
-<!--                        accent: '#8b5cf6',-->
-<!--                        success: '#10b981',-->
-<!--                        warning: '#f59e0b',-->
-<!--                        danger: '#ef4444'-->
-<!--                    },-->
-<!--                    animation: {-->
-<!--                        'fade-in': 'fadeIn 0.5s ease-in-out',-->
-<!--                        'slide-in': 'slideIn 0.3s ease-out',-->
-<!--                        'bounce-subtle': 'bounceSubtle 0.6s ease-in-out'-->
-<!--                    }-->
-<!--                }-->
-<!--            }-->
-<!--        }-->
-<!--    </script>-->
-<!--    <style>-->
-<!--        @keyframes fadeIn {-->
-<!--            from { opacity: 0; transform: translateY(10px); }-->
-<!--            to { opacity: 1; transform: translateY(0); }-->
-<!--        }-->
-<!--        @keyframes slideIn {-->
-<!--            from { transform: translateX(-100%); }-->
-<!--            to { transform: translateX(0); }-->
-<!--        }-->
-<!--        @keyframes bounceSubtle {-->
-<!--            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }-->
-<!--            40% { transform: translateY(-5px); }-->
-<!--            60% { transform: translateY(-3px); }-->
-<!--        }-->
-<!--        .sidebar-active {-->
-<!--            overflow: hidden;-->
-<!--        }-->
-<!--        #sidebar {-->
-<!--            transform: translateX(-100%);-->
-<!--            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);-->
-<!--        }-->
-<!--        #sidebar.active {-->
-<!--            transform: translateX(0);-->
-<!--        }-->
-<!--        @media (min-width: 768px) {-->
-<!--            #sidebar {-->
-<!--                transform: translateX(0);-->
-<!--            }-->
-<!--            #content.active {-->
-<!--                margin-left: 0;-->
-<!--            }-->
-<!--        }-->
-<!--        .glass-effect {-->
-<!--            backdrop-filter: blur(10px);-->
-<!--            background: rgba(255, 255, 255, 0.9);-->
-<!--        }-->
-<!--    </style>-->
-<!--</head>-->
-<!--<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">-->
-<!--&lt;!&ndash; Sidebar &ndash;&gt;-->
-<!--<nav id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-gradient-to-b from-slate-800 to-slate-900 shadow-2xl z-50 md:translate-x-0">-->
-<!--    &lt;!&ndash; Sidebar Header &ndash;&gt;-->
-<!--    <div class="px-6 py-8 border-b border-slate-700">-->
-<!--        <h3 class="text-2xl font-bold text-white tracking-wide">-->
-<!--            <i class="fas fa-star text-yellow-400 mr-2"></i>-->
-<!--            YRHP-->
-<!--        </h3>-->
-<!--        <p class="text-slate-400 text-sm mt-1">Review Generator</p>-->
-<!--    </div>-->
-
-<!--    &lt;!&ndash; Navigation Links &ndash;&gt;-->
-<!--    <div class="py-6">-->
-<!--        <ul class="space-y-2 px-4">-->
-<!--            <li>-->
-<!--                <a href="/user/create"-->
-<!--                   class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all duration-300 group">-->
-<!--                    <i class="fas fa-user-plus text-lg mr-3 group-hover:scale-110 transition-transform duration-300"></i>-->
-<!--                    <span class="font-medium">Add Client</span>-->
-<!--                </a>-->
-<!--            </li>-->
-<!--        </ul>-->
-<!--    </div>-->
-
-<!--    &lt;!&ndash; Bottom Actions &ndash;&gt;-->
-<!--    <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700 space-y-2">-->
-<!--        <a th:if="${user != null}"-->
-<!--           th:href="@{/user/details}"-->
-<!--           class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all duration-300 group">-->
-<!--            <i class="fas fa-user-circle text-lg mr-3 group-hover:scale-110 transition-transform duration-300"></i>-->
-<!--            <span class="font-medium">Profile</span>-->
-<!--        </a>-->
-
-<!--        <a th:href="@{/user/log}"-->
-<!--           class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all duration-300 group">-->
-<!--            <i class="fas fa-history text-lg mr-3 group-hover:scale-110 transition-transform duration-300"></i>-->
-<!--            <span class="font-medium">Log History</span>-->
-<!--        </a>-->
-
-<!--        <a href="/logout"-->
-<!--           class="flex items-center px-4 py-3 text-red-300 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-300 group">-->
-<!--            <i class="fas fa-sign-out-alt text-lg mr-3 group-hover:scale-110 transition-transform duration-300"></i>-->
-<!--            <span class="font-medium">Logout</span>-->
-<!--        </a>-->
-<!--    </div>-->
-<!--</nav>-->
-
-<!--&lt;!&ndash; Main Content &ndash;&gt;-->
-<!--<div id="content" class="md:ml-64 transition-all duration-300">-->
-<!--    &lt;!&ndash; Top Navigation &ndash;&gt;-->
-<!--    <nav class="glass-effect border-b border-slate-200 sticky top-0 z-40">-->
-<!--        <div class="px-6 py-4">-->
-<!--            <button type="button"-->
-<!--                    id="sidebarCollapse"-->
-<!--                    class="md:hidden bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105">-->
-<!--                <i class="fas fa-bars mr-2"></i>-->
-<!--                <span class="font-medium">Menu</span>-->
-<!--            </button>-->
-<!--        </div>-->
-<!--    </nav>-->
-
-<!--    &lt;!&ndash; Page Content &ndash;&gt;-->
-<!--    <div class="p-6 animate-fade-in">-->
-<!--        &lt;!&ndash; Page Header &ndash;&gt;-->
-<!--        <div class="mb-8">-->
-<!--            <h2 class="text-3xl font-bold text-slate-800 mb-2">-->
-<!--                <i class="fas fa-users text-primary mr-3"></i>-->
-<!--                Client Management-->
-<!--            </h2>-->
-<!--            <p class="text-slate-600">Manage your clients and their review links</p>-->
-<!--        </div>-->
-
-<!--        &lt;!&ndash; Search Section &ndash;&gt;-->
-<!--        <div class="bg-white rounded-xl shadow-lg p-6 mb-8 border border-slate-200">-->
-<!--            <form action="/user/search" method="get" class="flex flex-col md:flex-row gap-4">-->
-<!--                <div class="flex-1 relative">-->
-<!--                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>-->
-<!--                    <input type="text"-->
-<!--                           name="query"-->
-<!--                           class="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"-->
-<!--                           placeholder="Search by name, mobile or email..."-->
-<!--                           th:value="${searchQuery != null ? searchQuery : ''}"-->
-<!--                           aria-label="Search by name, mobile or email"/>-->
-<!--                </div>-->
-<!--                <button type="submit"-->
-<!--                        class="bg-primary hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 flex items-center justify-center">-->
-<!--                    <i class="fas fa-search mr-2"></i>-->
-<!--                    Search-->
-<!--                </button>-->
-<!--            </form>-->
-
-<!--            &lt;!&ndash; Search Results Info &ndash;&gt;-->
-<!--            <div th:if="${searchQuery != null}" class="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">-->
-<!--                <div class="flex items-center justify-between">-->
-<!--                    <div class="text-slate-700">-->
-<!--                            <span th:if="${clients.totalElements > 0}">-->
-<!--                                <i class="fas fa-check-circle text-success mr-2"></i>-->
-<!--                                Found <strong th:text="${clients.totalElements}" class="text-primary"></strong> results for "<strong th:text="${searchQuery}" class="text-slate-800"></strong>"-->
-<!--                            </span>-->
-<!--                        <span th:unless="${clients.totalElements > 0}">-->
-<!--                                <i class="fas fa-exclamation-circle text-warning mr-2"></i>-->
-<!--                                No results found for "<strong th:text="${searchQuery}" class="text-slate-800"></strong>"-->
-<!--                            </span>-->
-<!--                    </div>-->
-<!--                    <a href="/user/home"-->
-<!--                       class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center">-->
-<!--                        <i class="fas fa-times mr-2"></i>-->
-<!--                        Clear Search-->
-<!--                    </a>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-
-<!--        &lt;!&ndash; Clients Table &ndash;&gt;-->
-<!--        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">-->
-<!--            <div class="overflow-x-auto">-->
-<!--                <table class="w-full">-->
-<!--                    <thead class="bg-gradient-to-r from-slate-800 to-slate-700 text-white">-->
-<!--                    <tr>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">ID</th>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">Name</th>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">Email</th>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">Mobile</th>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">Logo</th>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">Chat Text</th>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">Review Link</th>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">Actions</th>-->
-<!--                    </tr>-->
-<!--                    </thead>-->
-<!--                    <tbody class="divide-y divide-slate-200">-->
-<!--                    <tr th:each="client : ${clients.content}" class="hover:bg-slate-50 transition-colors duration-200">-->
-<!--                        <td class="px-6 py-4 text-slate-600 font-medium" th:text="${client.id}"></td>-->
-<!--                        <td class="px-6 py-4">-->
-<!--                            <div class="font-medium text-slate-800 break-words" th:text="${client.name}"></div>-->
-<!--                        </td>-->
-<!--                        <td class="px-6 py-4">-->
-<!--                            <div class="text-slate-600 break-words" th:text="${client.email}"></div>-->
-<!--                        </td>-->
-<!--                        <td class="px-6 py-4 text-slate-600" th:text="${client.mobile}"></td>-->
-<!--                        <td class="px-6 py-4">-->
-<!--                            <img th:src="@{${resourceURL != null ? resourceURL : ''} + ${client.logo}}"-->
-<!--                                 alt="Client Logo"-->
-<!--                                 class="w-12 h-12 rounded-lg object-cover shadow-md border border-slate-200"-->
-<!--                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iOCIgZmlsbD0iIzkxQTdCRiIvPgo8cGF0aCBkPSJNMjQgMTJDMjcuMzEzNyAxMiAzMCAxNC42ODYzIDMwIDE4QzMwIDIxLjMxMzcgMjcuMzEzNyAyNCAyNCAyNEMyMC42ODYzIDI0IDE4IDIxLjMxMzcgMTggMThDMTggMTQuNjg2MyAyMC42ODYzIDEyIDI0IDEyWk0yNCAzNkMzMCAzNiAzNiAzMi40IDM2IDI4SDEyQzEyIDMyLjQgMTggMzYgMjQgMzZaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K'">-->
-<!--                        </td>-->
-<!--                        <td class="px-6 py-4">-->
-<!--                            <div class="text-slate-600 break-words max-w-xs" th:text="${client.chatText}"></div>-->
-<!--                        </td>-->
-<!--                        <td class="px-6 py-4">-->
-<!--                            <a th:href="${client.reviewLink}"-->
-<!--                               target="_blank"-->
-<!--                               class="text-primary hover:text-blue-600 break-words max-w-xs inline-block transition-colors duration-200"-->
-<!--                               th:text="${client.reviewLink}"></a>-->
-<!--                        </td>-->
-<!--                        <td class="px-6 py-4">-->
-<!--                            <div class="flex space-x-2">-->
-<!--                                <a th:href="${client.generateLink}"-->
-<!--                                   target="_blank"-->
-<!--                                   class="bg-success hover:bg-green-600 text-white p-2 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 group"-->
-<!--                                   title="View">-->
-<!--                                    <i class="fas fa-eye group-hover:scale-110 transition-transform duration-300"></i>-->
-<!--                                </a>-->
-<!--                                <a th:href="@{/user/edit/{id}(id=${client.id})}"-->
-<!--                                   class="bg-primary hover:bg-blue-600 text-white p-2 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 group"-->
-<!--                                   title="Edit">-->
-<!--                                    <i class="fas fa-edit group-hover:scale-110 transition-transform duration-300"></i>-->
-<!--                                </a>-->
-<!--                                <a th:href="@{/user/delete/{id}(id=${client.id})}"-->
-<!--                                   onclick="return confirm('Are you sure you want to delete this client?')"-->
-<!--                                   class="bg-danger hover:bg-red-600 text-white p-2 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 group"-->
-<!--                                   title="Delete">-->
-<!--                                    <i class="fas fa-trash-alt group-hover:scale-110 transition-transform duration-300"></i>-->
-<!--                                </a>-->
-<!--                            </div>-->
-<!--                        </td>-->
-<!--                    </tr>-->
-<!--                    </tbody>-->
-<!--                </table>-->
-<!--            </div>-->
-<!--        </div>-->
-
-<!--        &lt;!&ndash; Pagination &ndash;&gt;-->
-<!--        <div th:if="${clients.totalElements > 0}" class="mt-8 bg-white rounded-xl shadow-lg p-6 border border-slate-200">-->
-<!--            <nav aria-label="Page navigation" class="mb-4">-->
-<!--                <ul class="flex justify-center space-x-2 flex-wrap">-->
-<!--                    &lt;!&ndash; First & Previous &ndash;&gt;-->
-<!--                    <li th:classappend="${clients.first ? 'opacity-50 pointer-events-none' : ''}">-->
-<!--                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=0, size=${clients.size}, query=${searchQuery})}"-->
-<!--                           th:if="${!clients.first}"-->
-<!--                           class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all duration-300 font-medium">-->
-<!--                            First-->
-<!--                        </a>-->
-<!--                        <span th:if="${clients.first}" class="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg">First</span>-->
-<!--                    </li>-->
-
-<!--                    <li th:classappend="${clients.first ? 'opacity-50 pointer-events-none' : ''}">-->
-<!--                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=${clients.number - 1}, size=${clients.size}, query=${searchQuery})}"-->
-<!--                           th:if="${!clients.first}"-->
-<!--                           class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all duration-300 font-medium flex items-center">-->
-<!--                            <i class="fas fa-chevron-left mr-1"></i>-->
-<!--                            Previous-->
-<!--                        </a>-->
-<!--                        <span th:if="${clients.first}" class="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg flex items-center">-->
-<!--                                <i class="fas fa-chevron-left mr-1"></i>-->
-<!--                                Previous-->
-<!--                            </span>-->
-<!--                    </li>-->
-
-<!--                    &lt;!&ndash; Page Numbers &ndash;&gt;-->
-<!--                    <li th:each="pageNumber : ${#numbers.sequence(0, clients.totalPages - 1)}"-->
-<!--                        th:if="${pageNumber >= clients.number - 2 and pageNumber <= clients.number + 2}">-->
-<!--                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=${pageNumber}, size=${clients.size}, query=${searchQuery})}"-->
-<!--                           th:text="${pageNumber + 1}"-->
-<!--                           th:classappend="${pageNumber == clients.number ? 'bg-primary text-white shadow-lg' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}"-->
-<!--                           class="px-4 py-2 rounded-lg transition-all duration-300 font-medium"></a>-->
-<!--                    </li>-->
-
-<!--                    &lt;!&ndash; Next & Last &ndash;&gt;-->
-<!--                    <li th:classappend="${clients.last ? 'opacity-50 pointer-events-none' : ''}">-->
-<!--                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=${clients.number + 1}, size=${clients.size}, query=${searchQuery})}"-->
-<!--                           th:if="${!clients.last}"-->
-<!--                           class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all duration-300 font-medium flex items-center">-->
-<!--                            Next-->
-<!--                            <i class="fas fa-chevron-right ml-1"></i>-->
-<!--                        </a>-->
-<!--                        <span th:if="${clients.last}" class="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg flex items-center">-->
-<!--                                Next-->
-<!--                                <i class="fas fa-chevron-right ml-1"></i>-->
-<!--                            </span>-->
-<!--                    </li>-->
-
-<!--                    <li th:classappend="${clients.last ? 'opacity-50 pointer-events-none' : ''}">-->
-<!--                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=${clients.totalPages - 1}, size=${clients.size}, query=${searchQuery})}"-->
-<!--                           th:if="${!clients.last}"-->
-<!--                           class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all duration-300 font-medium">-->
-<!--                            Last-->
-<!--                        </a>-->
-<!--                        <span th:if="${clients.last}" class="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg">Last</span>-->
-<!--                    </li>-->
-<!--                </ul>-->
-<!--            </nav>-->
-
-<!--            &lt;!&ndash; Pagination Info &ndash;&gt;-->
-<!--            <div class="text-center text-slate-600 bg-slate-50 px-4 py-3 rounded-lg">-->
-<!--                <i class="fas fa-info-circle text-primary mr-2"></i>-->
-<!--                Showing <span th:text="${clients.numberOfElements}" class="font-semibold text-slate-800"></span> of-->
-<!--                <span th:text="${clients.totalElements}" class="font-semibold text-slate-800"></span> items-->
-<!--                (Page <span th:text="${clients.number + 1}" class="font-semibold text-primary"></span> of-->
-<!--                <span th:text="${clients.totalPages}" class="font-semibold text-primary"></span>)-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--</div>-->
-
-<!--&lt;!&ndash; Overlay for mobile sidebar &ndash;&gt;-->
-<!--<div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden hidden"></div>-->
-
-<!--<script>-->
-<!--    document.addEventListener('DOMContentLoaded', function() {-->
-<!--        const sidebarCollapse = document.getElementById('sidebarCollapse');-->
-<!--        const sidebar = document.getElementById('sidebar');-->
-<!--        const content = document.getElementById('content');-->
-<!--        const body = document.body;-->
-<!--        const overlay = document.getElementById('sidebar-overlay');-->
-
-<!--        sidebarCollapse.addEventListener('click', function() {-->
-<!--            sidebar.classList.toggle('active');-->
-<!--            content.classList.toggle('active');-->
-<!--            body.classList.toggle('sidebar-active');-->
-<!--            overlay.classList.toggle('hidden');-->
-<!--        });-->
-
-<!--        // Close sidebar when clicking overlay-->
-<!--        overlay.addEventListener('click', function() {-->
-<!--            sidebar.classList.remove('active');-->
-<!--            content.classList.remove('active');-->
-<!--            body.classList.remove('sidebar-active');-->
-<!--            overlay.classList.add('hidden');-->
-<!--        });-->
-
-<!--        // Close sidebar on window resize if screen becomes large-->
-<!--        window.addEventListener('resize', function() {-->
-<!--            if (window.innerWidth >= 768) {-->
-<!--                sidebar.classList.remove('active');-->
-<!--                content.classList.remove('active');-->
-<!--                body.classList.remove('sidebar-active');-->
-<!--                overlay.classList.add('hidden');-->
-<!--            }-->
-<!--        });-->
-
-<!--        // Add loading animation to buttons-->
-<!--        document.querySelectorAll('button[type="submit"]').forEach(button => {-->
-<!--            button.addEventListener('click', function() {-->
-<!--                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Searching...';-->
-<!--            });-->
-<!--        });-->
-<!--    });-->
-<!--</script>-->
-<!--</body>-->
-<!--</html>-->
-
-
-
-
-<!--TRY 2 -->
-
-<!--<!DOCTYPE html>-->
-<!--<html lang="en" xmlns:th="http://www.thymeleaf.org">-->
-<!--<head>-->
-<!--    <meta charset="UTF-8">-->
-<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
-<!--    <title>| Review Generator |</title>-->
-<!--    <script src="https://cdn.tailwindcss.com"></script>-->
-<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">-->
-<!--    <script>-->
-<!--        tailwind.config = {-->
-<!--            theme: {-->
-<!--                extend: {-->
-<!--                    colors: {-->
-<!--                        primary: '#6366f1',-->
-<!--                        secondary: '#8b5cf6',-->
-<!--                        accent: '#06b6d4',-->
-<!--                        success: '#10b981',-->
-<!--                        warning: '#f59e0b',-->
-<!--                        danger: '#ef4444',-->
-<!--                        dark: '#0f172a',-->
-<!--                        'purple-light': '#f3e8ff',-->
-<!--                        'blue-light': '#dbeafe'-->
-<!--                    },-->
-<!--                    animation: {-->
-<!--                        'fade-in': 'fadeIn 0.8s ease-in-out',-->
-<!--                        'slide-in': 'slideIn 0.5s ease-out',-->
-<!--                        'bounce-subtle': 'bounceSubtle 0.8s ease-in-out',-->
-<!--                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',-->
-<!--                        'float': 'float 6s ease-in-out infinite',-->
-<!--                        'glow': 'glow 2s ease-in-out infinite alternate'-->
-<!--                    },-->
-<!--                    backdropBlur: {-->
-<!--                        'xs': '2px',-->
-<!--                    },-->
-<!--                    boxShadow: {-->
-<!--                        'inner-lg': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.1)',-->
-<!--                        'glow': '0 0 20px rgba(99, 102, 241, 0.3)',-->
-<!--                        'glow-lg': '0 0 40px rgba(99, 102, 241, 0.4)',-->
-<!--                        'card': '0 10px 30px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'-->
-<!--                    }-->
-<!--                }-->
-<!--            }-->
-<!--        }-->
-<!--    </script>-->
-<!--    <style>-->
-<!--        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');-->
-
-<!--        * {-->
-<!--            font-family: 'Inter', sans-serif;-->
-<!--        }-->
-
-<!--        @keyframes fadeIn {-->
-<!--            from { opacity: 0; transform: translateY(20px); }-->
-<!--            to { opacity: 1; transform: translateY(0); }-->
-<!--        }-->
-<!--        @keyframes slideIn {-->
-<!--            from { transform: translateX(-100%); opacity: 0; }-->
-<!--            to { transform: translateX(0); opacity: 1; }-->
-<!--        }-->
-<!--        @keyframes bounceSubtle {-->
-<!--            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }-->
-<!--            40% { transform: translateY(-8px); }-->
-<!--            60% { transform: translateY(-4px); }-->
-<!--        }-->
-<!--        @keyframes float {-->
-<!--            0%, 100% { transform: translateY(0px); }-->
-<!--            50% { transform: translateY(-10px); }-->
-<!--        }-->
-<!--        @keyframes glow {-->
-<!--            from { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }-->
-<!--            to { box-shadow: 0 0 30px rgba(99, 102, 241, 0.6); }-->
-<!--        }-->
-
-<!--        .sidebar-active {-->
-<!--            overflow: hidden;-->
-<!--        }-->
-<!--        #sidebar {-->
-<!--            transform: translateX(-100%);-->
-<!--            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);-->
-<!--        }-->
-<!--        #sidebar.active {-->
-<!--            transform: translateX(0);-->
-<!--        }-->
-<!--        @media (min-width: 768px) {-->
-<!--            #sidebar {-->
-<!--                transform: translateX(0);-->
-<!--            }-->
-<!--            #content.active {-->
-<!--                margin-left: 0;-->
-<!--            }-->
-<!--        }-->
-
-<!--        .glass-effect {-->
-<!--            backdrop-filter: blur(20px) saturate(180%);-->
-<!--            background: rgba(255, 255, 255, 0.85);-->
-<!--            border: 1px solid rgba(255, 255, 255, 0.3);-->
-<!--        }-->
-
-<!--        .glass-dark {-->
-<!--            backdrop-filter: blur(20px) saturate(180%);-->
-<!--            background: rgba(15, 23, 42, 0.9);-->
-<!--            border: 1px solid rgba(255, 255, 255, 0.1);-->
-<!--        }-->
-
-<!--        .gradient-border {-->
-<!--            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);-->
-<!--            padding: 2px;-->
-<!--            border-radius: 12px;-->
-<!--        }-->
-
-<!--        .gradient-border-inner {-->
-<!--            background: white;-->
-<!--            border-radius: 10px;-->
-<!--        }-->
-
-<!--        .card-hover {-->
-<!--            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);-->
-<!--        }-->
-
-<!--        .card-hover:hover {-->
-<!--            transform: translateY(-8px) scale(1.02);-->
-<!--            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);-->
-<!--        }-->
-
-<!--        .btn-animated {-->
-<!--            position: relative;-->
-<!--            overflow: hidden;-->
-<!--            transform: translateZ(0);-->
-<!--        }-->
-
-<!--        .btn-animated::before {-->
-<!--            content: '';-->
-<!--            position: absolute;-->
-<!--            top: 0;-->
-<!--            left: -100%;-->
-<!--            width: 100%;-->
-<!--            height: 100%;-->
-<!--            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);-->
-<!--            transition: left 0.6s;-->
-<!--        }-->
-
-<!--        .btn-animated:hover::before {-->
-<!--            left: 100%;-->
-<!--        }-->
-
-<!--        .table-row {-->
-<!--            transition: all 0.3s ease;-->
-<!--        }-->
-
-<!--        .table-row:hover {-->
-<!--            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);-->
-<!--            transform: scale(1.01);-->
-<!--            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);-->
-<!--        }-->
-
-<!--        .search-input {-->
-<!--            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);-->
-<!--        }-->
-
-<!--        .search-input:focus {-->
-<!--            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);-->
-<!--            transform: scale(1.02);-->
-<!--        }-->
-
-<!--        .logo-container {-->
-<!--            position: relative;-->
-<!--            overflow: hidden;-->
-<!--        }-->
-
-<!--        .logo-container::after {-->
-<!--            content: '';-->
-<!--            position: absolute;-->
-<!--            top: -50%;-->
-<!--            left: -50%;-->
-<!--            width: 200%;-->
-<!--            height: 200%;-->
-<!--            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);-->
-<!--            transform: rotate(45deg);-->
-<!--            transition: all 0.6s;-->
-<!--            opacity: 0;-->
-<!--        }-->
-
-<!--        .logo-container:hover::after {-->
-<!--            animation: shimmer 1.5s ease-in-out;-->
-<!--            opacity: 1;-->
-<!--        }-->
-
-<!--        @keyframes shimmer {-->
-<!--            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }-->
-<!--            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }-->
-<!--        }-->
-
-<!--        .pagination-btn {-->
-<!--            position: relative;-->
-<!--            overflow: hidden;-->
-<!--        }-->
-
-<!--        .pagination-btn::before {-->
-<!--            content: '';-->
-<!--            position: absolute;-->
-<!--            top: 0;-->
-<!--            left: 0;-->
-<!--            width: 0;-->
-<!--            height: 100%;-->
-<!--            background: linear-gradient(135deg, #6366f1, #8b5cf6);-->
-<!--            transition: width 0.3s ease;-->
-<!--            z-index: -1;-->
-<!--        }-->
-
-<!--        .pagination-btn:hover::before {-->
-<!--            width: 100%;-->
-<!--        }-->
-
-<!--        .pagination-btn:hover {-->
-<!--            color: white;-->
-<!--        }-->
-<!--    </style>-->
-<!--</head>-->
-<!--<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">-->
-<!--&lt;!&ndash; Sidebar &ndash;&gt;-->
-<!--<nav id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-gradient-to-b from-slate-800 to-slate-900 shadow-2xl z-50 md:translate-x-0">-->
-<!--    &lt;!&ndash; Sidebar Header &ndash;&gt;-->
-<!--    <div class="px-6 py-8 border-b border-slate-700">-->
-<!--        <h3 class="text-2xl font-bold text-white tracking-wide">-->
-<!--            <i class="fas fa-star text-yellow-400 mr-2"></i>-->
-<!--            YRHP-->
-<!--        </h3>-->
-<!--        <p class="text-slate-400 text-sm mt-1">Review Generator</p>-->
-<!--    </div>-->
-
-<!--    &lt;!&ndash; Navigation Links &ndash;&gt;-->
-<!--    <div class="py-6">-->
-<!--        <ul class="space-y-2 px-4">-->
-<!--            <li>-->
-<!--                <a href="/user/create"-->
-<!--                   class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all duration-300 group">-->
-<!--                    <i class="fas fa-user-plus text-lg mr-3 group-hover:scale-110 transition-transform duration-300"></i>-->
-<!--                    <span class="font-medium">Add Client</span>-->
-<!--                </a>-->
-<!--            </li>-->
-<!--        </ul>-->
-<!--    </div>-->
-
-<!--    &lt;!&ndash; Bottom Actions &ndash;&gt;-->
-<!--    <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700 space-y-2">-->
-<!--        <a th:if="${user != null}"-->
-<!--           th:href="@{/user/details}"-->
-<!--           class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all duration-300 group">-->
-<!--            <i class="fas fa-user-circle text-lg mr-3 group-hover:scale-110 transition-transform duration-300"></i>-->
-<!--            <span class="font-medium">Profile</span>-->
-<!--        </a>-->
-
-<!--        <a th:href="@{/user/log}"-->
-<!--           class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all duration-300 group">-->
-<!--            <i class="fas fa-history text-lg mr-3 group-hover:scale-110 transition-transform duration-300"></i>-->
-<!--            <span class="font-medium">Log History</span>-->
-<!--        </a>-->
-
-<!--        <a href="/logout"-->
-<!--           class="flex items-center px-4 py-3 text-red-300 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-300 group">-->
-<!--            <i class="fas fa-sign-out-alt text-lg mr-3 group-hover:scale-110 transition-transform duration-300"></i>-->
-<!--            <span class="font-medium">Logout</span>-->
-<!--        </a>-->
-<!--    </div>-->
-<!--</nav>-->
-
-<!--&lt;!&ndash; Main Content &ndash;&gt;-->
-<!--<div id="content" class="md:ml-64 transition-all duration-300">-->
-<!--    &lt;!&ndash; Top Navigation &ndash;&gt;-->
-<!--    <nav class="glass-effect border-b border-slate-200 sticky top-0 z-40">-->
-<!--        <div class="px-6 py-4">-->
-<!--            <button type="button"-->
-<!--                    id="sidebarCollapse"-->
-<!--                    class="md:hidden bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105">-->
-<!--                <i class="fas fa-bars mr-2"></i>-->
-<!--                <span class="font-medium">Menu</span>-->
-<!--            </button>-->
-<!--        </div>-->
-<!--    </nav>-->
-
-<!--    &lt;!&ndash; Page Content &ndash;&gt;-->
-<!--    <div class="p-6 animate-fade-in">-->
-<!--        &lt;!&ndash; Page Header &ndash;&gt;-->
-<!--        <div class="mb-8">-->
-<!--            <h2 class="text-3xl font-bold text-slate-800 mb-2">-->
-<!--                <i class="fas fa-users text-primary mr-3"></i>-->
-<!--                Client Management-->
-<!--            </h2>-->
-<!--            <p class="text-slate-600">Manage your clients and their review links</p>-->
-<!--        </div>-->
-
-<!--        &lt;!&ndash; Search Section &ndash;&gt;-->
-<!--        <div class="bg-white rounded-xl shadow-lg p-6 mb-8 border border-slate-200">-->
-<!--            <form action="/user/search" method="get" class="flex flex-col md:flex-row gap-4">-->
-<!--                <div class="flex-1 relative">-->
-<!--                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>-->
-<!--                    <input type="text"-->
-<!--                           name="query"-->
-<!--                           class="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300"-->
-<!--                           placeholder="Search by name, mobile or email..."-->
-<!--                           th:value="${searchQuery != null ? searchQuery : ''}"-->
-<!--                           aria-label="Search by name, mobile or email"/>-->
-<!--                </div>-->
-<!--                <button type="submit"-->
-<!--                        class="bg-primary hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 flex items-center justify-center">-->
-<!--                    <i class="fas fa-search mr-2"></i>-->
-<!--                    Search-->
-<!--                </button>-->
-<!--            </form>-->
-
-<!--            &lt;!&ndash; Search Results Info &ndash;&gt;-->
-<!--            <div th:if="${searchQuery != null}" class="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">-->
-<!--                <div class="flex items-center justify-between">-->
-<!--                    <div class="text-slate-700">-->
-<!--                            <span th:if="${clients.totalElements > 0}">-->
-<!--                                <i class="fas fa-check-circle text-success mr-2"></i>-->
-<!--                                Found <strong th:text="${clients.totalElements}" class="text-primary"></strong> results for "<strong th:text="${searchQuery}" class="text-slate-800"></strong>"-->
-<!--                            </span>-->
-<!--                        <span th:unless="${clients.totalElements > 0}">-->
-<!--                                <i class="fas fa-exclamation-circle text-warning mr-2"></i>-->
-<!--                                No results found for "<strong th:text="${searchQuery}" class="text-slate-800"></strong>"-->
-<!--                            </span>-->
-<!--                    </div>-->
-<!--                    <a href="/user/home"-->
-<!--                       class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center">-->
-<!--                        <i class="fas fa-times mr-2"></i>-->
-<!--                        Clear Search-->
-<!--                    </a>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-
-<!--        &lt;!&ndash; Clients Table &ndash;&gt;-->
-<!--        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">-->
-<!--            <div class="overflow-x-auto">-->
-<!--                <table class="w-full">-->
-<!--                    <thead class="bg-gradient-to-r from-slate-800 to-slate-700 text-white">-->
-<!--                    <tr>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">ID</th>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">Name</th>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">Email</th>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">Mobile</th>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">Logo</th>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">Chat Text</th>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">Review Link</th>-->
-<!--                        <th class="px-6 py-4 text-left font-semibold">Actions</th>-->
-<!--                    </tr>-->
-<!--                    </thead>-->
-<!--                    <tbody class="divide-y divide-slate-200">-->
-<!--                    <tr th:each="client : ${clients.content}" class="hover:bg-slate-50 transition-colors duration-200">-->
-<!--                        <td class="px-6 py-4 text-slate-600 font-medium" th:text="${client.id}"></td>-->
-<!--                        <td class="px-6 py-4">-->
-<!--                            <div class="font-medium text-slate-800 break-words" th:text="${client.name}"></div>-->
-<!--                        </td>-->
-<!--                        <td class="px-6 py-4">-->
-<!--                            <div class="text-slate-600 break-words" th:text="${client.email}"></div>-->
-<!--                        </td>-->
-<!--                        <td class="px-6 py-4 text-slate-600" th:text="${client.mobile}"></td>-->
-<!--                        <td class="px-6 py-4">-->
-<!--                            <img th:src="@{${resourceURL != null ? resourceURL : ''} + ${client.logo}}"-->
-<!--                                 alt="Client Logo"-->
-<!--                                 class="w-12 h-12 rounded-lg object-cover shadow-md border border-slate-200"-->
-<!--                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iOCIgZmlsbD0iIzkxQTdCRiIvPgo8cGF0aCBkPSJNMjQgMTJDMjcuMzEzNyAxMiAzMCAxNC42ODYzIDMwIDE4QzMwIDIxLjMxMzcgMjcuMzEzNyAyNCAyNCAyNEMyMC42ODYzIDI0IDE4IDIxLjMxMzcgMTggMThDMTggMTQuNjg2MyAyMC42ODYzIDEyIDI0IDEyWk0yNCAzNkMzMCAzNiAzNiAzMi40IDM2IDI4SDEyQzEyIDMyLjQgMTggMzYgMjQgMzZaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K'">-->
-<!--                        </td>-->
-<!--                        <td class="px-6 py-4">-->
-<!--                            <div class="text-slate-600 break-words max-w-xs" th:text="${client.chatText}"></div>-->
-<!--                        </td>-->
-<!--                        <td class="px-6 py-4">-->
-<!--                            <a th:href="${client.reviewLink}"-->
-<!--                               target="_blank"-->
-<!--                               class="text-primary hover:text-blue-600 break-words max-w-xs inline-block transition-colors duration-200"-->
-<!--                               th:text="${client.reviewLink}"></a>-->
-<!--                        </td>-->
-<!--                        <td class="px-6 py-4">-->
-<!--                            <div class="flex space-x-2">-->
-<!--                                <a th:href="${client.generateLink}"-->
-<!--                                   target="_blank"-->
-<!--                                   class="bg-success hover:bg-green-600 text-white p-2 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 group"-->
-<!--                                   title="View">-->
-<!--                                    <i class="fas fa-eye group-hover:scale-110 transition-transform duration-300"></i>-->
-<!--                                </a>-->
-<!--                                <a th:href="@{/user/edit/{id}(id=${client.id})}"-->
-<!--                                   class="bg-primary hover:bg-blue-600 text-white p-2 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 group"-->
-<!--                                   title="Edit">-->
-<!--                                    <i class="fas fa-edit group-hover:scale-110 transition-transform duration-300"></i>-->
-<!--                                </a>-->
-<!--                                <a th:href="@{/user/delete/{id}(id=${client.id})}"-->
-<!--                                   onclick="return confirm('Are you sure you want to delete this client?')"-->
-<!--                                   class="bg-danger hover:bg-red-600 text-white p-2 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 group"-->
-<!--                                   title="Delete">-->
-<!--                                    <i class="fas fa-trash-alt group-hover:scale-110 transition-transform duration-300"></i>-->
-<!--                                </a>-->
-<!--                            </div>-->
-<!--                        </td>-->
-<!--                    </tr>-->
-<!--                    </tbody>-->
-<!--                </table>-->
-<!--            </div>-->
-<!--        </div>-->
-
-<!--        &lt;!&ndash; Pagination &ndash;&gt;-->
-<!--        <div th:if="${clients.totalElements > 0}" class="mt-8 bg-white rounded-xl shadow-lg p-6 border border-slate-200">-->
-<!--            <nav aria-label="Page navigation" class="mb-4">-->
-<!--                <ul class="flex justify-center space-x-2 flex-wrap">-->
-<!--                    &lt;!&ndash; First & Previous &ndash;&gt;-->
-<!--                    <li th:classappend="${clients.first ? 'opacity-50 pointer-events-none' : ''}">-->
-<!--                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=0, size=${clients.size}, query=${searchQuery})}"-->
-<!--                           th:if="${!clients.first}"-->
-<!--                           class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all duration-300 font-medium">-->
-<!--                            First-->
-<!--                        </a>-->
-<!--                        <span th:if="${clients.first}" class="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg">First</span>-->
-<!--                    </li>-->
-
-<!--                    <li th:classappend="${clients.first ? 'opacity-50 pointer-events-none' : ''}">-->
-<!--                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=${clients.number - 1}, size=${clients.size}, query=${searchQuery})}"-->
-<!--                           th:if="${!clients.first}"-->
-<!--                           class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all duration-300 font-medium flex items-center">-->
-<!--                            <i class="fas fa-chevron-left mr-1"></i>-->
-<!--                            Previous-->
-<!--                        </a>-->
-<!--                        <span th:if="${clients.first}" class="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg flex items-center">-->
-<!--                                <i class="fas fa-chevron-left mr-1"></i>-->
-<!--                                Previous-->
-<!--                            </span>-->
-<!--                    </li>-->
-
-<!--                    &lt;!&ndash; Page Numbers &ndash;&gt;-->
-<!--                    <li th:each="pageNumber : ${#numbers.sequence(0, clients.totalPages - 1)}"-->
-<!--                        th:if="${pageNumber >= clients.number - 2 and pageNumber <= clients.number + 2}">-->
-<!--                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=${pageNumber}, size=${clients.size}, query=${searchQuery})}"-->
-<!--                           th:text="${pageNumber + 1}"-->
-<!--                           th:classappend="${pageNumber == clients.number ? 'bg-primary text-white shadow-lg' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}"-->
-<!--                           class="px-4 py-2 rounded-lg transition-all duration-300 font-medium"></a>-->
-<!--                    </li>-->
-
-<!--                    &lt;!&ndash; Next & Last &ndash;&gt;-->
-<!--                    <li th:classappend="${clients.last ? 'opacity-50 pointer-events-none' : ''}">-->
-<!--                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=${clients.number + 1}, size=${clients.size}, query=${searchQuery})}"-->
-<!--                           th:if="${!clients.last}"-->
-<!--                           class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all duration-300 font-medium flex items-center">-->
-<!--                            Next-->
-<!--                            <i class="fas fa-chevron-right ml-1"></i>-->
-<!--                        </a>-->
-<!--                        <span th:if="${clients.last}" class="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg flex items-center">-->
-<!--                                Next-->
-<!--                                <i class="fas fa-chevron-right ml-1"></i>-->
-<!--                            </span>-->
-<!--                    </li>-->
-
-<!--                    <li th:classappend="${clients.last ? 'opacity-50 pointer-events-none' : ''}">-->
-<!--                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=${clients.totalPages - 1}, size=${clients.size}, query=${searchQuery})}"-->
-<!--                           th:if="${!clients.last}"-->
-<!--                           class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all duration-300 font-medium">-->
-<!--                            Last-->
-<!--                        </a>-->
-<!--                        <span th:if="${clients.last}" class="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg">Last</span>-->
-<!--                    </li>-->
-<!--                </ul>-->
-<!--            </nav>-->
-
-<!--            &lt;!&ndash; Pagination Info &ndash;&gt;-->
-<!--            <div class="text-center text-slate-600 bg-slate-50 px-4 py-3 rounded-lg">-->
-<!--                <i class="fas fa-info-circle text-primary mr-2"></i>-->
-<!--                Showing <span th:text="${clients.numberOfElements}" class="font-semibold text-slate-800"></span> of-->
-<!--                <span th:text="${clients.totalElements}" class="font-semibold text-slate-800"></span> items-->
-<!--                (Page <span th:text="${clients.number + 1}" class="font-semibold text-primary"></span> of-->
-<!--                <span th:text="${clients.totalPages}" class="font-semibold text-primary"></span>)-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--</div>-->
-
-<!--&lt;!&ndash; Overlay for mobile sidebar &ndash;&gt;-->
-<!--<div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden hidden"></div>-->
-
-<!--<script>-->
-<!--    document.addEventListener('DOMContentLoaded', function() {-->
-<!--        const sidebarCollapse = document.getElementById('sidebarCollapse');-->
-<!--        const sidebar = document.getElementById('sidebar');-->
-<!--        const content = document.getElementById('content');-->
-<!--        const body = document.body;-->
-<!--        const overlay = document.getElementById('sidebar-overlay');-->
-
-<!--        sidebarCollapse.addEventListener('click', function() {-->
-<!--            sidebar.classList.toggle('active');-->
-<!--            content.classList.toggle('active');-->
-<!--            body.classList.toggle('sidebar-active');-->
-<!--            overlay.classList.toggle('hidden');-->
-<!--        });-->
-
-<!--        // Close sidebar when clicking overlay-->
-<!--        overlay.addEventListener('click', function() {-->
-<!--            sidebar.classList.remove('active');-->
-<!--            content.classList.remove('active');-->
-<!--            body.classList.remove('sidebar-active');-->
-<!--            overlay.classList.add('hidden');-->
-<!--        });-->
-
-<!--        // Close sidebar on window resize if screen becomes large-->
-<!--        window.addEventListener('resize', function() {-->
-<!--            if (window.innerWidth >= 768) {-->
-<!--                sidebar.classList.remove('active');-->
-<!--                content.classList.remove('active');-->
-<!--                body.classList.remove('sidebar-active');-->
-<!--                overlay.classList.add('hidden');-->
-<!--            }-->
-<!--        });-->
-
-<!--        // Add loading animation to buttons-->
-<!--        document.querySelectorAll('button[type="submit"]').forEach(button => {-->
-<!--            button.addEventListener('click', function() {-->
-<!--                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Searching...';-->
-<!--            });-->
-<!--        });-->
-<!--    });-->
-<!--</script>-->
-<!--</body>-->
-<!--</html>-->
-
-
-
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -1611,13 +715,16 @@
         </div>
 
         <!-- Pagination -->
+        <!-- Improved Pagination -->
         <div th:if="${clients.totalElements > 0}" class="mt-8 bg-white rounded-xl shadow-lg p-6 border border-slate-200">
             <nav aria-label="Page navigation" class="mb-4">
                 <ul class="flex justify-center space-x-2 flex-wrap">
                     <!-- First & Previous -->
                     <li th:classappend="${clients.first ? 'opacity-50 pointer-events-none' : ''}">
-                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=0, size=${clients.size}, query=${searchQuery})}"
-                           th:if="${!clients.first}"
+                        <a th:if="${!clients.first}"
+                           th:href="${searchQuery != null} ?
+                               @{/user/search(page=0, size=${clients.size}, query=${searchQuery})} :
+                               @{/user/home(page=0, size=${clients.size})}"
                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all duration-300 font-medium">
                             First
                         </a>
@@ -1625,44 +732,91 @@
                     </li>
 
                     <li th:classappend="${clients.first ? 'opacity-50 pointer-events-none' : ''}">
-                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=${clients.number - 1}, size=${clients.size}, query=${searchQuery})}"
-                           th:if="${!clients.first}"
+                        <a th:if="${!clients.first}"
+                           th:href="${searchQuery != null} ?
+                               @{/user/search(page=${clients.number - 1}, size=${clients.size}, query=${searchQuery})} :
+                               @{/user/home(page=${clients.number - 1}, size=${clients.size})}"
                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all duration-300 font-medium flex items-center">
                             <i class="fas fa-chevron-left mr-1"></i>
-                            Previous
+                            Prev
                         </a>
                         <span th:if="${clients.first}" class="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg flex items-center">
-                                <i class="fas fa-chevron-left mr-1"></i>
-                                Previous
-                            </span>
+                            <i class="fas fa-chevron-left mr-1"></i>
+                            Prev
+                        </span>
                     </li>
 
-                    <!-- Page Numbers -->
-                    <li th:each="pageNumber : ${#numbers.sequence(0, clients.totalPages - 1)}"
-                        th:if="${pageNumber >= clients.number - 2 and pageNumber <= clients.number + 2}">
-                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=${pageNumber}, size=${clients.size}, query=${searchQuery})}"
-                           th:text="${pageNumber + 1}"
-                           th:classappend="${pageNumber == clients.number ? 'bg-primary text-white shadow-lg' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}"
-                           class="px-4 py-2 rounded-lg transition-all duration-300 font-medium"></a>
-                    </li>
+                    <!-- Smart Page Numbers with Ellipsis -->
+                    <th:block th:with="
+                currentPage=${clients.number},
+                totalPages=${clients.totalPages},
+                startPage=${currentPage <= 3 ? 0 : (currentPage >= totalPages - 4 ? totalPages - 7 : currentPage - 3)},
+                endPage=${currentPage <= 3 ? 6 : (currentPage >= totalPages - 4 ? totalPages - 1 : currentPage + 3)},
+                actualStartPage=${startPage < 0 ? 0 : startPage},
+                actualEndPage=${endPage >= totalPages ? totalPages - 1 : endPage}
+            ">
+                        <!-- Show first page if not in range -->
+                        <li th:if="${actualStartPage > 0}">
+                            <a th:href="${searchQuery != null} ?
+                                   @{/user/search(page=0, size=${clients.size}, query=${searchQuery})} :
+                                   @{/user/home(page=0, size=${clients.size})}"
+                               class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all duration-300 font-medium">
+                                1
+                            </a>
+                        </li>
+
+                        <!-- Show ellipsis if there's gap after first page -->
+                        <li th:if="${actualStartPage > 1}">
+                            <span class="px-4 py-2 text-slate-400">...</span>
+                        </li>
+
+                        <!-- Show page numbers in range -->
+                        <li th:each="pageNumber : ${#numbers.sequence(actualStartPage, actualEndPage)}">
+                            <a th:href="${searchQuery != null} ?
+                                       @{/user/search(page=${pageNumber}, size=${clients.size}, query=${searchQuery})} :
+                                       @{/user/home(page=${pageNumber}, size=${clients.size})}"
+                               th:text="${pageNumber + 1}"
+                               th:classappend="${pageNumber == clients.number ? 'bg-primary text-white shadow-lg' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}"
+                               class="px-4 py-2 rounded-lg transition-all duration-300 font-medium"></a>
+                        </li>
+
+                        <!-- Show ellipsis if there's gap before last page -->
+                        <li th:if="${actualEndPage < totalPages - 2}">
+                            <span class="px-4 py-2 text-slate-400">...</span>
+                        </li>
+
+                        <!-- Show last page if not in range -->
+                        <li th:if="${actualEndPage < totalPages - 1}">
+                            <a th:href="${searchQuery != null} ?
+                                   @{/user/search(page=${totalPages - 1}, size=${clients.size}, query=${searchQuery})} :
+                                   @{/user/home(page=${totalPages - 1}, size=${clients.size})}"
+                               th:text="${totalPages}"
+                               class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all duration-300 font-medium">
+                            </a>
+                        </li>
+                    </th:block>
 
                     <!-- Next & Last -->
                     <li th:classappend="${clients.last ? 'opacity-50 pointer-events-none' : ''}">
-                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=${clients.number + 1}, size=${clients.size}, query=${searchQuery})}"
-                           th:if="${!clients.last}"
+                        <a th:if="${!clients.last}"
+                           th:href="${searchQuery != null} ?
+                               @{/user/search(page=${clients.number + 1}, size=${clients.size}, query=${searchQuery})} :
+                               @{/user/home(page=${clients.number + 1}, size=${clients.size})}"
                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all duration-300 font-medium flex items-center">
                             Next
                             <i class="fas fa-chevron-right ml-1"></i>
                         </a>
                         <span th:if="${clients.last}" class="px-4 py-2 bg-slate-100 text-slate-400 rounded-lg flex items-center">
-                                Next
-                                <i class="fas fa-chevron-right ml-1"></i>
-                            </span>
+                            Next
+                            <i class="fas fa-chevron-right ml-1"></i>
+                        </span>
                     </li>
 
                     <li th:classappend="${clients.last ? 'opacity-50 pointer-events-none' : ''}">
-                        <a th:href="@{${searchQuery != null ? '/user/search' : '/user/home'}(page=${clients.totalPages - 1}, size=${clients.size}, query=${searchQuery})}"
-                           th:if="${!clients.last}"
+                        <a th:if="${!clients.last}"
+                           th:href="${searchQuery != null} ?
+                               @{/user/search(page=${clients.totalPages - 1}, size=${clients.size}, query=${searchQuery})} :
+                               @{/user/home(page=${clients.totalPages - 1}, size=${clients.size})}"
                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all duration-300 font-medium">
                             Last
                         </a>
@@ -1679,6 +833,22 @@
                 (Page <span th:text="${clients.number + 1}" class="font-semibold text-primary"></span> of
                 <span th:text="${clients.totalPages}" class="font-semibold text-primary"></span>)
             </div>
+
+            <!-- Quick Page Jump (Optional) -->
+            <div class="mt-4 text-center" th:if="${clients.totalPages > 10}">
+                <div class="inline-flex items-center space-x-2">
+                    <span class="text-sm text-slate-600">Jump to page:</span>
+                    <select id="pageJump" class="px-3 py-1 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option th:each="pageNum : ${#numbers.sequence(1, clients.totalPages)}"
+                                th:value="${pageNum - 1}"
+                                th:text="${pageNum}"
+                                th:selected="${pageNum - 1 == clients.number}"></option>
+                    </select>
+                    <button onclick="jumpToPage()" class="px-3 py-1 bg-primary text-white rounded-md text-sm hover:bg-blue-600 transition-colors duration-200">
+                        Go
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -1687,6 +857,23 @@
 <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden hidden"></div>
 
 <script>
+
+    function jumpToPage() {
+        const select = document.getElementById('pageJump');
+        const pageNumber = select.value;
+        const searchQuery = new URLSearchParams(window.location.search).get('query');
+        const size = new URLSearchParams(window.location.search).get('size') || '10';
+
+        let url;
+        if (searchQuery) {
+            url = `/user/search?page=${pageNumber}&size=${size}&query=${encodeURIComponent(searchQuery)}`;
+        } else {
+            url = `/user/home?page=${pageNumber}&size=${size}`;
+        }
+
+        window.location.href = url;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const sidebarCollapse = document.getElementById('sidebarCollapse');
         const sidebar = document.getElementById('sidebar');
