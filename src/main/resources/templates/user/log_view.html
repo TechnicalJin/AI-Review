@@ -180,36 +180,50 @@
     <!-- Pagination -->
     <div class="pagination-container" th:if="${logs.totalPages > 1}">
         <div class="pagination">
+            <!-- First Page -->
             <a th:if="${logs.hasPrevious()}"
                th:href="@{/user/log(page=0, size=${logs.size},
-                search=${filters.search},
-                company=${filters.company},
-                reviewLength=${filters.reviewLength},
-                regenerated=${filters.regenerated},
-                keyPoints=${filters.keyPoints},
-                startDate=${filters.startDate},
-                endDate=${filters.endDate})}"
+            search=${filters.search},
+            company=${filters.company},
+            reviewLength=${filters.reviewLength},
+            regenerated=${filters.regenerated},
+            keyPoints=${filters.keyPoints},
+            startDate=${filters.startDate},
+            endDate=${filters.endDate})}"
                class="page-link first" title="First Page">
                 <i class="fas fa-angle-double-left"></i>
                 <span class="sr-only">First Page</span>
             </a>
 
+            <!-- Previous Page -->
             <a th:if="${logs.hasPrevious()}"
                th:href="@{/user/log(page=${logs.number - 1}, size=${logs.size},
-                search=${filters.search},
-                company=${filters.company},
-                reviewLength=${filters.reviewLength},
-                regenerated=${filters.regenerated},
-                keyPoints=${filters.keyPoints},
-                startDate=${filters.startDate},
-                endDate=${filters.endDate})}"
+            search=${filters.search},
+            company=${filters.company},
+            reviewLength=${filters.reviewLength},
+            regenerated=${filters.regenerated},
+            keyPoints=${filters.keyPoints},
+            startDate=${filters.startDate},
+            endDate=${filters.endDate})}"
                class="page-link prev" title="Previous Page">
                 <i class="fas fa-angle-left"></i>
                 <span class="sr-only">Previous Page</span>
             </a>
 
-            <a th:each="page : ${#numbers.sequence(0, logs.totalPages - 1)}"
-               th:href="@{/user/log(page=${page}, size=${logs.size},
+            <!-- Simplified Page Numbers with Ellipsis -->
+            <th:block th:with="
+            currentPage=${logs.number},
+            totalPages=${logs.totalPages},
+            maxPagesToShow=7,
+            startPage=${currentPage - 3 < 0 ? 0 : currentPage - 3},
+            endPage=${currentPage + 3 >= totalPages ? totalPages - 1 : currentPage + 3},
+            adjustedStartPage=${endPage == totalPages - 1 && totalPages > maxPagesToShow ? totalPages - maxPagesToShow : startPage},
+            finalStartPage=${adjustedStartPage < 0 ? 0 : adjustedStartPage},
+            finalEndPage=${finalStartPage + maxPagesToShow - 1 >= totalPages ? totalPages - 1 : finalStartPage + maxPagesToShow - 1}
+        ">
+                <!-- Show first page if not in range -->
+                <a th:if="${finalStartPage > 0}"
+                   th:href="@{/user/log(page=0, size=${logs.size},
                 search=${filters.search},
                 company=${filters.company},
                 reviewLength=${filters.reviewLength},
@@ -217,34 +231,71 @@
                 keyPoints=${filters.keyPoints},
                 startDate=${filters.startDate},
                 endDate=${filters.endDate})}"
-               th:text="${page + 1}"
-               th:classappend="${page == logs.number} ? 'active' : ''"
-               class="page-link">
-            </a>
+                   class="page-link">
+                    1
+                </a>
 
+                <!-- Show ellipsis if there's a gap after the first page -->
+                <span th:if="${finalStartPage > 1}" class="ellipsis">...</span>
+
+                <!-- Show page numbers in the calculated range -->
+                <a th:each="page : ${#numbers.sequence(finalStartPage, finalEndPage)}"
+                   th:href="@{/user/log(page=${page}, size=${logs.size},
+                search=${filters.search},
+                company=${filters.company},
+                reviewLength=${filters.reviewLength},
+                regenerated=${filters.regenerated},
+                keyPoints=${filters.keyPoints},
+                startDate=${filters.startDate},
+                endDate=${filters.endDate})}"
+                   th:text="${page + 1}"
+                   th:classappend="${page == logs.number} ? 'active' : ''"
+                   class="page-link">
+                </a>
+
+                <!-- Show ellipsis if there's a gap before the last page -->
+                <span th:if="${finalEndPage < totalPages - 2}" class="ellipsis">...</span>
+
+                <!-- Show last page if not in range -->
+                <a th:if="${finalEndPage < totalPages - 1}"
+                   th:href="@{/user/log(page=${totalPages - 1}, size=${logs.size},
+                search=${filters.search},
+                company=${filters.company},
+                reviewLength=${filters.reviewLength},
+                regenerated=${filters.regenerated},
+                keyPoints=${filters.keyPoints},
+                startDate=${filters.startDate},
+                endDate=${filters.endDate})}"
+                   th:text="${totalPages}"
+                   class="page-link">
+                </a>
+            </th:block>
+
+            <!-- Next Page -->
             <a th:if="${logs.hasNext()}"
                th:href="@{/user/log(page=${logs.number + 1}, size=${logs.size},
-                search=${filters.search},
-                company=${filters.company},
-                reviewLength=${filters.reviewLength},
-                regenerated=${filters.regenerated},
-                keyPoints=${filters.keyPoints},
-                startDate=${filters.startDate},
-                endDate=${filters.endDate})}"
+            search=${filters.search},
+            company=${filters.company},
+            reviewLength=${filters.reviewLength},
+            regenerated=${filters.regenerated},
+            keyPoints=${filters.keyPoints},
+            startDate=${filters.startDate},
+            endDate=${filters.endDate})}"
                class="page-link next" title="Next Page">
                 <i class="fas fa-angle-right"></i>
                 <span class="sr-only">Next Page</span>
             </a>
 
+            <!-- Last Page -->
             <a th:if="${logs.hasNext()}"
                th:href="@{/user/log(page=${logs.totalPages - 1}, size=${logs.size},
-                search=${filters.search},
-                company=${filters.company},
-                reviewLength=${filters.reviewLength},
-                regenerated=${filters.regenerated},
-                keyPoints=${filters.keyPoints},
-                startDate=${filters.startDate},
-                endDate=${filters.endDate})}"
+            search=${filters.search},
+            company=${filters.company},
+            reviewLength=${filters.reviewLength},
+            regenerated=${filters.regenerated},
+            keyPoints=${filters.keyPoints},
+            startDate=${filters.startDate},
+            endDate=${filters.endDate})}"
                class="page-link last" title="Last Page">
                 <i class="fas fa-angle-double-right"></i>
                 <span class="sr-only">Last Page</span>
