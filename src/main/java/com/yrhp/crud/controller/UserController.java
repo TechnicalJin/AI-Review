@@ -46,6 +46,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.yrhp.crud.exception.ResourceNotFoundException;
 
@@ -558,18 +559,25 @@ public class UserController implements ErrorController {
             Client client = clientOptional.get();
             log.info("Downloading CSV for client: {} (ID: {})", client.getName(), clientId);
 
-            // Get logs for this client
-            List<ReviewGenerationLog> logs = reviewLogRepository.findByCompanyName(client.getName());
+            // Get logs for this client and sort by timestamp descending (latest first)
+            List<ReviewGenerationLog> logs = reviewLogRepository.findByCompanyName(client.getName())
+                    .stream()
+                    .sorted(Comparator.comparing(ReviewGenerationLog::getTimestamp, Comparator.reverseOrder()))
+                    .collect(Collectors.toList());
             log.info("Found {} logs for client: {}", logs.size(), client.getName());
 
             // Build CSV content with proper headers
             StringBuilder csvContent = new StringBuilder();
             csvContent.append("ID,Company,Timestamp,Review Length,Key Points,Regenerated\n");
 
+            // Date formatter for Indian format DD/MM/YYYY
+            DateTimeFormatter indianDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
             for (ReviewGenerationLog logEntry : logs) {
                 csvContent.append(escapeCSVValue(logEntry.getId() != null ? logEntry.getId().toString() : "")).append(",")
                         .append(escapeCSVValue(logEntry.getCompanyName() != null ? logEntry.getCompanyName() : "")).append(",")
-                        .append(escapeCSVValue(logEntry.getTimestamp() != null ? logEntry.getTimestamp().toString() : "")).append(",")
+                        .append(escapeCSVValue(logEntry.getTimestamp() != null ?
+                                logEntry.getTimestamp().format(indianDateFormatter) : "")).append(",")
                         .append(escapeCSVValue(logEntry.getReviewLength() != null ? logEntry.getReviewLength().toString() : "")).append(",")
                         .append(escapeCSVValue(logEntry.getKeyPoints() != null ? logEntry.getKeyPoints() : "")).append(",")
                         .append(escapeCSVValue(logEntry.getRegenerated() != null ? logEntry.getRegenerated().toString() : "false")).append("\n");
@@ -602,16 +610,14 @@ public class UserController implements ErrorController {
                     .header(HttpHeaders.PRAGMA, "no-cache")
                     .header(HttpHeaders.EXPIRES, "0")
                     .contentLength(csvWithBom.length)
-                    .body(resource); // Removed the cast - Spring will handle this automatically
+                    .body(resource);
 
         } catch (DataAccessException e) {
             log.error("Database error while downloading CSV for client ID: {}", clientId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (Exception e) {
-            // Log the error for debugging
             log.error("Error downloading CSV for client ID: {}", clientId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .build(); // Return empty body instead of null
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -640,10 +646,10 @@ public class UserController implements ErrorController {
 
         // Replace unsafe characters with underscore
         String sanitized = filename.trim()
-                .replaceAll("[^a-zA-Z0-9\\-_\\s]", "_")  // Replace unsafe chars
-                .replaceAll("\\s+", "_")                 // Replace spaces with underscores
-                .replaceAll("_{2,}", "_")                // Replace multiple underscores with single
-                .replaceAll("^_|_$", "");               // Remove leading/trailing underscores
+                .replaceAll("[^a-zA-Z0-9\\-_\\s]", "_")
+                .replaceAll("\\s+", "_")
+                .replaceAll("_{2,}", "_")
+                .replaceAll("^_|_$", "");
 
         // Ensure it's not empty after sanitization
         return sanitized.isEmpty() ? "client" : sanitized;
