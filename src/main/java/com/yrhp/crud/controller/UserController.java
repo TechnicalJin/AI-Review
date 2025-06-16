@@ -10,18 +10,25 @@ import com.yrhp.crud.repository.UserRepository;
 import com.yrhp.crud.service.ReviewGeneratorService;
 import com.yrhp.crud.dto.RegenerateReviewRequest;
 // import jakarta.servlet.http.HttpServletRequest;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.error.ErrorController;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 // import org.springframework.http.HttpStatus;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,9 +40,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import com.yrhp.crud.exception.ResourceNotFoundException;
@@ -534,5 +543,115 @@ public class UserController implements ErrorController {
         model.addAttribute("resourceURL", resourceAccessUrl);
 
         return "user/home";
+    }
+
+    @PostMapping("/download-csv")
+    public ResponseEntity<org.springframework.core.io.Resource> downloadClientLogs(@RequestParam Long clientId, HttpServletRequest request) {
+        try {
+            // Find client by ID using proper Optional pattern
+            Optional<Client> clientOptional = clientRepo.findById(clientId);
+            if (!clientOptional.isPresent()) {
+                log.warn("Client not found with ID: {}", clientId);
+                return ResponseEntity.notFound().build();
+            }
+
+            Client client = clientOptional.get();
+            log.info("Downloading CSV for client: {} (ID: {})", client.getName(), clientId);
+
+            // Get logs for this client
+            List<ReviewGenerationLog> logs = reviewLogRepository.findByCompanyName(client.getName());
+            log.info("Found {} logs for client: {}", logs.size(), client.getName());
+
+            // Build CSV content with proper headers
+            StringBuilder csvContent = new StringBuilder();
+            csvContent.append("ID,Company,Timestamp,Review Length,Key Points,Regenerated\n");
+
+            for (ReviewGenerationLog logEntry : logs) {
+                csvContent.append(escapeCSVValue(logEntry.getId() != null ? logEntry.getId().toString() : "")).append(",")
+                        .append(escapeCSVValue(logEntry.getCompanyName() != null ? logEntry.getCompanyName() : "")).append(",")
+                        .append(escapeCSVValue(logEntry.getTimestamp() != null ? logEntry.getTimestamp().toString() : "")).append(",")
+                        .append(escapeCSVValue(logEntry.getReviewLength() != null ? logEntry.getReviewLength().toString() : "")).append(",")
+                        .append(escapeCSVValue(logEntry.getKeyPoints() != null ? logEntry.getKeyPoints() : "")).append(",")
+                        .append(escapeCSVValue(logEntry.getRegenerated() != null ? logEntry.getRegenerated().toString() : "false")).append("\n");
+            }
+
+            // Handle empty logs case
+            if (logs.isEmpty()) {
+                csvContent.append("No logs found for ").append(escapeCSVValue(client.getName())).append("\n");
+            }
+
+            // Convert to bytes with UTF-8 BOM for Excel compatibility
+            byte[] bom = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+            byte[] csvBytes = csvContent.toString().getBytes(StandardCharsets.UTF_8);
+            byte[] csvWithBom = new byte[bom.length + csvBytes.length];
+            System.arraycopy(bom, 0, csvWithBom, 0, bom.length);
+            System.arraycopy(csvBytes, 0, csvWithBom, bom.length, csvBytes.length);
+
+            ByteArrayResource resource = new ByteArrayResource(csvWithBom);
+
+            // Create safe filename
+            String filename = sanitizeFilename(client.getName()) + "_logs_" +
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".csv";
+
+            log.info("Generated CSV file: {} with {} bytes", filename, csvWithBom.length);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .header(HttpHeaders.CONTENT_TYPE, "text/csv; charset=utf-8")
+                    .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
+                    .header(HttpHeaders.PRAGMA, "no-cache")
+                    .header(HttpHeaders.EXPIRES, "0")
+                    .contentLength(csvWithBom.length)
+                    .body(resource); // Removed the cast - Spring will handle this automatically
+
+        } catch (DataAccessException e) {
+            log.error("Database error while downloading CSV for client ID: {}", clientId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (Exception e) {
+            // Log the error for debugging
+            log.error("Error downloading CSV for client ID: {}", clientId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .build(); // Return empty body instead of null
+        }
+    }
+
+    // Helper method to properly escape CSV values
+    private String escapeCSVValue(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return "";
+        }
+
+        // Trim whitespace
+        value = value.trim();
+
+        // If value contains comma, newline, or double quote, wrap in quotes and escape quotes
+        if (value.contains(",") || value.contains("\n") || value.contains("\r") || value.contains("\"")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+
+        return value;
+    }
+
+    // Helper method to create safe filename
+    private String sanitizeFilename(String filename) {
+        if (filename == null || filename.trim().isEmpty()) {
+            return "client";
+        }
+
+        // Replace unsafe characters with underscore
+        String sanitized = filename.trim()
+                .replaceAll("[^a-zA-Z0-9\\-_\\s]", "_")  // Replace unsafe chars
+                .replaceAll("\\s+", "_")                 // Replace spaces with underscores
+                .replaceAll("_{2,}", "_")                // Replace multiple underscores with single
+                .replaceAll("^_|_$", "");               // Remove leading/trailing underscores
+
+        // Ensure it's not empty after sanitization
+        return sanitized.isEmpty() ? "client" : sanitized;
+    }
+
+    // Alternative method using GET mapping for direct links (if needed)
+    @GetMapping("/download-csv/{id}")
+    public ResponseEntity<org.springframework.core.io.Resource> downloadClientLogsGet(@PathVariable("id") Long clientId, HttpServletRequest request) {
+        return downloadClientLogs(clientId, request);
     }
 }

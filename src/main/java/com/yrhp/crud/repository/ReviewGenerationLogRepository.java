@@ -59,4 +59,17 @@ public interface ReviewGenerationLogRepository extends JpaRepository<ReviewGener
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
 
+    List<ReviewGenerationLog> findByCompanyNameOrderByTimestampDesc(String companyName);
+
+    Page<ReviewGenerationLog> findByCompanyName(String companyName, Pageable pageable);
+
+    // Find logs by company name within date range
+    List<ReviewGenerationLog> findByCompanyNameAndTimestampBetween(
+            String companyName,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    );
+
+    // Count logs by company name
+    long countByCompanyName(String companyName);
 }

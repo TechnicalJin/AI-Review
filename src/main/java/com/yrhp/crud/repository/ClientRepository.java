@@ -31,4 +31,7 @@ public interface ClientRepository extends JpaRepository<Client, Integer> {
 
     Page<Client> findByNameContainingIgnoreCaseOrMobileContainingOrEmailContainingIgnoreCase(
         String name, String mobile, String email, Pageable pageable);
+
+//    Client findById(Long clientId);
+    Optional<Client> findById(Long clientId);
 }

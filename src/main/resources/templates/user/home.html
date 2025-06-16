@@ -706,6 +706,12 @@
                                    title="Delete">
                                     <i class="fas fa-trash-alt group-hover:scale-110 transition-transform duration-300"></i>
                                 </a>
+                                <a th:href="@{/user/download-csv/{id}(id=${client.id})}"
+                                   onclick="return handleDownload(event, [[${client.id}]], '[[${client.name}]]')"
+                                   class="bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 group"
+                                   title="Download CSV">
+                                    <i class="fas fa-download group-hover:scale-110 transition-transform duration-300"></i>
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -857,6 +863,113 @@
 <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden hidden"></div>
 
 <script>
+
+    function handleDownload(event, clientId, clientName) {
+    event.preventDefault();
+
+    // Show loading state
+    const downloadBtn = event.target.closest('a');
+    const originalContent = downloadBtn.innerHTML;
+    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    downloadBtn.style.pointerEvents = 'none';
+
+    // Create form and submit using POST method
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/user/download-csv';
+    form.style.display = 'none';
+
+    const clientIdInput = document.createElement('input');
+    clientIdInput.type = 'hidden';
+    clientIdInput.name = 'clientId';
+    clientIdInput.value = clientId;
+    form.appendChild(clientIdInput);
+
+    // Add CSRF token if available
+    const csrfToken = document.querySelector('meta[name="_csrf"]');
+    if (csrfToken) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_csrf';
+        csrfInput.value = csrfToken.getAttribute('content');
+        form.appendChild(csrfInput);
+    }
+
+    document.body.appendChild(form);
+
+    // Submit form
+    form.submit();
+
+    // Clean up
+    document.body.removeChild(form);
+
+    // Reset button state after delay
+    setTimeout(() => {
+        downloadBtn.innerHTML = originalContent;
+        downloadBtn.style.pointerEvents = 'auto';
+    }, 2000);
+
+    return false;
+}
+
+// Alternative method using fetch API for better error handling
+function handleDownloadWithFetch(event, clientId, clientName) {
+    event.preventDefault();
+
+    const downloadBtn = event.target.closest('a');
+    const originalContent = downloadBtn.innerHTML;
+    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    downloadBtn.style.pointerEvents = 'none';
+
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('clientId', clientId);
+
+    // Add CSRF token if available
+    const csrfToken = document.querySelector('meta[name="_csrf"]');
+    if (csrfToken) {
+        formData.append('_csrf', csrfToken.getAttribute('content'));
+    }
+
+    fetch('/user/download-csv', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Download failed');
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+
+        // Extract filename from response headers or create default
+        const filename = clientName.replace(/[^a-zA-Z0-9]/g, '_') + '_logs_' +
+                         new Date().toISOString().slice(0,19).replace(/:/g, '-') + '.csv';
+        a.download = filename;
+
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    })
+    .catch(error => {
+        console.error('Download error:', error);
+        alert('Failed to download CSV. Please try again.');
+    })
+    .finally(() => {
+        // Reset button state
+        downloadBtn.innerHTML = originalContent;
+        downloadBtn.style.pointerEvents = 'auto';
+    });
+
+    return false;
+}
 
     function jumpToPage() {
         const select = document.getElementById('pageJump');
