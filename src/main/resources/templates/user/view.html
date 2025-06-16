@@ -22,11 +22,6 @@
 
             <!-- Add tag selection section -->
             <div class="tag-selection mb-3">
-                <h4>
-                    Select Tags for Review Generation
-                    <span class="tags-counter">0 selected</span>
-                </h4>
-                <p class="text-muted mb-3">Choose at least 3 tags.</p>
                 <div class="tags-container" th:if="${client.chatText != null}">
                     <div th:each="tag : ${#strings.arraySplit(client.chatText, ',')}" class="tag-item form-check form-check-inline">
                         <input class="form-check-input tag-checkbox" type="checkbox" th:value="${#strings.trim(tag)}" th:id="${'tag-' + tagStat.index}">
@@ -49,7 +44,7 @@
                         <button class="btn btn-secondary regenerate-btn mt-2"
                                 th:attr="data-client-id=${client.id}">Regenerate Review</button>
                     </div>
-                </div>
+                </div><br>
                 <h3>Generated Review:</h3>
                 <div class="row mt-3">
                     <div class="col-12">

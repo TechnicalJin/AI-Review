@@ -44,7 +44,7 @@ html {
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.6;
+
     color: var(--text-color);
     background: var(--background-color);
     min-height: 100vh;
@@ -60,7 +60,7 @@ body {
    ===================================================== */
 .container {
     max-width: 1000px;
-    margin: 40px auto;
+    margin: 15px auto;
     padding: 0 15px; /* Ensure consistent padding on both sides */
     background: transparent;
     border-radius: 0;
@@ -91,7 +91,7 @@ body {
    Styles for the client info card with hover effects
    ===================================================== */
 .client-info {
-    padding: 40px;
+    padding: 20px;
     border-radius: 24px;
     background:
         linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%),
@@ -153,9 +153,6 @@ body {
    ===================================================== */
 .client-name {
     text-align: center;
-    /*margin: 30px 0;
-    padding: 20px 0;
-    font-size: 2.5rem;*/
     font-weight: 700;
     background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
     -webkit-background-clip: text;
@@ -239,30 +236,15 @@ body {
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
 }
-
 .tag-selection h4 {
     color: #2d3436;
     font-size: 1.25rem;
     font-weight: 600;
     margin-bottom: 1rem;
-    position: relative;
-    padding-bottom: 10px;
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
-
-.tag-selection h4::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 50px;
-    height: 3px;
-    background: var(--primary-color);
-    border-radius: 2px;
-}
-
 /* Tags Counter */
 .tags-counter {
     display: inline-flex;
@@ -278,12 +260,10 @@ body {
     transform: scale(0.8);
     transition: all 0.3s ease;
 }
-
 .tags-counter.visible {
     opacity: 1;
     transform: scale(1);
 }
-
 /* Tags Container */
 .tags-container {
     display: flex;
@@ -297,52 +277,43 @@ body {
     scrollbar-color: var(--primary-color) #f0f0f0;
     -webkit-overflow-scrolling: touch;
 }
-
 /* Custom Scrollbar Styling */
 .tags-container::-webkit-scrollbar {
     width: 8px;
 }
-
 .tags-container::-webkit-scrollbar-track {
     background: #f0f0f0;
     border-radius: 4px;
 }
-
 .tags-container::-webkit-scrollbar-thumb {
     background-color: var(--primary-color);
     border-radius: 4px;
     border: 2px solid #f0f0f0;
 }
-
 .tags-container::-webkit-scrollbar-thumb:hover {
     background-color: #0056b3;
 }
-
 /* Tag Items */
 .tag-item {
     order: 2;
     transition: all 0.3s ease;
 }
-
 .tag-item.selected {
     order: 1;
 }
-
 .form-check-inline {
     margin: 0;
     padding: 0;
     position: relative;
 }
-
 .form-check-input {
     display: none;
 }
-
 .form-check-label {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 10px 20px;
+    padding: 1px 10px;
     background: white;
     border: 2px solid var(--border-color);
     border-radius: 25px;
@@ -358,14 +329,12 @@ body {
     min-height: 44px;
     -webkit-tap-highlight-color: transparent;
 }
-
 .form-check-label:hover {
     transform: translateY(-2px);
     box-shadow: var(--hover-shadow);
     border-color: var(--primary-color);
     color: var(--primary-color);
 }
-
 .form-check-input:checked + .form-check-label {
     background: var(--primary-gradient);
     color: white;
@@ -416,10 +385,10 @@ body {
    ===================================================== */
 .generated-msg-box {
     width: 100%;
-    min-height: 200px;
+    min-height: 165px;
     border: 2px solid var(--border-color);
     border-radius: 16px;
-    padding: 15px;
+    padding: 10px;
     resize: vertical;
     font-family: 'Inter', monospace;
     white-space: pre-wrap;
@@ -429,7 +398,7 @@ body {
     animation: fadeIn 0.8s ease-out;
     backdrop-filter: blur(5px);
     font-size: 1rem;
-    line-height: 1.6;
+    line-height: 1.4;
     -webkit-appearance: none;
 }
 
