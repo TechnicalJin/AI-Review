@@ -58,12 +58,13 @@ public class SecurityConfig {
                     logger.debug("Configuring authorization rules");
                     auth
                             // Public resources
-                            .requestMatchers("/", "/createUser", "/signin", "/register", 
+                            .requestMatchers("/", "/createUser", "/signin",
                                     "/css/**", "/js/**", "/images/**", "/error/**", 
                                     "/uploads/**", "/Uploads/**").permitAll()
                             // Public pages
                             .requestMatchers("/user/view/**", "/user/regenerate/**").permitAll()
                             // Role-based access
+                            .requestMatchers("/register").denyAll()
                             .requestMatchers("/user/**").hasRole("USER")
                             .requestMatchers("/client/**").hasRole("CLIENT")
                             .anyRequest().authenticated();
