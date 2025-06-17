@@ -193,9 +193,9 @@
                 <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                     Manage Chat Widget Tags
                 </h1>
-                <p class="text-sm sm:text-base text-gray-600">
-                    Customize the tags that appear in your chat widget to guide customer conversations.
-                </p>
+<!--                <p class="text-sm sm:text-base text-gray-600">-->
+<!--                    Customize the tags that appear in your chat widget to guide customer conversations.-->
+<!--                </p>-->
             </div>
         </div>
 
@@ -237,7 +237,7 @@
                                 id="chatTextInput"
                                 placeholder="e.g., Billing Inquiry, Technical Support..."
                                 class="input-modern w-full py-2 sm:py-3 px-3 sm:px-4 pr-10 sm:pr-12 rounded-lg font-medium text-sm sm:text-base"
-                                maxlength="30"
+                                maxlength="300"
                         />
                         <button
                                 type="button"
@@ -250,7 +250,7 @@
 
                     <p class="mt-1 text-xs text-gray-500 flex items-center">
                         <i class="fas fa-info-circle mr-1"></i>
-                        Type your tag and press Enter or click the '+' button (max 30 characters per tag).
+                        Type your tag and press Enter or click the '+' button (max 300 characters per tag).
                     </p>
                 </div>
 
@@ -374,8 +374,8 @@
                 return;
             }
 
-            if (tagValue.length > 30) {
-                showError('Tags must be 30 characters or less');
+            if (tagValue.length > 300) {
+                showError('Tags must be 300 characters or less');
                 return;
             }
 
