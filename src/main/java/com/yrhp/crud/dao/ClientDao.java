@@ -36,7 +36,7 @@ public class ClientDao {
 
     private String existingLogo;
 
-    @Size(max = 500, message = "Chat text cannot exceed 500 characters")
+    @NotEmpty(message = "chatText is required")
     private String chatText;
 
     private String generateLink;

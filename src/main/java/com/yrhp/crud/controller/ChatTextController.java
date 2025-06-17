@@ -43,24 +43,16 @@ public class ChatTextController {
 
         log.debug("Updating chat text for user: {} with text: {}", authentication.getName(), chatText);
 
-        // Basic validation
-        if (chatText == null || chatText.trim().isEmpty()) {
-            log.warn("Chat text is empty for user: {}", authentication.getName());
-            redirectAttributes.addFlashAttribute("error", "Chat text cannot be empty");
-            return "redirect:/client/chatText";
-        }
-
-        if (chatText.length() > 500) {
-            log.warn("Chat text too long for user: {}", authentication.getName());
-            redirectAttributes.addFlashAttribute("error", "Chat text cannot exceed 500 characters");
-            return "redirect:/client/chatText";
+        // Basic validation - only check for null, allow empty strings
+        if (chatText == null) {
+            chatText = ""; // Set to empty string if null
         }
 
         try {
             Client client = clientService.getClientByEmail(authentication.getName());
             log.debug("Found client: {} with ID: {}", client.getName(), client.getId());
 
-            // Update chat text
+            // Update chat text - no length restrictions
             client.setChatText(chatText.trim());
 
             // Save the client
