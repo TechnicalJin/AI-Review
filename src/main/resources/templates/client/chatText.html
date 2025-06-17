@@ -95,27 +95,27 @@
         }
 
         .tag-modern {
-            background: #e0e7ff; /* Lighter primary color */
-            border: 1px solid #c7d2fe; /* Slightly darker border */
-            color: #3730a3; /* Darker text for contrast */
+            background: #e0e7ff;
+            border: 1px solid #c7d2fe;
+            color: #3730a3;
             transition: all 0.2s ease-in-out;
-            cursor: default; /* Indicate it's not directly clickable for navigation */
+            cursor: default;
         }
 
         .tag-modern:hover {
-            background: #c7d2fe; /* Even lighter on hover */
-            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2); /* Subtle shadow on hover */
+            background: #c7d2fe;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
             transform: translateY(-1px);
         }
 
         .tag-modern .remove-tag-btn {
-            color: #6366f1; /* Primary color for close icon */
+            color: #6366f1;
             transition: color 0.2s ease;
         }
 
         .tag-modern .remove-tag-btn:hover {
-            color: #ef4444; /* Red on hover for removal */
-            background-color: rgba(239, 68, 68, 0.1); /* Light red background on hover */
+            color: #ef4444;
+            background-color: rgba(239, 68, 68, 0.1);
         }
 
         .selected-tags-area {
@@ -132,7 +132,7 @@
         }
 
         .tags-scroll-container {
-            max-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: #d1d5db #f3f4f6;
@@ -158,7 +158,7 @@
 
         @media (max-width: 640px) {
             .tags-scroll-container {
-                max-height: 150px;
+                max-height: 200px;
             }
 
             .input-modern {
@@ -193,9 +193,6 @@
                 <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                     Manage Chat Widget Tags
                 </h1>
-<!--                <p class="text-sm sm:text-base text-gray-600">-->
-<!--                    Customize the tags that appear in your chat widget to guide customer conversations.-->
-<!--                </p>-->
             </div>
         </div>
 
@@ -219,9 +216,6 @@
                     <i class="fas fa-tags mr-2 text-primary"></i>
                     Tag Configuration
                 </h2>
-                <p class="text-gray-600 text-sm">
-                    Add relevant tags to improve your chat bot's interaction and topic understanding.
-                </p>
             </div>
 
             <form id="chatTextForm" method="post" th:action="@{/client/chatText}">
@@ -237,7 +231,6 @@
                                 id="chatTextInput"
                                 placeholder="e.g., Billing Inquiry, Technical Support..."
                                 class="input-modern w-full py-2 sm:py-3 px-3 sm:px-4 pr-10 sm:pr-12 rounded-lg font-medium text-sm sm:text-base"
-                                maxlength="300"
                         />
                         <button
                                 type="button"
@@ -250,7 +243,7 @@
 
                     <p class="mt-1 text-xs text-gray-500 flex items-center">
                         <i class="fas fa-info-circle mr-1"></i>
-                        Type your tag and press Enter or click the '+' button (max 300 characters per tag).
+                        Type your tag and press Enter or click the '+' button (no character limit).
                     </p>
                 </div>
 
@@ -264,7 +257,7 @@
                         <div class="text-gray-500 text-center py-6 animate-pulse-soft">
                             <i class="fas fa-tag text-2xl sm:text-3xl mb-3 opacity-50"></i>
                             <p class="text-sm sm:text-base font-medium">No tags added yet</p>
-                            <p class="text-xs">Add at least 10 tags to get started</p>
+                            <p class="text-xs">Add tags to get started</p>
                         </div>
                     </div>
 
@@ -272,12 +265,12 @@
                         <div class="flex flex-wrap items-center gap-2">
                             <div class="bg-gray-50 rounded-full px-3 py-1 border border-gray-200">
                                 <span class="text-xs font-medium text-gray-600">
-                                    Tags: <span id="tagCount" class="font-bold text-primary">0</span>/500
+                                    Tags: <span id="tagCount" class="font-bold text-primary">0</span>
                                 </span>
                             </div>
                             <div class="bg-gray-50 rounded-full px-3 py-1 border border-gray-200">
                                 <span class="text-xs font-medium text-gray-600">
-                                    Required: <span class="font-bold text-accent">10 minimum</span>
+                                    Status: <span class="font-bold text-accent">No Limits</span>
                                 </span>
                             </div>
                         </div>
@@ -351,18 +344,10 @@
             }
         });
 
-        // Form submission
+        // Form submission - removed minimum tag requirement
         chatTextForm.addEventListener('submit', function(e) {
-            if (tagSet.size < 10) {
-                e.preventDefault();
-                showError("You must add at least 10 tags before updating.");
-                return;
-            }
             hiddenChatText.value = Array.from(tagSet).join(', ');
-            // In a real application, you'd send this to the server.
-            // For this example, we'll just simulate success.
-            // e.preventDefault(); // Uncomment this line if you want to prevent actual form submission for testing
-            // showSuccess("Chat tags updated successfully!");
+            // Form will submit normally - no validation blocking
         });
 
         function addTagFromInput() {
@@ -374,21 +359,12 @@
                 return;
             }
 
-            if (tagValue.length > 300) {
-                showError('Tags must be 300 characters or less');
-                return;
-            }
-
-            if (tagSet.size >= 500) {
-                showError('Maximum of 500 tags reached');
-                return;
-            }
-
+            // Removed all length and count restrictions
             addTagToSet(tagValue);
             chatTextInput.value = '';
             chatTextInput.focus();
             updateTagDisplay();
-            hideMessages(); // Hide messages after successful tag add
+            hideMessages();
         }
 
         function addTagToSet(tag) {
@@ -398,14 +374,14 @@
         function removeTag(tagToRemove) {
             tagSet.delete(tagToRemove);
             updateTagDisplay();
-            hideMessages(); // Hide messages after tag removal
+            hideMessages();
         }
 
         window.clearAllTags = function() {
             if (confirm('Are you sure you want to remove all tags?')) {
                 tagSet.clear();
                 updateTagDisplay();
-                hideMessages(); // Hide messages after clearing all tags
+                hideMessages();
             }
         }
 
@@ -419,7 +395,7 @@
                     <div class="text-gray-500 text-center py-6 animate-pulse-soft">
                         <i class="fas fa-tag text-2xl sm:text-3xl mb-3 opacity-50"></i>
                         <p class="text-sm sm:text-base font-medium">No tags added yet</p>
-                        <p class="text-xs">Add at least 10 tags to get started</p>
+                        <p class="text-xs">Add tags to get started</p>
                     </div>
                 `;
                 return;
@@ -436,10 +412,10 @@
             Array.from(tagSet).forEach((tag, index) => {
                 const tagElement = document.createElement('div');
                 tagElement.className = 'tag-modern flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium animate-tag-bounce';
-                tagElement.style.animationDelay = `${index * 0.05}s`; // Slightly faster animation for tags
+                tagElement.style.animationDelay = `${index * 0.05}s`;
                 tagElement.innerHTML = `
-                    <span class="mr-1.5 sm:mr-2">${tag}</span>
-                    <button type="button" class="remove-tag-btn w-5 h-5 flex items-center justify-center rounded-full text-xs" onclick="removeTagByValue('${tag}')">
+                    <span class="mr-1.5 sm:mr-2">${escapeHtml(tag)}</span>
+                    <button type="button" class="remove-tag-btn w-5 h-5 flex items-center justify-center rounded-full text-xs" onclick="removeTagByValue('${escapeForAttribute(tag)}')">
                         <i class="fas fa-times"></i>
                     </button>
                 `;
@@ -452,6 +428,17 @@
 
         window.removeTagByValue = function(tagValue) {
             removeTag(tagValue);
+        }
+
+        // Helper functions for escaping HTML/attributes
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function escapeForAttribute(text) {
+            return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
         }
 
         function showError(message) {
@@ -473,13 +460,10 @@
             errorMessage.classList.add('hidden');
         }
 
-        // Check for success message from server-side (if applicable)
-        // This assumes a 'success' parameter might be added to the URL after a successful form submission
+        // Check for success message from server-side
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('success') && urlParams.get('success') === 'true') {
             showSuccess("Chat tags updated successfully!");
-            // Optionally, remove the success parameter from the URL after showing the message
-            // history.replaceState({}, document.title, window.location.pathname);
         }
     });
 </script>
