@@ -406,45 +406,61 @@
 
         /* Link Styling */
         .review-link {
-            background: linear-gradient(135deg, #06b6d4, #0891b2);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap; /* Enforce single-line truncation */
+    position: relative; /* For absolute positioning of expanded text */
+    cursor: pointer; /* Indicate interactivity */
+}
 
-        .review-link:hover {
-            background: linear-gradient(135deg, #0891b2, #0e7490);
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px -3px rgba(6, 182, 212, 0.3);
-        }
+.review-link:hover {
+    background: linear-gradient(135deg, #0891b2, #0e7490);
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px -3px rgba(6, 182, 212, 0.3);
+    white-space: normal; /* Allow text wrapping on hover */
+    overflow: visible; /* Show full text */
+    max-width: none; /* Remove width constraint */
+    z-index: 10; /* Ensure it appears above other elements */
+    padding: 0.75rem 1.25rem; /* Slightly increase padding for readability */
+}
 
         /* Text Content Styling */
         .chat-text {
-            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            color: #475569;
-            max-width: 250px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            border-left: 4px solid #6366f1;
-            transition: all 0.3s ease;
-        }
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #475569;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap; /* Enforce single-line truncation */
+    border-left: 4px solid #6366f1;
+    transition: all 0.3s ease;
+    position: relative; /* For absolute positioning of expanded text */
+    cursor: pointer; /* Indicate interactivity */
+}
 
-        .chat-text:hover {
-            background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-            transform: scale(1.02);
-        }
+.chat-text:hover {
+    background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+    transform: scale(1.02);
+    white-space: normal; /* Allow text wrapping on hover */
+    overflow: visible; /* Show full text */
+    max-width: none; /* Remove width constraint */
+    z-index: 10; /* Ensure it appears above other elements */
+    box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.2); /* Enhance visibility */
+    padding: 1rem; /* Slightly increase padding for readability */
+}
 
         /* Enhanced Pagination */
         .pagination-btn {
@@ -679,13 +695,14 @@
                                  onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iOCIgZmlsbD0iIzkxQTdCRiIvPgo8cGF0aCBkPSJNMjQgMTJDMjcuMzEzNyAxMiAzMCAxNC42ODYzIDMwIDE4QzMwIDIxLjMxMzcgMjcuMzEzNyAyNCAyNCAyNEMyMC42ODYzIDI0IDE4IDIxLjMxMzcgMTggMThDMTggMTQuNjg2MyAyMC42ODYzIDEyIDI0IDEyWk0yNCAzNkMzMCAzNiAzNiAzMi40IDM2IDI4SDEyQzEyIDMyLjQgMTggMzYgMjQgMzZaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K'">
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-slate-600 break-words max-w-xs" th:text="${client.chatText}"></div>
+                            <div class="chat-text" th:text="${client.chatText}" title="${client.chatText}"></div>
                         </td>
                         <td class="px-6 py-4">
                             <a th:href="${client.reviewLink}"
                                target="_blank"
-                               class="text-primary hover:text-blue-600 break-words max-w-xs inline-block transition-colors duration-200"
-                               th:text="${client.reviewLink}"></a>
+                               class="review-link"
+                               th:text="${client.reviewLink}"
+                               title="${client.reviewLink}"></a>
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex space-x-2">
