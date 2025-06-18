@@ -95,27 +95,39 @@
         }
 
         .tag-modern {
-            background: #e0e7ff;
-            border: 1px solid #c7d2fe;
-            color: #3730a3;
-            transition: all 0.2s ease-in-out;
-            cursor: default;
+            display: inline-flex;
+            align-items: center;
+            background-color: #D2E3FC;
+            border: 1px solid #AECBFA;
+            color: #202124;
+            padding: 5px 12px;
+            margin: 4px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
         }
 
         .tag-modern:hover {
-            background: #c7d2fe;
-            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
-            transform: translateY(-1px);
+            background-color: #C0D8FC;
+        }
+
+        .tag-modern:active {
+            background-color: #AECBFA;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
         }
 
         .tag-modern .remove-tag-btn {
-            color: #6366f1;
-            transition: color 0.2s ease;
+            margin-left: 8px;
+            font-size: 16px;
+            color: #5f6368;
+            cursor: pointer;
+            transition: color 0.2s;
         }
 
         .tag-modern .remove-tag-btn:hover {
-            color: #ef4444;
-            background-color: rgba(239, 68, 68, 0.1);
+            color: #D93025;
         }
 
         .selected-tags-area {
@@ -218,7 +230,7 @@
                 </h2>
             </div>
 
-            <form id="chatTextForm" method="post" th:action="@{/client/chatText}">
+            <form id="chatTextForm" method="post" th:action="@{/client/chatText}" onsubmit="return validateForm()">
                 <div class="mb-6">
                     <label for="chatTextInput" class="block text-gray-900 mb-2 font-semibold text-sm sm:text-base">
                         <i class="fas fa-plus-circle mr-1 text-primary"></i>
@@ -243,7 +255,7 @@
 
                     <p class="mt-1 text-xs text-gray-500 flex items-center">
                         <i class="fas fa-info-circle mr-1"></i>
-                        Type your tag and press Enter or click the '+' button (no character limit).
+                        Type your tag(s) and press Enter or click the '+' button (use commas for multiple tags).
                     </p>
                 </div>
 
@@ -344,27 +356,51 @@
             }
         });
 
-        // Form submission - removed minimum tag requirement
+        // Form submission with minimum 10 tags validation
         chatTextForm.addEventListener('submit', function(e) {
-            hiddenChatText.value = Array.from(tagSet).join(', ');
-            // Form will submit normally - no validation blocking
+            e.preventDefault();
+            if (validateForm()) {
+                hiddenChatText.value = Array.from(tagSet).join(', ');
+                chatTextForm.submit();
+            }
         });
 
-        function addTagFromInput() {
-            const tagValue = chatTextInput.value.trim();
-            if (tagValue === '') return;
+        function validateForm() {
+            if (tagSet.size < 10) {
+                showError('You must add at least 10 tags.');
+                return false;
+            }
+            return true;
+        }
 
-            if (tagSet.has(tagValue)) {
-                showError('This tag already exists!');
+        function addTagFromInput() {
+            const inputValue = chatTextInput.value.trim();
+            if (inputValue === '') {
+                showError('Please enter a tag.');
                 return;
             }
 
-            // Removed all length and count restrictions
-            addTagToSet(tagValue);
-            chatTextInput.value = '';
-            chatTextInput.focus();
-            updateTagDisplay();
-            hideMessages();
+            // Split by commas, trim spaces, and filter out empty tags
+            const tags = inputValue.split(',')
+                .map(tag => tag.trim())
+                .filter(tag => tag !== '');
+
+            let added = false;
+            tags.forEach(tag => {
+                if (!tagSet.has(tag)) {
+                    addTagToSet(tag);
+                    added = true;
+                } else {
+                    showError(`Tag "${tag}" already exists!`);
+                }
+            });
+
+            if (added) {
+                updateTagDisplay();
+                chatTextInput.value = '';
+                chatTextInput.focus();
+                hideMessages();
+            }
         }
 
         function addTagToSet(tag) {
@@ -374,14 +410,18 @@
         function removeTag(tagToRemove) {
             tagSet.delete(tagToRemove);
             updateTagDisplay();
-            hideMessages();
+            if (tagSet.size < 10) {
+                showError('You must have at least 10 tags.');
+            } else {
+                hideMessages();
+            }
         }
 
         window.clearAllTags = function() {
             if (confirm('Are you sure you want to remove all tags?')) {
                 tagSet.clear();
                 updateTagDisplay();
-                hideMessages();
+                showError('You must have at least 10 tags.');
             }
         }
 
@@ -411,7 +451,7 @@
 
             Array.from(tagSet).forEach((tag, index) => {
                 const tagElement = document.createElement('div');
-                tagElement.className = 'tag-modern flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-medium animate-tag-bounce';
+                tagElement.className = 'tag-modern flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-sm font-medium animate-tag-bounce';
                 tagElement.style.animationDelay = `${index * 0.05}s`;
                 tagElement.innerHTML = `
                     <span class="mr-1.5 sm:mr-2">${escapeHtml(tag)}</span>
