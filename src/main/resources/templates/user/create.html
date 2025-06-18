@@ -4,11 +4,54 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Create Client</title>
-
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-        crossorigin="anonymous"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'fade-in': 'fadeIn 0.6s ease-out',
+            'slide-up': 'slideUp 0.5s ease-out',
+            'tag-bounce': 'tagBounce 0.4s ease-out',
+            'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
+            'slide-in-left': 'slideInLeft 0.5s ease-out',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            slideInLeft: {
+              '0%': { opacity: '0', transform: 'translateX(-20px)' },
+              '100%': { opacity: '1', transform: 'translateX(0)' }
+            },
+            tagBounce: {
+              '0%': { transform: 'scale(0.8)', opacity: '0' },
+              '50%': { transform: 'scale(1.05)' },
+              '100%': { transform: 'scale(1)', opacity: '1' }
+            },
+            pulseSoft: {
+              '0%, 100%': { opacity: '1' },
+              '50%': { opacity: '0.7' }
+            }
+          },
+          colors: {
+            'primary': '#4f46e5',
+            'primary-hover': '#4338ca',
+            'secondary': '#f3f4f6',
+            'secondary-hover': '#e5e7eb',
+            'accent': '#10b981',
+          }
+        }
+      }
+    }
+  </script>
   <style>
     @import url("https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700");
 
@@ -33,10 +76,6 @@
     .container h2 {
       text-align: center;
       margin-bottom: 20px;
-    }
-
-    .container p {
-      margin-bottom: 10px;
     }
 
     .container img {
@@ -82,8 +121,16 @@
       width: 100%;
       padding: 8px 40px 8px 12px;
       border-radius: 20px;
-      border: 1px solid #c1dafc;
+      border: 2px solid #e5e7eb;
       font-size: 14px;
+      transition: all 0.3s ease;
+      color: #1f2937;
+    }
+
+    #chatTextInput:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+      outline: none;
     }
 
     .plus-btn-inside {
@@ -93,19 +140,20 @@
       transform: translateY(-50%);
       padding: 6px 12px;
       cursor: pointer;
-      background-color: #007bff;
+      background-color: #4f46e5;
       color: white;
       border: none;
       border-radius: 50%;
       font-size: 18px;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.3s ease, transform 0.3s ease;
     }
 
     .plus-btn-inside:hover {
-      background-color: #0056b3;
+      background-color: #4338ca;
+      transform: translateY(-50%) scale(1.05);
     }
 
-    .tag {
+    .tag-modern {
       display: inline-flex;
       align-items: center;
       background-color: #D2E3FC;
@@ -117,19 +165,20 @@
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.2s, box-shadow 0.2s;
+      transition: background-color 0.2s, box-shadow 0.2s, transform 0.2s;
     }
 
-    .tag:hover {
+    .tag-modern:hover {
       background-color: #C0D8FC;
+      transform: translateY(-1px);
     }
 
-    .tag:active {
+    .tag-modern:active {
       background-color: #AECBFA;
       box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
     }
 
-    .close-icon {
+    .tag-modern .remove-tag-btn {
       margin-left: 8px;
       font-size: 16px;
       color: #5f6368;
@@ -137,7 +186,7 @@
       transition: color 0.2s;
     }
 
-    .close-icon:hover {
+    .tag-modern .remove-tag-btn:hover {
       color: #D93025;
     }
 
@@ -181,7 +230,7 @@
         flex-direction: row;
       }
 
-      .tag {
+      .tag-modern {
         margin: 5px;
       }
     }
@@ -201,8 +250,14 @@
     <div class="col-md-8 mx-auto rounded border p-4">
       <h2 class="text-center mb-5">New Client</h2>
 
-      <form method="post" th:object="${clientDao}" enctype="multipart/form-data" id="clientForm" onsubmit="return validateForm()">
+      <div class="mb-4 p-3 bg-red-100 text-red-800 rounded-lg border border-red-300 hidden animate-slide-up" id="errorMessage">
+        <div class="flex items-center">
+          <i class="fas fa-exclamation-triangle mr-2 text-base"></i>
+          <span id="errorText" class="font-medium text-sm"></span>
+        </div>
+      </div>
 
+      <form method="post" th:object="${clientDao}" enctype="multipart/form-data" id="clientForm" onsubmit="return validateForm()">
         <input type="hidden" id="clientId" th:value="${clientId}" />
 
         <div class="row mb-3">
@@ -281,143 +336,175 @@
             <a href="/user/home" class="btn btn-secondary">Cancel</a>
           </div>
         </div>
-
       </form>
     </div>
   </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 <script>
   const tagSet = new Set();
 
   function validateForm() {
-      let isValid = true;
+    let isValid = true;
 
-      // Email validation
-      const emailInput = document.querySelector('input[type="email"]');
-      const emailError = document.getElementById('emailError');
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Email validation
+    const emailInput = document.querySelector('input[type="email"]');
+    const emailError = document.getElementById('emailError');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-      if (!emailRegex.test(emailInput.value.trim())) {
-          emailError.textContent = "Invalid email address.";
-          isValid = false;
-      } else {
-          emailError.textContent = "";
-      }
+    if (!emailRegex.test(emailInput.value.trim())) {
+      emailError.textContent = "Invalid email address.";
+      isValid = false;
+    } else {
+      emailError.textContent = "";
+    }
 
-      // Mobile validation
-      const mobileInput = document.getElementById('mobile');
-      const mobileError = document.getElementById('mobileError');
-      const mobileRegex = /^\d{10}$/;
+    // Mobile validation
+    const mobileInput = document.getElementById('mobile');
+    const mobileError = document.getElementById('mobileError');
+    const mobileRegex = /^\d{10}$/;
 
-      if (!mobileRegex.test(mobileInput.value.trim())) {
-          mobileError.textContent = "Enter a valid 10-digit mobile number.";
-          isValid = false;
-      } else {
-          mobileError.textContent = "";
-      }
+    if (!mobileRegex.test(mobileInput.value.trim())) {
+      mobileError.textContent = "Enter a valid 10-digit mobile number.";
+      isValid = false;
+    } else {
+      mobileError.textContent = "";
+    }
 
-      // Review Link validation
-      const reviewLink = document.querySelector('input[name="reviewLink"]').value;
-      const reviewLinkError = document.getElementById('reviewLinkError');
+    // Review Link validation
+    const reviewLink = document.querySelector('input[name="reviewLink"]').value;
+    const reviewLinkError = document.getElementById('reviewLinkError');
 
-      if (!isValidURL(reviewLink)) {
-          reviewLinkError.textContent = "Please enter a valid URL.";
-          isValid = false;
-      } else {
-          reviewLinkError.textContent = "";
-      }
+    if (!isValidURL(reviewLink)) {
+      reviewLinkError.textContent = "Please enter a valid URL.";
+      isValid = false;
+    } else {
+      reviewLinkError.textContent = "";
+    }
 
-      // Tags validation
-      if (tagSet.size < 10) {
-          document.getElementById('chatTextError').textContent = "Please add at least 10 tags.";
-          isValid = false;
-      } else {
-          document.getElementById('chatTextError').textContent = "";
-      }
+    // Logo validation
+    const logoInput = document.querySelector('input[name="logo"]');
+    const logoError = document.getElementById('logoError');
 
-      return isValid;
+    if (logoInput.files.length === 0) {
+      logoError.textContent = "Please upload a logo.";
+      isValid = false;
+    } else {
+      logoError.textContent = "";
+    }
+
+    // Tags validation
+    if (tagSet.size < 10) {
+      document.getElementById('chatTextError').textContent = "Please add at least 10 tags.";
+      isValid = false;
+    } else {
+      document.getElementById('chatTextError').textContent = "";
+    }
+
+    return isValid;
   }
 
   function addTag() {
-      const input = document.getElementById("chatTextInput");
-      const tagsInput = document.getElementById("tagsInput");
-      let inputValue = input.value.trim();
+    const input = document.getElementById("chatTextInput");
+    const tagsInput = document.getElementById("tagsInput");
+    const chatTextError = document.getElementById("chatTextError");
+    let inputValue = input.value.trim();
 
-      if (inputValue) {
-          let tags = inputValue.split(',')
-              .map(tag => tag.trim())
-              .filter(tag => tag !== '');
+    if (inputValue) {
+      let tags = inputValue.split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag !== '');
 
-          let added = false;
-          for (let tag of tags) {
-              if (!tagSet.has(tag)) {
-                  tagSet.add(tag);
-                  added = true;
-              }
-          }
-
-          if (added) {
-              tagsInput.value = Array.from(tagSet).join(", ");
-              updateDisplayedTags();
-          }
-          input.value = "";
+      let added = false;
+      for (let tag of tags) {
+        if (!tagSet.has(tag)) {
+          tagSet.add(tag);
+          added = true;
+        } else {
+          showError(`Tag "${tag}" already exists!`);
+        }
       }
+
+      if (added) {
+        tagsInput.value = Array.from(tagSet).join(", ");
+        updateDisplayedTags();
+        chatTextError.textContent = "";
+      }
+      input.value = "";
+    } else {
+      showError("Please enter a tag.");
+    }
   }
 
   function updateDisplayedTags() {
-      const container = document.querySelector('.selected-tags');
-      container.innerHTML = "<h5>Selected Tags</h5>";
+    const container = document.querySelector('.selected-tags');
+    container.innerHTML = "<h5>Selected Tags</h5>";
 
-      tagSet.forEach(tag => {
-          const tagElement = document.createElement('span');
-          tagElement.className = 'tag';
+    tagSet.forEach((tag, index) => {
+      const tagElement = document.createElement('span');
+      tagElement.className = 'tag-modern';
+      tagElement.style.animationDelay = `${index * 0.05}s`;
 
-          const tagText = document.createTextNode(tag);
-          tagElement.appendChild(tagText);
+      const tagText = document.createElement('span');
+      tagText.className = 'mr-1.5';
+      tagText.innerHTML = escapeHtml(tag);
+      tagElement.appendChild(tagText);
 
-          const removeIcon = document.createElement('span');
-          removeIcon.className = 'close-icon';
-          removeIcon.innerHTML = '×';
-          removeIcon.addEventListener('click', (e) => {
-              e.stopPropagation();
-              removeTag(tag);
-          });
-
-          tagElement.appendChild(removeIcon);
-          container.appendChild(tagElement);
+      const removeIcon = document.createElement('button');
+      removeIcon.type = 'button';
+      removeIcon.className = 'remove-tag-btn w-5 h-5 flex items-center justify-center rounded-full text-xs';
+      removeIcon.innerHTML = '<i class="fas fa-times"></i>';
+      removeIcon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeTag(tag);
       });
+
+      tagElement.appendChild(removeIcon);
+      container.appendChild(tagElement);
+    });
   }
 
   function removeTag(tag) {
-      tagSet.delete(tag);
-      document.getElementById("tagsInput").value = Array.from(tagSet).join(", ");
-      updateDisplayedTags();
+    tagSet.delete(tag);
+    document.getElementById("tagsInput").value = Array.from(tagSet).join(", ");
+    updateDisplayedTags();
 
-      if (tagSet.size < 10) {
-          document.getElementById('chatTextError').textContent = "Please add at least 10 tags.";
-      } else {
-          document.getElementById('chatTextError').textContent = "";
-      }
+    if (tagSet.size < 10) {
+      document.getElementById('chatTextError').textContent = "Please add at least 10 tags.";
+    } else {
+      document.getElementById('chatTextError').textContent = "";
+    }
   }
 
   function isValidURL(string) {
-      try {
-          new URL(string);
-          return true;
-      } catch (_) {
-          return false;
-      }
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function showError(message) {
+    const errorMessage = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+    errorText.textContent = message;
+    errorMessage.classList.remove('hidden');
+    setTimeout(() => errorMessage.classList.add('hidden'), 5000);
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   function submitForm() {
-      if (validateForm()) {
-          document.getElementById("clientForm").submit();
-      }
+    if (validateForm()) {
+      document.getElementById("clientForm").submit();
+    }
   }
 </script>
 </body>
