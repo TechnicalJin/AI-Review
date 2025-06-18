@@ -4,41 +4,27 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Edit Client</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           animation: {
-            'fade-in': 'fadeIn 0.6s ease-out',
             'slide-up': 'slideUp 0.5s ease-out',
             'tag-bounce': 'tagBounce 0.4s ease-out',
-            'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
-            'slide-in-left': 'slideInLeft 0.5s ease-out',
           },
           keyframes: {
-            fadeIn: {
-              '0%': { opacity: '0', transform: 'translateY(20px)' },
-              '100%': { opacity: '1', transform: 'translateY(0)' }
-            },
             slideUp: {
               '0%': { opacity: '0', transform: 'translateY(10px)' },
               '100%': { opacity: '1', transform: 'translateY(0)' }
-            },
-            slideInLeft: {
-              '0%': { opacity: '0', transform: 'translateX(-20px)' },
-              '100%': { opacity: '1', transform: 'translateX(0)' }
             },
             tagBounce: {
               '0%': { transform: 'scale(0.8)', opacity: '0' },
               '50%': { transform: 'scale(1.05)' },
               '100%': { transform: 'scale(1)', opacity: '1' }
-            },
-            pulseSoft: {
-              '0%, 100%': { opacity: '1' },
-              '50%': { opacity: '0.7' }
             }
           },
           colors: {
@@ -53,8 +39,6 @@
     }
   </script>
   <style>
-    @import url("https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700");
-
     body {
       font-family: 'Poppins', sans-serif;
       background: #fafafa;
@@ -68,7 +52,7 @@
     }
 
     .container {
-      max-width: 960px;
+      max-width: 90%;
       margin: 20px auto;
       padding: 20px;
     }
@@ -101,7 +85,7 @@
       font-weight: bold;
     }
 
-    .form-control {
+    .custom-input {
       border: 1px solid #ced4da;
     }
 
@@ -115,6 +99,8 @@
       width: 100%;
       max-width: 100%;
       margin-bottom: 10px;
+      display: flex;
+      align-items: center;
     }
 
     #chatTextInput {
@@ -201,14 +187,6 @@
         padding: 10px;
       }
 
-      .row {
-        flex-direction: column;
-      }
-
-      .col-md-8, .col-sm-8, .offset-sm-4, .col-sm-4 {
-        width: 100%;
-      }
-
       .input-wrapper {
         flex-direction: column;
         max-width: 100%;
@@ -249,90 +227,95 @@
     <div class="col-md-8 mx-auto rounded border p-4">
       <h2 class="text-center mb-5">Edit Client</h2>
 
-      <div class="mb-4 p-3 bg-red-100 text-red-800 rounded-lg border border-red-300 hidden animate-slide-up" id="errorMessage">
+      <div class="mb-4 p-3 bg-red-100 text-red-800 rounded-lg border border-red-300 hidden animate-slide-up" id="errorMessage" role="alert">
         <div class="flex items-center">
           <i class="fas fa-exclamation-triangle mr-2 text-base"></i>
           <span id="errorText" class="font-medium text-sm"></span>
         </div>
       </div>
 
-      <form method="post" th:action="@{/user/edit/{id}(id=${clientId})}" th:object="${clientDao}" id="editForm" enctype="multipart/form-data" onsubmit="return validateForm()">
-        <input type="hidden" id="clientId" th:value="${clientId}">
+      <form method="post" th:action="@{/user/edit/{id}(id=${clientId})}" th:object="${clientDao}" id="editForm" enctype="multipart/form-data">
+        <input type="hidden" th:field="*{id}" th:value="${clientId}">
 
         <div class="row mb-3">
-          <label class="col-sm-4 col-form-label">Name</label>
+          <label for="nameInput" class="col-sm-4 col-form-label">Name</label>
           <div class="col-sm-8">
-            <input class="form-control" th:field="*{name}" required />
-            <p th:if="${#fields.hasErrors('name')}" th:errorclass="text-danger" th:errors="*{name}"></p>
-            <p id="nameError" class="text-danger"></p>
+            <input class="form-control custom-input" th:field="*{name}" id="nameInput" aria-describedby="nameError" required />
+            <p th:if="${#fields.hasErrors('name')}" th:errorclass="text-danger" th:errors="*{name}" role="alert"></p>
+            <p id="nameError" class="text-danger" role="alert"></p>
           </div>
         </div>
 
         <div class="row mb-3">
-          <label class="col-sm-4 col-form-label">Email</label>
+          <label for="emailInput" class="col-sm-4 col-form-label">Email</label>
           <div class="col-sm-8">
-            <input type="email" class="form-control" th:field="*{email}" />
-            <p id="emailError" class="text-danger"></p>
+            <input type="email" class="form-control custom-input" th:field="*{email}" id="emailInput" aria-describedby="emailError" />
+            <p th:if="${#fields.hasErrors('email')}" th:errorclass="text-danger" th:errors="*{email}" role="alert"></p>
+            <p id="emailError" class="text-danger" role="alert"></p>
           </div>
         </div>
 
         <div class="row mb-3">
-          <label class="col-sm-4 col-form-label">Password</label>
+          <label for="passwordInput" class="col-sm-4 col-form-label">Password</label>
           <div class="col-sm-8">
-            <input type="password" class="form-control" th:field="*{password}" />
-            <p th:if="${#fields.hasErrors('password')}" th:errorclass="text-danger" th:errors="*{password}"></p>
-            <p id="passwordError" class="text-danger"></p>
+            <input type="password" class="form-control custom-input" th:field="*{password}" id="passwordInput" aria-describedby="passwordError" />
+            <p th:if="${#fields.hasErrors('password')}" th:errorclass="text-danger" th:errors="*{password}" role="alert"></p>
+            <p id="passwordError" class="text-danger" role="alert"></p>
             <small class="text-muted">Leave blank to keep current password</small>
           </div>
         </div>
 
         <div class="row mb-3">
-          <label class="col-sm-4 col-form-label">Mobile</label>
+          <label for="mobileInput" class="col-sm-4 col-form-label">Mobile</label>
           <div class="col-sm-8">
-            <input type="text" class="form-control" th:field="*{mobile}" id="mobile" required maxlength="10"/>
-            <p id="mobileError" class="text-danger"></p>
+            <input type="text" class="form-control custom-input" th:field="*{mobile}" id="mobileInput" required maxlength="10" aria-describedby="mobileError"/>
+            <p th:if="${#fields.hasErrors('mobile')}" th:errorclass="text-danger" th:errors="*{mobile}" role="alert"></p>
+            <p id="mobileError" class="text-danger" role="alert"></p>
           </div>
         </div>
 
         <div class="row mb-3">
-          <label class="col-sm-4 col-form-label">Review Link</label>
+          <label for="reviewLinkInput" class="col-sm-4 col-form-label">Review Link</label>
           <div class="col-sm-8">
-            <input type="text" class="form-control" th:field="*{reviewLink}" required id="reviewLink"/>
-            <p th:if="${#fields.hasErrors('reviewLink')}" th:errorclass="text-danger" th:errors="*{reviewLink}"></p>
-            <p id="reviewLinkError" class="text-danger"></p>
+            <input type="text" class="form-control custom-input" th:field="*{reviewLink}" id="reviewLinkInput" required aria-describedby="reviewLinkError"/>
+            <p th:if="${#fields.hasErrors('reviewLink')}" th:errorclass="text-danger" th:errors="*{reviewLink}" role="alert"></p>
+            <p id="reviewLinkError" class="text-danger" role="alert"></p>
           </div>
         </div>
 
         <div class="row mb-3">
-          <label class="col-sm-4 col-form-label">Logo</label>
+          <label for="logoInput" class="col-sm-4 col-form-label">Logo</label>
           <div class="col-sm-8">
             <div id="logoPreview">
-              <img th:if="${clientDao.existingLogo}" th:src="@{|/uploads/${clientDao.existingLogo}|}" alt="Current Logo" width="100">
+              <img th:if="${clientDao.existingLogo}" th:src="@{|/Uploads/${clientDao.existingLogo}|}" alt="Current Logo">
+              <img th:unless="${clientDao.existingLogo}" src="" alt="No logo uploaded" style="display: none;">
             </div>
-            <input type="file" class="form-control" id="logoInput" th:field="*{logo}" accept="image/jpeg, image/png"/>
+            <input type="file" class="form-control custom-input" id="logoInput" th:field="*{logo}" accept="image/jpeg,image/png" aria-describedby="logoError"/>
             <input type="hidden" th:field="*{existingLogo}"/>
-            <p id="logoError" class="text-danger"></p>
+            <p class="text-muted">Up to max 5 MB (JPEG or PNG)</p>
+            <p id="logoError" class="text-danger" role="alert"></p>
           </div>
         </div>
 
         <input type="hidden" id="tagsInput" th:field="*{chatText}" />
         <div class="row mb-3">
-          <label class="col-sm-4 col-form-label">Chat Text</label>
+          <label for="chatTextInput" class="col-sm-4 col-form-label">Chat Text</label>
           <div class="col-sm-8">
             <div class="input-wrapper">
-              <input type="text" id="chatTextInput" class="form-control" placeholder="Enter tag (use commas for multiple)" />
-              <button type="button" class="plus-btn-inside" onclick="addTag()">+</button>
+              <input type="text" id="chatTextInput" class="form-control custom-input" placeholder="Enter tag (use commas for multiple)" aria-describedby="chatTextError" />
+              <button type="button" class="plus-btn-inside bg-primary hover:bg-primary-hover" onclick="addTag()">+</button>
             </div>
             <div class="selected-tags mt-3">
               <h5>Selected Tags</h5>
             </div>
-            <p id="chatTextError" class="text-danger"></p>
+            <p th:if="${#fields.hasErrors('chatText')}" th:errorclass="text-danger" th:errors="*{chatText}" role="alert"></p>
+            <p id="chatTextError" class="text-danger" role="alert"></p>
           </div>
         </div>
 
         <div class="row">
           <div class="offset-sm-4 col-sm-4 d-grid">
-            <button type="button" class="btn btn-primary" onclick="submitForm()">Update</button>
+            <button type="button" class="btn bg-primary hover:bg-primary-hover text-white" onclick="submitForm()">Update</button>
           </div>
           <div class="col-sm-4 d-grid">
             <a href="/user/home" class="btn btn-secondary">Cancel</a>
@@ -342,90 +325,102 @@
     </div>
   </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 <script>
   const tagSet = new Set();
+  let errorTimeout;
 
   function validateForm() {
     let isValid = true;
 
     // Name validation
-    const nameInput = document.querySelector('input[name="name"]');
+    const nameInput = document.getElementById('nameInput');
     const nameError = document.getElementById('nameError');
     if (!nameInput.value.trim()) {
       nameError.textContent = "Name is required.";
+      nameInput.setAttribute('aria-invalid', 'true');
       isValid = false;
     } else {
       nameError.textContent = "";
+      nameInput.removeAttribute('aria-invalid');
     }
 
     // Email validation
-    const emailInput = document.querySelector('input[type="email"]');
+    const emailInput = document.getElementById('emailInput');
     const emailError = document.getElementById('emailError');
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (emailInput.value.trim() && !emailRegex.test(emailInput.value.trim())) {
       emailError.textContent = "Invalid email address.";
+      emailInput.setAttribute('aria-invalid', 'true');
       isValid = false;
     } else {
       emailError.textContent = "";
+      emailInput.removeAttribute('aria-invalid');
     }
 
-    // Password validation - FIXED: Made truly optional for edit
-    const passwordInput = document.querySelector('input[type="password"]');
+    // Password validation (only if provided)
+    const passwordInput = document.getElementById('passwordInput');
     const passwordError = document.getElementById('passwordError');
     const passwordValue = passwordInput.value.trim();
-
-    // Only validate if password is actually entered (not empty)
-    if (passwordValue !== "" && passwordValue.length < 6) {
+    if (passwordValue && passwordValue.length < 6) {
       passwordError.textContent = "Password must be at least 6 characters.";
+      passwordInput.setAttribute('aria-invalid', 'true');
       isValid = false;
     } else {
       passwordError.textContent = "";
+      passwordInput.removeAttribute('aria-invalid');
     }
 
     // Mobile validation
-    const mobileInput = document.getElementById('mobile');
+    const mobileInput = document.getElementById('mobileInput');
     const mobileError = document.getElementById('mobileError');
     const mobileRegex = /^\d{10}$/;
-    if (!mobileRegex.test(mobileInput.value.trim())) {
+    if (!mobileInput.value.trim() || !mobileRegex.test(mobileInput.value.trim())) {
       mobileError.textContent = "Enter a valid 10-digit mobile number.";
+      mobileInput.setAttribute('aria-invalid', 'true');
       isValid = false;
     } else {
       mobileError.textContent = "";
+      mobileInput.removeAttribute('aria-invalid');
     }
 
     // Review Link validation
-    const reviewLink = document.getElementById("reviewLink").value;
+    const reviewLinkInput = document.getElementById("reviewLinkInput");
     const reviewLinkError = document.getElementById("reviewLinkError");
-    if (reviewLink.trim() === "") {
+    if (!reviewLinkInput.value.trim()) {
       reviewLinkError.textContent = "Review Link is required.";
+      reviewLinkInput.setAttribute('aria-invalid', 'true');
       isValid = false;
-    } else if (!isValidURL(reviewLink)) {
+    } else if (!isValidURL(reviewLinkInput.value)) {
       reviewLinkError.textContent = "Invalid Review Link format.";
+      reviewLinkInput.setAttribute('aria-invalid', 'true');
       isValid = false;
     } else {
       reviewLinkError.textContent = "";
+      reviewLinkInput.removeAttribute('aria-invalid');
     }
 
-    // Logo validation - Made optional for edit (existing logo check)
+    // Logo validation
     const logoInput = document.getElementById('logoInput');
     const logoError = document.getElementById('logoError');
-    const existingLogo = document.querySelector("#logoPreview img");
-    // Only require logo if no existing logo and no new file selected
+    const existingLogo = document.querySelector("#logoPreview img[alt='Current Logo']");
     if (logoInput.files.length === 0 && !existingLogo) {
       logoError.textContent = "Please upload a logo.";
+      logoInput.setAttribute('aria-invalid', 'true');
       isValid = false;
     } else {
       logoError.textContent = "";
+      logoInput.removeAttribute('aria-invalid');
     }
 
     // Tags validation
     if (tagSet.size < 10) {
       document.getElementById('chatTextError').textContent = "You must add at least 10 tags.";
+      document.getElementById('chatTextInput').setAttribute('aria-invalid', 'true');
       isValid = false;
     } else {
       document.getElementById('chatTextError').textContent = "";
+      document.getElementById('chatTextInput').removeAttribute('aria-invalid');
     }
 
     return isValid;
@@ -456,10 +451,12 @@
         tagsInput.value = Array.from(tagSet).join(", ");
         updateDisplayedTags();
         chatTextError.textContent = "";
+        input.removeAttribute('aria-invalid');
       }
       input.value = "";
     } else {
       showError("Please enter a tag.");
+      input.setAttribute('aria-invalid', 'true');
     }
   }
 
@@ -481,6 +478,7 @@
       removeIcon.type = 'button';
       removeIcon.className = 'remove-tag-btn w-5 h-5 flex items-center justify-center rounded-full text-xs';
       removeIcon.innerHTML = '<i class="fas fa-times"></i>';
+      removeIcon.setAttribute('aria-label', `Remove tag ${tag}`);
       removeIcon.addEventListener('click', (e) => {
         e.stopPropagation();
         removeTag(tag);
@@ -498,19 +496,21 @@
 
     if (tagSet.size < 10) {
       document.getElementById('chatTextError').textContent = "You must add at least 10 tags.";
+      document.getElementById('chatTextInput').setAttribute('aria-invalid', 'true');
     } else {
       document.getElementById('chatTextError').textContent = "";
+      document.getElementById('chatTextInput').removeAttribute('aria-invalid');
     }
   }
 
   function initializeTags(existingTags) {
-    existingTags.split(',').forEach(tag => {
-      let trimmedTag = tag.trim();
-      if (trimmedTag) {
-        tagSet.add(trimmedTag);
-      }
-    });
-    updateDisplayedTags();
+    if (existingTags) {
+      existingTags.split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag)
+        .forEach(tag => tagSet.add(tag));
+      updateDisplayedTags();
+    }
   }
 
   function isValidURL(string) {
@@ -525,9 +525,10 @@
   function showError(message) {
     const errorMessage = document.getElementById('errorMessage');
     const errorText = document.getElementById('errorText');
+    clearTimeout(errorTimeout);
     errorText.textContent = message;
     errorMessage.classList.remove('hidden');
-    setTimeout(() => errorMessage.classList.add('hidden'), 5000);
+    errorTimeout = setTimeout(() => errorMessage.classList.add('hidden'), 5000);
   }
 
   function escapeHtml(text) {
@@ -538,14 +539,48 @@
 
   function submitForm() {
     if (validateForm()) {
-      document.getElementById("editForm").submit();
+      const form = document.getElementById("editForm");
+      const formData = new FormData(form);
+      fetch(form.action, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => {
+        if (response.ok) {
+          window.location.href = '/user/home';
+        } else {
+          showError('Failed to update client. Please try again.');
+        }
+      })
+      .catch(() => showError('An error occurred. Please try again.'));
     }
   }
+
+  // Logo input validation
+  const logoInput = document.getElementById('logoInput');
+  const logoError = document.getElementById('logoError');
+  logoInput.addEventListener('change', () => {
+    const file = logoInput.files[0];
+    if (file) {
+      if (!['image/jpeg', 'image/png'].includes(file.type)) {
+        logoError.textContent = 'Only JPEG or PNG files are allowed.';
+        logoInput.value = '';
+        logoInput.setAttribute('aria-invalid', 'true');
+      } else if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        logoError.textContent = 'File size must be less than 5MB.';
+        logoInput.value = '';
+        logoInput.setAttribute('aria-invalid', 'true');
+      } else {
+        logoError.textContent = '';
+        logoInput.removeAttribute('aria-invalid');
+      }
+    }
+  });
 
   // Initialize tags on page load
   window.addEventListener('DOMContentLoaded', () => {
     const tagsInput = document.getElementById("tagsInput");
-    if (tagsInput.value.trim()) {
+    if (tagsInput && tagsInput.value.trim()) {
       initializeTags(tagsInput.value);
     }
   });
