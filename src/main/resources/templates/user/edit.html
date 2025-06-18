@@ -105,8 +105,7 @@
        background-color: #0056b3;
     }
 
-
-    /* Gmail-like tag styling */
+    /* Tag styling */
     .tag {
         display: inline-flex;
         align-items: center;
@@ -122,19 +121,16 @@
         transition: background-color 0.2s, box-shadow 0.2s;
     }
 
-    /* Hover effect like Gmail */
     .tag:hover {
         background-color: #C0D8FC;
     }
 
-    /* Active selection effect */
     .tag:active {
         background-color: #AECBFA;
         box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
     }
 
-    /* Close button inside the tag */
-    .tag .close-icon {
+    .close-icon {
         margin-left: 8px;
         font-size: 16px;
         color: #5f6368;
@@ -142,18 +138,15 @@
         transition: color 0.2s;
     }
 
-    /* Close button hover effect */
-    .tag .close-icon:hover {
+    .close-icon:hover {
         color: #D93025;
     }
 
-
     .selected-tags {
        margin-top: 20px;
-       display: flex; /* Enable flexbox for wrapping */
-       flex-wrap: wrap; /* Allow tags to wrap */
+       display: flex;
+       flex-wrap: wrap;
     }
-
 
     /* Responsive Styles */
     @media (max-width: 768px) {
@@ -170,91 +163,30 @@
        }
 
        .input-wrapper {
-           flex-direction: column; /* Stack input and button vertically */
-           max-width: 100%; /* Make input full-width */
+           flex-direction: column;
+           max-width: 100%;
        }
 
        #chatTextInput {
-           padding-right: 10px; /* Remove padding for the button */
-           border-radius: 5px; /* Adjust border radius */
+           padding-right: 10px;
+           border-radius: 5px;
        }
 
        .plus-btn-inside {
-           position: static; /* Remove absolute positioning */
-           transform: translateY(0); /* Reset transform */
-           margin-top: 5px; /* Add some margin */
+           position: static;
+           transform: translateY(0);
+           margin-top: 5px;
            border-radius: 5px;
        }
 
        .selected-tags {
-           flex-direction: row; /* Ensure tags are in a row */
+           flex-direction: row;
        }
 
        .tag {
-           margin: 5px; /* Maintain tag spacing */
+           margin: 5px;
        }
     }
-
-       #tagInput {
-           padding: 8px 12px;
-           margin-bottom: 10px;
-           border-radius: 20px;
-           border: 1px solid #c1dafc;
-           font-size: 14px;
-           font-family: Arial, sans-serif;
-           width: 100%;
-           max-width: 300px;
-           display: inline-block;
-       }
-
-       .plus-btn {
-           padding: 8px 12px;
-           cursor: pointer;
-           background-color: #007bff;
-           color: white;
-           border: none;
-           border-radius: 20px;
-           font-size: 14px;
-           transition: background-color 0.3s ease;
-       }
-
-       .plus-btn:hover {
-           background-color: #0056b3;
-       }
-
-       /* Styling the input with the plus button inside */
-       .input-wrapper {
-           position: relative;
-           max-width: 300px;
-       }
-
-       #chatTextInput {
-           padding-right: 40px; /* Add space for the plus button */
-           border-radius: 20px;
-           border: 1px solid #c1dafc;
-           font-size: 14px;
-           width: 100%;
-       }
-
-       .plus-btn-inside {
-           position: absolute;
-           right: 10px;
-           top: 50%;
-           transform: translateY(-50%);
-           padding: 6px 12px;
-           cursor: pointer;
-           background-color: #007bff;
-           color: white;
-           border: none;
-           border-radius: 50%;
-           font-size: 18px;
-           transition: background-color 0.3s ease;
-       }
-
-       .plus-btn-inside:hover {
-           background-color: #0056b3;
-       }
-
   </style>
 
 </head>
@@ -300,7 +232,8 @@
           </div>
         </div>
 
-        <div class="row mb-3">  <label class="col-sm-4 col-form-label">Review Link</label>
+        <div class="row mb-3">
+          <label class="col-sm-4 col-form-label">Review Link</label>
           <div class="col-sm-8">
             <input type="text" class="form-control" th:field="*{reviewLink}" required id="reviewLink"/>
             <p th:if="${#fields.hasErrors('reviewLink')}" th:errorclass="text-danger" th:errors="*{reviewLink}"></p>
@@ -308,40 +241,24 @@
           </div>
         </div>
 
-        <!--<div class="row mb-3">
-          <label class="col-sm-4 col-form-label">Review Character Limit</label>
-          <div class="col-sm-8">
-            <input type="number" class="form-control" th:field="*{reviewCharLimit}" min="10" max="1000" required />
-            <p th:if="${#fields.hasErrors('reviewCharLimit')}" th:errorclass="text-danger" th:errors="*{reviewCharLimit}"></p>
-            <p id="reviewCharLimitError" class="text-danger"></p> &lt;!&ndash; Error will be displayed here &ndash;&gt;
-          </div>
-        </div>-->
-
-
-
         <div class="row mb-3">
           <label class="col-sm-4 col-form-label">Logo</label>
           <div class="col-sm-8">
-            <!-- Display current logo if exists -->
             <div id="logoPreview">
               <img th:if="${clientDao.existingLogo}" th:src="@{'/uploads/' + ${clientDao.existingLogo}}" alt="Current Logo" width="100">
             </div>
-
-            <!-- File upload field -->
             <input type="file" class="form-control" id="logoInput" th:field="*{logo}" accept="image/jpeg, image/png"/>
-            <input type="hidden" th:field="*{existingLogo}"/> <!-- Hidden field to retain existing logo -->
+            <input type="hidden" th:field="*{existingLogo}"/>
             <p id="logoError" class="text-danger"></p>
           </div>
         </div>
-
-
 
         <input type="hidden" id="tagsInput" th:field="*{chatText}" />
         <div class="row mb-3">
           <label class="col-sm-4 col-form-label">Chat Text</label>
           <div class="col-sm-8">
             <div class="input-wrapper">
-              <input type="text" id="chatTextInput" class="form-control" placeholder="Enter tag" />
+              <input type="text" id="chatTextInput" class="form-control" placeholder="Enter tag (use commas for multiple)" />
               <button type="button" class="plus-btn-inside" onclick="addTag()">+</button>
             </div>
             <div class="selected-tags mt-3">
@@ -350,17 +267,6 @@
             <p id="chatTextError" class="text-danger"></p>
           </div>
         </div>
-
-        <!--<div class="row mb-3">
-          <label class="col-sm-4 col-form-label">Generate Link</label>
-          <div class="col-sm-8">
-            <div class="input-group">
-              <input type="text" id="generateLink" class="form-control" readonly />
-              <button type="button" class="btn btn-primary" onclick="generateClientLink()">Generate</button>
-              <button type="button" class="btn btn-secondary" onclick="copyToClipboard()">Copy</button>
-            </div>
-          </div>
-        </div>-->
 
         <div class="row">
           <div class="offset-sm-4 col-sm-4 d-grid">
@@ -377,6 +283,8 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+  const tagSet = new Set();
+
   function validateForm() {
     let isValid = true;
 
@@ -404,20 +312,17 @@
         mobileError.textContent = "";
     }
 
-     // Review Link
+    // Review Link
     let reviewLink = document.getElementById("reviewLink").value;
-            if (reviewLink.trim() === "") {
-                document.getElementById("reviewLinkError").textContent = "Review Link is required.";
-                isValid = false;
-            } else if (!isValidURL(reviewLink)) { // Custom validation function
-                document.getElementById("reviewLinkError").textContent = "Invalid Review Link format.";
-                isValid = false;
-            } else {
-                document.getElementById("reviewLinkError").textContent = ""; // Clear error
-            }
-
-
-
+    if (reviewLink.trim() === "") {
+        document.getElementById("reviewLinkError").textContent = "Review Link is required.";
+        isValid = false;
+    } else if (!isValidURL(reviewLink)) {
+        document.getElementById("reviewLinkError").textContent = "Invalid Review Link format.";
+        isValid = false;
+    } else {
+        document.getElementById("reviewLinkError").textContent = "";
+    }
 
     // Logo validation
     const logoInput = document.getElementById('logoInput');
@@ -429,148 +334,114 @@
         isValid = false;
     } else {
         logoError.textContent = "";
-}
-
-
+    }
 
     // Tags validation
-    const tagsInput = document.getElementById("tagsInput");
-    const chatTextError = document.getElementById("chatTextError");
-
-    const tagArray = tagsInput.value.trim().split(",").filter(tag => tag.trim() !== "");
-
-    if (tagArray.length < 10) {
-        chatTextError.textContent = "You must add at least 10 tags.";
+    if (tagSet.size < 10) {
+        document.getElementById('chatTextError').textContent = "You must add at least 10 tags.";
         isValid = false;
     } else {
-        chatTextError.textContent = "";
+        document.getElementById('chatTextError').textContent = "";
     }
-
 
     return isValid;
-}
+  }
 
-// Tag Management
-const tagSet = new Set();
+  function addTag() {
+      const input = document.getElementById("chatTextInput");
+      const tagsInput = document.getElementById("tagsInput");
+      const chatTextError = document.getElementById("chatTextError");
 
-function addTag() {
-    const input = document.getElementById("chatTextInput");
-    const tagsInput = document.getElementById("tagsInput");
-    const chatTextError = document.getElementById("chatTextError");
+      let inputValue = input.value.trim();
+      if (inputValue) {
+          // Split by commas and process each tag
+          let tags = inputValue.split(',')
+              .map(tag => tag.trim())
+              .filter(tag => tag !== '');
 
-    let tagValue = input.value.trim();
-    if (tagValue !== "" && !tagSet.has(tagValue)) {
-        tagSet.add(tagValue);
-        tagsInput.value = Array.from(tagSet).join(", ");
-        input.value = "";
+          let added = false;
+          for (let tag of tags) {
+              if (!tagSet.has(tag)) {
+                  tagSet.add(tag);
+                  added = true;
+              }
+          }
 
-        updateDisplayedTags();
-        chatTextError.textContent = "";
-    } else if (tagSet.has(tagValue)) {
-        alert("This tag has already been added!");
-    }
-}
+          if (added) {
+              tagsInput.value = Array.from(tagSet).join(", ");
+              updateDisplayedTags();
+              chatTextError.textContent = "";
+          }
+          input.value = "";
+      }
+  }
 
-// Update the displayed tags
-function updateDisplayedTags() {
-    const selectedTagsDiv = document.querySelector('.selected-tags');
-    selectedTagsDiv.innerHTML = "<h5>Selected Tags</h5>";
+  function updateDisplayedTags() {
+      const selectedTagsDiv = document.querySelector('.selected-tags');
+      selectedTagsDiv.innerHTML = "<h5>Selected Tags</h5>";
 
-    if (tagSet.size === 0) {
-        selectedTagsDiv.innerHTML += "<p>No tags added yet.</p>";
-        return;
-    }
+      tagSet.forEach(tag => {
+          let tagSpan = document.createElement('span');
+          tagSpan.classList.add('tag');
+          tagSpan.textContent = tag;
 
-    tagSet.forEach(tag => {
-        let tagSpan = document.createElement('span');
-        tagSpan.classList.add('tag');
-        tagSpan.textContent = tag;
+          let closeIcon = document.createElement('span');
+          closeIcon.classList.add('close-icon');
+          closeIcon.innerHTML = "&times;";
+          closeIcon.onclick = function () {
+              removeTag(tag);
+          };
 
-        let closeIcon = document.createElement('span');
-        closeIcon.classList.add('close-icon');
-        closeIcon.innerHTML = "&times;";
-        closeIcon.onclick = function () {
-            removeTag(tag);
-        };
+          tagSpan.appendChild(closeIcon);
+          selectedTagsDiv.appendChild(tagSpan);
+      });
+  }
 
-        tagSpan.appendChild(closeIcon);
-        selectedTagsDiv.appendChild(tagSpan);
-    });
-}
+  function removeTag(tagToRemove) {
+      tagSet.delete(tagToRemove);
+      document.getElementById("tagsInput").value = Array.from(tagSet).join(", ");
+      updateDisplayedTags();
 
-// Remove tag
-function removeTag(tagToRemove) {
-    tagSet.delete(tagToRemove);
-    document.getElementById("tagsInput").value = Array.from(tagSet).join(", ");
-    updateDisplayedTags();
-}
+      // Update validation message
+      if (tagSet.size < 10) {
+          document.getElementById('chatTextError').textContent = "You must add at least 10 tags.";
+      } else {
+          document.getElementById('chatTextError').textContent = "";
+      }
+  }
 
-// Generate Client Link
-function generateClientLink() {
-    let clientIdElement = document.getElementById("clientId");
-    let generateLinkInput = document.getElementById("generateLink");
+  function initializeTags(existingTags) {
+      existingTags.split(',').forEach(tag => {
+          let trimmedTag = tag.trim();
+          if (trimmedTag) {
+              tagSet.add(trimmedTag);
+          }
+      });
+      updateDisplayedTags();
+  }
 
-    if (!clientIdElement || !clientIdElement.value.trim()) {
-        alert("Please save the client first before generating a link.");
-        return;
-    }
+  function isValidURL(string) {
+      try {
+          new URL(string);
+          return true;
+      } catch (_) {
+          return false;
+      }
+  }
 
-    let clientId = clientIdElement.value;
-    let uniqueLink = window.location.origin + "/clients/view/" + clientId;
+  function submitForm() {
+      if (validateForm()) {
+          document.getElementById("editForm").submit();
+      }
+  }
 
-    generateLinkInput.value = uniqueLink;
-}
-
-// Copy to Clipboard
-function copyToClipboard() {
-    let linkInput = document.getElementById("generateLink");
-    if (linkInput.value === "") {
-        alert("No link generated yet.");
-        return;
-    }
-
-    navigator.clipboard.writeText(linkInput.value).then(() => {
-        alert("Link copied: " + linkInput.value);
-    }).catch(err => {
-        console.error("Failed to copy:", err);
-    });
-}
-
-// Initialize displayed tags when the page loads
-window.addEventListener('DOMContentLoaded', () => {
-    const tagsInput = document.getElementById("tagsInput");
-    if (tagsInput.value.trim()) {
-        initializeTags(tagsInput.value);
-    }
-});
-
-function initializeTags(existingTags) {
-    existingTags.split(',').forEach(tag => {
-        let trimmedTag = tag.trim();
-        if (trimmedTag) {
-            tagSet.add(trimmedTag);
-        }
-    });
-    updateDisplayedTags();
-}
-
-function isValidURL(string) {
-        let url;
-
-        try {
-            url = new URL(string);
-        } catch (_) {
-            return false;
-        }
-
-        return url.protocol === "http:" || url.protocol === "https:";
-    }
-
-function submitForm() {
-    if (validateForm()) {
-        document.getElementById("editForm").submit();
-    }
-}
+  // Initialize tags on page load
+  window.addEventListener('DOMContentLoaded', () => {
+      const tagsInput = document.getElementById("tagsInput");
+      if (tagsInput.value.trim()) {
+          initializeTags(tagsInput.value);
+      }
+  });
 </script>
 </body>
 </html>
