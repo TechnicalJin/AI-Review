@@ -75,7 +75,7 @@ document.querySelectorAll(".regenerate-btn").forEach(button => {
     button.addEventListener("click", function() {
         let clientId = this.dataset.clientId;
         const selectedTags = Array.from(document.querySelectorAll('.tag-checkbox:checked'))
-            .map(checkbox => checkbox.value);
+            .map(checkbox => checkbox.value.trim());
 
         if (selectedTags.length < 3) {
             document.getElementById('tag-warning').classList.remove('d-none');
@@ -173,9 +173,19 @@ document.querySelectorAll('.form-check-label').forEach(label => {
     });
 });
 
-const initialSelectedCount = document.querySelectorAll('.tag-checkbox:checked').length;
-if (initialSelectedCount > 0) {
-    document.querySelectorAll('.tag-checkbox:checked').forEach(checkbox => {
-        checkbox.closest('.tag-item').classList.add('selected');
-    });
-}
+// Initialize selected tags on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const initialSelectedCount = document.querySelectorAll('.tag-checkbox:checked').length;
+    if (initialSelectedCount > 0) {
+        document.querySelectorAll('.tag-checkbox:checked').forEach(checkbox => {
+            checkbox.closest('.tag-item').classList.add('selected');
+        });
+
+        // Hide warning if we have enough selected tags
+        if (initialSelectedCount >= 3) {
+            document.getElementById('tag-warning').classList.add('d-none');
+        }
+    }
+
+    console.log(`Initialized with ${initialSelectedCount} pre-selected tags`);
+});

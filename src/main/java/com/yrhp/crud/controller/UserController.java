@@ -919,6 +919,10 @@ public class UserController implements ErrorController {
             model.addAttribute("review", review);
         }
 
+        // Get the tags used in the last review generation
+        List<String> usedTags = reviewGeneratorService.getLastUsedTags(client.getId());
+        model.addAttribute("usedTags", usedTags);
+
         return "user/view";
     }
 

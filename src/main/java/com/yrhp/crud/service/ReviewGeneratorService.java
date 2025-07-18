@@ -202,8 +202,14 @@ public class ReviewGeneratorService {
         Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new IllegalArgumentException("Client not found"));
 
+        // Store the used tags for this client
+        List<String> trimmedTags = selectedTags.stream()
+                .map(String::trim)
+                .collect(Collectors.toList());
+        lastUsedTagsMap.put(clientId, trimmedTags);
+
         Random random = new Random();
-        
+
         // Set character limit based on review length
         int charLimit;
         switch (reviewLength.toLowerCase()) {
@@ -219,7 +225,7 @@ public class ReviewGeneratorService {
             default:
                 charLimit = random.nextInt(100) + 130; // default to medium
         }
-        
+
         // Randomize the order of elements in the prompt
         List<String> promptElements = new ArrayList<>();
         promptElements.add(PERSPECTIVE_MODIFIERS[random.nextInt(PERSPECTIVE_MODIFIERS.length)]);
@@ -229,23 +235,23 @@ public class ReviewGeneratorService {
         // Shuffle the elements to randomize their order
         Collections.shuffle(promptElements);
 
-        List<String> enhancedTags = new ArrayList<>(selectedTags);
+        List<String> enhancedTags = new ArrayList<>(trimmedTags);
         addRandomElements(enhancedTags, EXPERIENCE_PHRASES, 1, random);
         Collections.shuffle(enhancedTags);
-        
+
         String clientName = client.getName() != null ? client.getName() : "Unknown Client";
         String combinedTags = String.join(", ", enhancedTags);
 
         String promptTemplate = PROMPTS[random.nextInt(PROMPTS.length)];
-        String prompt = String.format(promptTemplate, 
-            clientName,
-            promptElements.get(0),
-            combinedTags,
-            promptElements.get(1),
-            charLimit
+        String prompt = String.format(promptTemplate,
+                clientName,
+                promptElements.get(0),
+                combinedTags,
+                promptElements.get(1),
+                charLimit
         );
 
-        String baseTags = String.join(", ", selectedTags);
+        String baseTags = String.join(", ", trimmedTags);
         saveGenerationLog(client.getName(), reviewLength, baseTags, isRegenerated);
 
         logger.info("---                                   ---");
@@ -253,6 +259,7 @@ public class ReviewGeneratorService {
         logger.info("Character Limit: {}", charLimit);
         logger.info("Generated Prompt: {}", prompt);
         logger.info("Enhanced Tags: {}", enhancedTags);
+        logger.info("Used Tags for client {}: {}", clientId, trimmedTags);
         logger.info("---                                   ---");
 
         return chatGPTService.getResponse(prompt);
@@ -283,7 +290,7 @@ public class ReviewGeneratorService {
 
         Random random = new Random();
         int charLimit = random.nextInt(471) + 30;
-        
+
         String clientName = client.getName() != null ? client.getName() : "Unknown Client";
         String chatText = client.getChatText() != null ? client.getChatText() : "No details provided";
 
@@ -292,7 +299,11 @@ public class ReviewGeneratorService {
                 .distinct()
                 .limit(3)
                 .mapToObj(baseTags::get)
+                .map(String::trim) // Trim whitespace
                 .collect(Collectors.toList());
+
+        // Store the used tags for this client
+        lastUsedTagsMap.put(clientId, selectedBaseTags);
 
         List<String> enhancedTags = new ArrayList<>(selectedBaseTags);
         addRandomElements(enhancedTags, EXPERIENCE_PHRASES, 1, random);
@@ -308,12 +319,12 @@ public class ReviewGeneratorService {
         Collections.shuffle(promptElements);
 
         String promptTemplate = PROMPTS[random.nextInt(PROMPTS.length)];
-        String prompt = String.format(promptTemplate, 
-            clientName,
-            promptElements.get(0),
-            String.join(", ", enhancedTags),
-            promptElements.get(1),
-            charLimit
+        String prompt = String.format(promptTemplate,
+                clientName,
+                promptElements.get(0),
+                String.join(", ", enhancedTags),
+                promptElements.get(1),
+                charLimit
         );
 
         String keyPoints = String.join(", ", baseTags);
@@ -324,6 +335,7 @@ public class ReviewGeneratorService {
         logger.info("---                                   ---");
         logger.info("Generated Prompt: {}", prompt);
         logger.info("Enhanced Tags: {}", enhancedTags);
+        logger.info("Used Tags for client {}: {}", clientId, selectedBaseTags);
         logger.info("---                                   ---");
 
         return chatGPTService.getResponse(prompt);
@@ -359,5 +371,24 @@ public class ReviewGeneratorService {
         } else {
             return "large";
         }
+    }
+
+    private Map<Integer, List<String>> lastUsedTagsMap = new HashMap<>();
+
+    // New method to get last used tags for a client
+    public List<String> getLastUsedTags(int clientId) {
+        return lastUsedTagsMap.getOrDefault(clientId, new ArrayList<>());
+    }
+
+    // New method to get all available tags for a client
+    public List<String> getAllAvailableTags(int clientId) {
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new IllegalArgumentException("Client not found"));
+
+        String chatText = client.getChatText() != null ? client.getChatText() : "";
+        return Arrays.stream(chatText.split(","))
+                .map(String::trim)
+                .filter(tag -> !tag.isEmpty())
+                .collect(Collectors.toList());
     }
 }
