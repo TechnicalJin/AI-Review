@@ -235,6 +235,9 @@ body {
     margin-bottom: 25px;
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
+    /* Mobile scrolling enhancement */
+    touch-action: manipulation; /* Allow touch gestures but prevent default behaviors */
+    position: relative;
 }
 .tag-selection h4 {
     color: #2d3436;
@@ -270,12 +273,56 @@ body {
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 20px;
-    padding: 5px;
+    padding: 15px 10px; /* Increased padding for better touch area */
     max-height: 250px;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--primary-color) #f0f0f0;
     -webkit-overflow-scrolling: touch;
+    /* Enhanced mobile scrolling */
+    touch-action: pan-y; /* Allow only vertical scrolling within this container */
+    overscroll-behavior: contain; /* Prevent scroll chaining to parent */
+    scroll-behavior: smooth;
+    /* Better scroll area definition */
+    position: relative;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    background-clip: padding-box;
+}
+
+/* Mobile scroll enhancement class */
+.mobile-scroll-enhanced {
+    /* Improve touch responsiveness */
+    -webkit-transform: translateZ(0); /* Hardware acceleration */
+    transform: translateZ(0);
+    will-change: scroll-position;
+    /* Better momentum scrolling */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent zoom on double tap in some mobile browsers */
+    touch-action: pan-y pinch-zoom;
+}
+
+/* Mobile-specific scrollbar styling */
+@media (max-width: 768px) {
+    .mobile-scroll-enhanced::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .mobile-scroll-enhanced::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.1);
+        border-radius: 3px;
+    }
+    
+    .mobile-scroll-enhanced::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 3px;
+        opacity: 0.7;
+    }
+    
+    .mobile-scroll-enhanced::-webkit-scrollbar-thumb:active {
+        background: var(--secondary-color);
+        opacity: 1;
+    }
 }
 /* Custom Scrollbar Styling */
 .tags-container::-webkit-scrollbar {
@@ -764,11 +811,7 @@ body {
 
 .footer .website-link i {
     font-size: 1.3rem;
-    color: rgba(255, 255, :checked + .form-check-label {
-    background: var(--primary-gradient);
-    color: white;
-    border-color: transparent;
-    box-shadow: var(--button-shadow);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 /* Ripple Effect for Tags */
@@ -906,27 +949,68 @@ body {
         padding-bottom: max(20px, env(safe-area-inset-bottom));
     }
 }
+
+/* Enhanced Mobile Responsiveness */
+@media (max-width: 768px) {
+    /* Improved tags container for mobile */
+    .tags-container {
+        padding: 20px 15px; /* Larger touch area */
+        margin: 15px -10px; /* Extend beyond container for easier scrolling */
+        max-height: 200px; /* Slightly smaller on mobile */
+        border: 3px solid transparent; /* Larger touch border */
+        background: rgba(248, 250, 252, 0.8);
+        backdrop-filter: blur(3px);
+    }
+    
+    /* Enhance tag selection area */
+    .tag-selection {
+        padding: 20px 15px;
+        margin: 0 -5px 20px -5px; /* Expand touch area */
+    }
+    
+    /* Larger touch targets for tags */
+    .form-check-label {
+        min-height: 48px; /* Minimum touch target size */
+        padding: 12px 18px;
+        font-size: 0.9rem;
+        line-height: 1.2;
+    }
 }
 
 @media (max-width: 480px) {
-/* Tag Selection */
-.tag-selection h4 {
-    font-size: 1rem;
-}
+    /* Tag Selection */
+    .tag-selection {
+        padding: 15px 10px;
+        margin: 0 -5px 15px -5px;
+    }
+    
+    .tag-selection h4 {
+        font-size: 1rem;
+    }
+    
+    .tags-container {
+        padding: 15px 10px;
+        margin: 10px -5px;
+        max-height: 180px;
+        gap: 8px;
+    }
 
-.form-check-label {
-    padding: 6px 14px;
-    font-size: 0.85rem;
-}
+    .form-check-label {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+        min-height: 44px;
+    }
 
-#tag-warning {
-    padding: 12px 15px;
-    font-size: 0.9rem;
-}
+    #tag-warning {
+        padding: 12px 15px;
+        font-size: 0.9rem;
+        margin: 10px -5px;
+    }
 
-/* Client Name */
-.client-name {
-    font-size: 1.5rem;
+    /* Client Name */
+    .client-name {
+        font-size: 1.5rem;
+    }
 }
 }
 

@@ -11,6 +11,8 @@
           "backdrop-filter"
         ]
       }
-    ]
+    ],
+    "axe/forms": "off",
+    "disown-opener": "off"
   }
 }

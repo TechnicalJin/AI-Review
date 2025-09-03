@@ -161,6 +161,41 @@ document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
 
         setTimeout(() => ripple.remove(), 1000);
     });
+
+    // Enhanced mobile touch handling for individual tags
+    const label = checkbox.nextElementSibling;
+    if (label) {
+        let touchStartTime = 0;
+        
+        label.addEventListener('touchstart', function(e) {
+            touchStartTime = Date.now();
+            this.style.transform = 'scale(0.98)';
+            this.style.transition = 'transform 0.1s ease';
+        }, { passive: true });
+        
+        label.addEventListener('touchend', function(e) {
+            const touchDuration = Date.now() - touchStartTime;
+            
+            // Only treat as click if touch was brief (not a scroll)
+            if (touchDuration < 200) {
+                // Visual feedback
+                this.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                    this.style.transition = '';
+                }, 150);
+            } else {
+                // Reset without click
+                this.style.transform = '';
+                this.style.transition = '';
+            }
+        }, { passive: true });
+        
+        label.addEventListener('touchcancel', function(e) {
+            this.style.transform = '';
+            this.style.transition = '';
+        }, { passive: true });
+    }
 });
 
 document.querySelectorAll('.form-check-label').forEach(label => {
@@ -188,4 +223,127 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     console.log(`Initialized with ${initialSelectedCount} pre-selected tags`);
+
+    // Enhanced mobile scrolling for tags container
+    const tagsContainer = document.querySelector('.tags-container');
+    if (tagsContainer) {
+        let isScrolling = false;
+        let scrollTimeout;
+
+        // Enhance touch handling for better mobile scrolling
+        tagsContainer.addEventListener('touchstart', function(e) {
+            isScrolling = false;
+            clearTimeout(scrollTimeout);
+        }, { passive: true });
+
+        tagsContainer.addEventListener('touchmove', function(e) {
+            isScrolling = true;
+            
+            // Clear any existing timeout
+            clearTimeout(scrollTimeout);
+            
+            // Add a visual indicator that we're in scroll mode
+            this.style.borderColor = 'var(--primary-color)';
+            
+            // Reset border color after scrolling stops
+            scrollTimeout = setTimeout(() => {
+                this.style.borderColor = 'transparent';
+            }, 150);
+        }, { passive: true });
+
+        tagsContainer.addEventListener('touchend', function(e) {
+            clearTimeout(scrollTimeout);
+            
+            // Reset border color
+            setTimeout(() => {
+                this.style.borderColor = 'transparent';
+            }, 300);
+        }, { passive: true });
+
+        // Prevent page scroll when scrolling within tags container
+        tagsContainer.addEventListener('wheel', function(e) {
+            const atTop = this.scrollTop === 0;
+            const atBottom = this.scrollTop >= (this.scrollHeight - this.clientHeight);
+            
+            // Only prevent default if we're not at the boundaries
+            if (!atTop && !atBottom) {
+                e.stopPropagation();
+            } else if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) {
+                e.stopPropagation();
+            }
+        }, { passive: false });
+
+        // Add momentum scrolling indicator
+        let momentumIndicator = null;
+        tagsContainer.addEventListener('scroll', function() {
+            // Show scroll indicator
+            if (!momentumIndicator) {
+                momentumIndicator = document.createElement('div');
+                momentumIndicator.style.cssText = `
+                    position: absolute;
+                    right: 8px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 4px;
+                    height: 30px;
+                    background: var(--primary-color);
+                    border-radius: 2px;
+                    opacity: 0.6;
+                    pointer-events: none;
+                    transition: opacity 0.3s ease;
+                    z-index: 10;
+                `;
+                this.style.position = 'relative';
+                this.appendChild(momentumIndicator);
+            }
+
+            // Hide indicator after scrolling stops
+            clearTimeout(this.scrollTimer);
+            momentumIndicator.style.opacity = '0.6';
+            
+            this.scrollTimer = setTimeout(() => {
+                if (momentumIndicator) {
+                    momentumIndicator.style.opacity = '0';
+                }
+            }, 1000);
+        });
+    }
+
+    // Enhanced tag selection for mobile
+    const tagSelection = document.querySelector('.tag-selection');
+    if (tagSelection) {
+        // Add expanded touch area around tags container
+        tagSelection.addEventListener('touchstart', function(e) {
+            const tagsContainer = this.querySelector('.tags-container');
+            if (tagsContainer) {
+                const rect = tagsContainer.getBoundingClientRect();
+                const touch = e.touches[0];
+                
+                // Expand the effective touch area by 20px on all sides
+                const expandedRect = {
+                    left: rect.left - 20,
+                    right: rect.right + 20,
+                    top: rect.top - 20,
+                    bottom: rect.bottom + 20
+                };
+                
+                // If touch is in the expanded area, focus the container
+                if (touch.clientX >= expandedRect.left && 
+                    touch.clientX <= expandedRect.right &&
+                    touch.clientY >= expandedRect.top && 
+                    touch.clientY <= expandedRect.bottom) {
+                    
+                    // Visually indicate the container is active
+                    tagsContainer.style.background = 'rgba(79, 70, 229, 0.02)';
+                    tagsContainer.style.borderColor = 'rgba(79, 70, 229, 0.2)';
+                    
+                    // Reset after touch ends
+                    setTimeout(() => {
+                        tagsContainer.style.background = '';
+                        tagsContainer.style.borderColor = 'transparent';
+                    }, 200);
+                }
+            }
+        }, { passive: true });
+    }
 });
