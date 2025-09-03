@@ -176,13 +176,23 @@ public class ReviewGeneratorService {
         "A step above the rest", "Reliable and consistent", "Always a pleasure", "One-of-a-kind experience"
     };
 
-    private static final String[] PROMPTS = {
-        "Based on %s, %s: \"%s\". %s. Character limit: %d.",
-        "\"%s\" - %s. Focusing on: \"%s\". %s. Keep within %d characters.",
-        "Here's my take on %s: \"%s\". %s. %s. Limit to %d characters.",
-        "Sharing thoughts about %s. %s: \"%s\". %s. Maximum %d characters.",
-        "My experience with %s was noteworthy. %s: \"%s\". %s. Stay within %d characters.",
-        "Let me share about %s. %s. Key points: \"%s\". %s. Up to %d characters."
+//    private static final String[] PROMPTS = {
+//        "Based on %s, %s: \"%s\". %s. Character limit: %d.",
+//        "\"%s\" - %s. Focusing on: \"%s\". %s. Keep within %d characters.",
+//        "Here's my take on %s: \"%s\". %s. %s. Limit to %d characters.",
+//        "Sharing thoughts about %s. %s: \"%s\". %s. Maximum %d characters.",
+//        "My experience with %s was noteworthy. %s: \"%s\". %s. Stay within %d characters.",
+//        "Let me share about %s. %s. Key points: \"%s\". %s. Up to %d characters."
+//    };
+
+    // Modified prompts to emphasize primary tag
+    private static final String[] PROMPTS_WITH_PRIMARY_FOCUS = {
+            "Based on %s, %s: The standout feature is definitely \"%s\". This is what makes it special. Additionally, %s. %s. Character limit: %d.",
+            "\"%s\" - %s. What impressed me most was \"%s\". This really sets it apart. Other notable aspects: \"%s\". %s. Keep within %d characters.",
+            "Here's my take on %s: The main highlight is \"%s\". This is the core of the experience. %s: \"%s\". %s. Limit to %d characters.",
+            "Sharing thoughts about %s. %s: What defines this place is \"%s\". This is the key attraction. Supporting elements include \"%s\". %s. Maximum %d characters.",
+            "My experience with %s was noteworthy. %s: The primary focus should be on \"%s\". This is what makes it memorable. Other aspects: \"%s\". %s. Stay within %d characters.",
+            "Let me share about %s. %s. The central theme is \"%s\". This is what truly matters. Additional points: \"%s\". %s. Up to %d characters."
     };
 
     private static final String[] ADDITIONAL_INSTRUCTIONS = {
@@ -226,6 +236,17 @@ public class ReviewGeneratorService {
                 charLimit = random.nextInt(100) + 130; // default to medium
         }
 
+        // Identify primary tag (first tag) and supporting tags
+        String primaryTag = trimmedTags.get(0);
+        List<String> supportingTags = new ArrayList<>();
+        if (trimmedTags.size() > 1) {
+            supportingTags = trimmedTags.subList(1, trimmedTags.size());
+        }
+
+        // Add experience phrases to supporting tags only
+        addRandomElements(supportingTags, EXPERIENCE_PHRASES, 1, random);
+        Collections.shuffle(supportingTags);
+
         // Randomize the order of elements in the prompt
         List<String> promptElements = new ArrayList<>();
         promptElements.add(PERSPECTIVE_MODIFIERS[random.nextInt(PERSPECTIVE_MODIFIERS.length)]);
@@ -235,18 +256,15 @@ public class ReviewGeneratorService {
         // Shuffle the elements to randomize their order
         Collections.shuffle(promptElements);
 
-        List<String> enhancedTags = new ArrayList<>(trimmedTags);
-        addRandomElements(enhancedTags, EXPERIENCE_PHRASES, 1, random);
-        Collections.shuffle(enhancedTags);
-
         String clientName = client.getName() != null ? client.getName() : "Unknown Client";
-        String combinedTags = String.join(", ", enhancedTags);
+        String supportingTagsString = supportingTags.isEmpty() ? "excellent service" : String.join(", ", supportingTags);
 
-        String promptTemplate = PROMPTS[random.nextInt(PROMPTS.length)];
+        String promptTemplate = PROMPTS_WITH_PRIMARY_FOCUS[random.nextInt(PROMPTS_WITH_PRIMARY_FOCUS.length)];
         String prompt = String.format(promptTemplate,
                 clientName,
                 promptElements.get(0),
-                combinedTags,
+                primaryTag,
+                supportingTagsString,
                 promptElements.get(1),
                 charLimit
         );
@@ -257,18 +275,14 @@ public class ReviewGeneratorService {
         logger.info("---                                   ---");
         logger.info("Review Length: {}", reviewLength);
         logger.info("Character Limit: {}", charLimit);
+        logger.info("Primary Tag (Main Focus): {}", primaryTag);
+        logger.info("Supporting Tags: {}", supportingTags);
         logger.info("Generated Prompt: {}", prompt);
-        logger.info("Enhanced Tags: {}", enhancedTags);
         logger.info("Used Tags for client {}: {}", clientId, trimmedTags);
         logger.info("---                                   ---");
 
         return chatGPTService.getResponse(prompt);
     }
-
-    // Keep the original method for backward compatibility
-//    public String generateReviewWithTags(int clientId, List<String> selectedTags) {
-//        return generateReviewWithTags(clientId, selectedTags, "medium");
-//    }
 
     public String generateReviewWithTags(int clientId, List<String> selectedTags, String reviewLength) {
         return generateReviewWithTags(clientId, selectedTags, reviewLength, false);
@@ -283,7 +297,7 @@ public class ReviewGeneratorService {
         target.addAll(selectedElements);
     }
 
-    // Modify the original generateReview method similarly
+    // Modify the original generateReview method with primary tag focus
     public String generateReview(int clientId, boolean isRegenerated) {
         Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new IllegalArgumentException("Client not found"));
@@ -305,9 +319,16 @@ public class ReviewGeneratorService {
         // Store the used tags for this client
         lastUsedTagsMap.put(clientId, selectedBaseTags);
 
-        List<String> enhancedTags = new ArrayList<>(selectedBaseTags);
-        addRandomElements(enhancedTags, EXPERIENCE_PHRASES, 1, random);
-        Collections.shuffle(enhancedTags);
+        // Identify primary tag (first tag) and supporting tags
+        String primaryTag = selectedBaseTags.get(0);
+        List<String> supportingTags = new ArrayList<>();
+        if (selectedBaseTags.size() > 1) {
+            supportingTags = selectedBaseTags.subList(1, selectedBaseTags.size());
+        }
+
+        // Add experience phrases to supporting tags only
+        addRandomElements(supportingTags, EXPERIENCE_PHRASES, 1, random);
+        Collections.shuffle(supportingTags);
 
         // Randomize the order of elements in the prompt
         List<String> promptElements = new ArrayList<>();
@@ -318,11 +339,14 @@ public class ReviewGeneratorService {
         // Shuffle the elements to randomize their order
         Collections.shuffle(promptElements);
 
-        String promptTemplate = PROMPTS[random.nextInt(PROMPTS.length)];
+        String supportingTagsString = supportingTags.isEmpty() ? "excellent service" : String.join(", ", supportingTags);
+
+        String promptTemplate = PROMPTS_WITH_PRIMARY_FOCUS[random.nextInt(PROMPTS_WITH_PRIMARY_FOCUS.length)];
         String prompt = String.format(promptTemplate,
                 clientName,
                 promptElements.get(0),
-                String.join(", ", enhancedTags),
+                primaryTag,
+                supportingTagsString,
                 promptElements.get(1),
                 charLimit
         );
@@ -333,8 +357,9 @@ public class ReviewGeneratorService {
         saveGenerationLog(client.getName(), reviewLengthCategory, keyPoints, isRegenerated);
 
         logger.info("---                                   ---");
+        logger.info("Primary Tag (Main Focus): {}", primaryTag);
+        logger.info("Supporting Tags: {}", supportingTags);
         logger.info("Generated Prompt: {}", prompt);
-        logger.info("Enhanced Tags: {}", enhancedTags);
         logger.info("Used Tags for client {}: {}", clientId, selectedBaseTags);
         logger.info("---                                   ---");
 
@@ -345,7 +370,6 @@ public class ReviewGeneratorService {
     public String generateReview(int clientId) {
         return generateReview(clientId, false);
     }
-
 
     private void saveGenerationLog(String companyName, String reviewLength,
                                    String keyPoints, boolean isRegenerated) {
