@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -89,6 +90,8 @@ public class SecurityConfig {
                             })
                             .failureHandler((request, response, exception) -> {
                                 logger.error("Login failed: {}", exception.getMessage());
+                                
+                                // Use relative redirect to maintain protocol
                                 response.sendRedirect("/signin?error=true");
                             })
                             .permitAll();
@@ -109,8 +112,18 @@ public class SecurityConfig {
                             .accessDeniedPage("/error/403")
                             .authenticationEntryPoint((request, response, authException) -> {
                                 logger.error("Unauthorized access attempt: {}", authException.getMessage());
+                                
+                                // Use relative redirect to maintain protocol
                                 response.sendRedirect("/signin?error=unauthorized");
                             });
+                })
+                .headers(headers -> {
+                    headers
+                        .frameOptions(frameOptions -> frameOptions.deny())
+                        .contentTypeOptions(Customizer.withDefaults())
+                        .httpStrictTransportSecurity(hstsConfig -> hstsConfig
+                            .maxAgeInSeconds(31536000)
+                            .includeSubDomains(true));
                 })
                 .csrf(csrf -> {
                     logger.debug("Disabling CSRF protection");

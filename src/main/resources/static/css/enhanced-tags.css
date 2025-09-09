@@ -1,0 +1,137 @@
+/* Enhanced Tag Selection Styles - Clean Version */
+
+/* Modern Tag Design with Professional Look */
+.form-check-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 14px 20px;
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    border: 2px solid #e2e8f0;
+    border-radius: 50px;
+    color: #475569;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 1px 3px rgba(0, 0, 0, 0.1),
+        0 1px 2px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    -webkit-user-select: none;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    min-height: 48px;
+    -webkit-tap-highlight-color: transparent;
+    gap: 0;
+    text-align: center;
+    white-space: nowrap;
+    backdrop-filter: blur(10px);
+}
+
+.form-check-label:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 
+        0 4px 12px rgba(79, 70, 229, 0.15),
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border-color: #6366f1;
+    color: #4f46e5;
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
+}
+
+/* Enhanced checked state with professional checkmark */
+.form-check-input:checked + .form-check-label {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #6366f1 100%);
+    color: white;
+    border-color: transparent;
+    box-shadow: 
+        0 6px 20px rgba(79, 70, 229, 0.4),
+        0 2px 6px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: scale(1.02);
+    padding-left: 55px;
+    padding-right: 20px;
+    position: relative;
+    font-weight: 600;
+}
+
+/* Professional checkmark circle background */
+.form-check-input:checked + .form-check-label::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: checkmarkGlow 0.4s ease-out;
+    backdrop-filter: blur(5px);
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Enhanced checkmark icon - properly positioned */
+.form-check-input:checked + .form-check-label::after {
+    content: '✓';
+    position: absolute;
+    left: 21px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    font-weight: 900;
+    color: white;
+    z-index: 2;
+    animation: checkmarkBounce 0.4s ease-out 0.1s both;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    line-height: 1;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Enhanced animations */
+@keyframes checkmarkGlow {
+    0% {
+        transform: translateY(-50%) scale(0);
+        opacity: 0;
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+    }
+    50% {
+        transform: translateY(-50%) scale(1.2);
+        opacity: 1;
+        box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.2);
+    }
+    100% {
+        transform: translateY(-50%) scale(1);
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+}
+
+@keyframes checkmarkBounce {
+    0% {
+        transform: translateY(-50%) scale(0);
+        opacity: 0;
+    }
+    60% {
+        transform: translateY(-50%) scale(1.3);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-50%) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Active state for mobile touch feedback */
+.form-check-label:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+}
