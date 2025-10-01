@@ -27,10 +27,15 @@ public class ReviewGenerationLogService {
      * @return List of ReviewGenerationLog entries for the client
      */
     public List<ReviewGenerationLog> getLogsByCompanyName(String companyName) {
-        log.info("Fetching logs for company: {}", companyName);
-        List<ReviewGenerationLog> logs = logRepository.findByCompanyName(companyName);
-        log.debug("Retrieved {} logs for company: {}", logs.size(), companyName);
-        return logs;
+        try {
+            log.info("Fetching logs for company: {}", companyName);
+            List<ReviewGenerationLog> logs = logRepository.findByCompanyName(companyName);
+            log.debug("Retrieved {} logs for company: {}", logs.size(), companyName);
+            return logs;
+        } catch (Exception e) {
+            log.error("Error fetching logs for company {}: {}", companyName, e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch logs for company: " + companyName, e);
+        }
     }
 
     /**
@@ -50,18 +55,19 @@ public class ReviewGenerationLogService {
                                                 String regenerated, String keyPoints,
                                                 LocalDateTime startDate, LocalDateTime endDate,
                                                 Pageable pageable) {
+    try {
         log.info("Searching logs with filters - search: {}, company: {}, reviewLength: {}, regenerated: {}, keyPoints: {}, startDate: {}, endDate: {}",
-                search, company, reviewLength, regenerated, keyPoints, startDate, endDate);
-
-        // Log the exact parameters being passed to the repository
+            search, company, reviewLength, regenerated, keyPoints, startDate, endDate);
         log.debug("Repository query parameters - search: '{}', company: '{}', reviewLength: '{}', regenerated: '{}', keyPoints: '{}', startDate: {}, endDate: {}",
-                search, company, reviewLength, regenerated, keyPoints, startDate, endDate);
-
+            search, company, reviewLength, regenerated, keyPoints, startDate, endDate);
         Page<ReviewGenerationLog> logs = logRepository.searchWithFilters(
-                search, company, reviewLength, regenerated, keyPoints, startDate, endDate, pageable);
-
+            search, company, reviewLength, regenerated, keyPoints, startDate, endDate, pageable);
         log.debug("Retrieved {} logs with filters (total elements: {})", logs.getContent().size(), logs.getTotalElements());
         return logs;
+    } catch (Exception e) {
+        log.error("Error searching logs with filters: {}", e.getMessage(), e);
+        throw new RuntimeException("Failed to search logs with filters", e);
+    }
     }
 
     /**
@@ -70,9 +76,14 @@ public class ReviewGenerationLogService {
      * @return List of unique company names
      */
     public List<String> getDistinctCompanyNames() {
-        log.info("Fetching distinct company names");
-        List<String> companyNames = logRepository.findDistinctCompanyNames();
-        log.debug("Retrieved {} distinct company names", companyNames.size());
-        return companyNames;
+        try {
+            log.info("Fetching distinct company names");
+            List<String> companyNames = logRepository.findDistinctCompanyNames();
+            log.debug("Retrieved {} distinct company names", companyNames.size());
+            return companyNames;
+        } catch (Exception e) {
+            log.error("Error fetching distinct company names: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch distinct company names", e);
+        }
     }
 }

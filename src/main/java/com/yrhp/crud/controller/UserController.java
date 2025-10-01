@@ -799,21 +799,17 @@ public class UserController implements ErrorController {
     public String saveClient(@ModelAttribute("clientDao") @Valid ClientDao clientDao,
                              BindingResult result, Model model) {
         log.info("Attempting to create new client: {}", clientDao.getName());
-
         try {
             if (result.hasErrors()) {
                 log.warn("Validation errors while creating client: {}", result.getAllErrors());
                 return "user/create";
             }
-
             validateNewClient(clientDao);
             Client client = createClientFromDao(clientDao);
             handleLogoUpload(clientDao, client);
-
             clientRepo.save(client);
             log.info("Successfully created client: {} (ID: {})", client.getName(), client.getId());
             return "redirect:/user/home";
-
         } catch (IllegalArgumentException e) {
             log.error("Validation error creating client: {}", e.getMessage());
             model.addAttribute("error", e.getMessage());
@@ -821,6 +817,10 @@ public class UserController implements ErrorController {
         } catch (IOException e) {
             log.error("File upload error for client {}: {}", clientDao.getName(), e.getMessage(), e);
             model.addAttribute("error", "Error uploading file: " + e.getMessage());
+            return "user/create";
+        } catch (Exception e) {
+            log.error("Unexpected error creating client: {}", e.getMessage(), e);
+            model.addAttribute("error", "Unexpected error: " + e.getMessage());
             return "user/create";
         }
     }
@@ -880,50 +880,65 @@ public class UserController implements ErrorController {
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String mobile,
             @RequestParam(required = false) String reviewLink) {
-        Map<String, Boolean> response = new HashMap<>();
-        boolean isDuplicate = false;
+        try {
+            Map<String, Boolean> response = new HashMap<>();
+            boolean isDuplicate = false;
 
-        if (name != null) {
-            isDuplicate = clientRepo.existsByNameIgnoreCase(name);
-        } else if (email != null) {
-            isDuplicate = clientRepo.existsByEmail(email);
-        } else if (mobile != null) {
-            isDuplicate = clientRepo.existsByMobile(mobile);
-        } else if (reviewLink != null) {
-            isDuplicate = clientRepo.existsByReviewLink(reviewLink);
+            if (name != null) {
+                isDuplicate = clientRepo.existsByNameIgnoreCase(name);
+            } else if (email != null) {
+                isDuplicate = clientRepo.existsByEmail(email);
+            } else if (mobile != null) {
+                isDuplicate = clientRepo.existsByMobile(mobile);
+            } else if (reviewLink != null) {
+                isDuplicate = clientRepo.existsByReviewLink(reviewLink);
+            }
+
+            response.put("isDuplicate", isDuplicate);
+            return response;
+        } catch (Exception e) {
+            log.error("Error checking duplicate: {}", e.getMessage(), e);
+            Map<String, Boolean> errorResponse = new HashMap<>();
+            errorResponse.put("error", true);
+            return errorResponse;
         }
-
-        response.put("isDuplicate", isDuplicate);
-        return response;
     }
 
     @GetMapping("/view/{name}")
     public String viewClient(@PathVariable("name") String name, Model model) {
-        log.info("Viewing client: {}", name);
-        String formattedName = name.replace("-", " ");
-        List<Client> clients = clientRepo.findByName(formattedName);
+        try {
+            log.info("Viewing client: {}", name);
+            String formattedName = name.replace("-", " ");
+            List<Client> clients = clientRepo.findByName(formattedName);
 
-        if (clients.isEmpty()) {
-            log.error("Client not found: {}", formattedName);
-            throw new ResourceNotFoundException("Client not found with name: " + formattedName);
+            if (clients.isEmpty()) {
+                log.error("Client not found: {}", formattedName);
+                throw new ResourceNotFoundException("Client not found with name: " + formattedName);
+            }
+
+            Client client = clients.get(0);
+            log.debug("Displaying client details for ID: {}", client.getId());
+            model.addAttribute("client", client);
+            model.addAttribute("clients", clients);
+
+            String existingReview = (String) model.getAttribute("review");
+            if (existingReview == null || existingReview.isEmpty()) {
+                String review = reviewGeneratorService.generateReview(client.getId());
+                model.addAttribute("review", review);
+            }
+
+            // Get the tags used in the last review generation
+            List<String> usedTags = reviewGeneratorService.getLastUsedTags(client.getId());
+            model.addAttribute("usedTags", usedTags);
+
+            return "user/view";
+        } catch (ResourceNotFoundException e) {
+            // Re-throw to be handled by GlobalExceptionHandler
+            throw e;
+        } catch (Exception e) {
+            log.error("Error viewing client: {}", e.getMessage(), e);
+            return "redirect:/user/home?error=viewFailed";
         }
-
-        Client client = clients.get(0);
-        log.debug("Displaying client details for ID: {}", client.getId());
-        model.addAttribute("client", client);
-        model.addAttribute("clients", clients);
-
-        String existingReview = (String) model.getAttribute("review");
-        if (existingReview == null || existingReview.isEmpty()) {
-            String review = reviewGeneratorService.generateReview(client.getId());
-            model.addAttribute("review", review);
-        }
-
-        // Get the tags used in the last review generation
-        List<String> usedTags = reviewGeneratorService.getLastUsedTags(client.getId());
-        model.addAttribute("usedTags", usedTags);
-
-        return "user/view";
     }
 
     @PostMapping("/regenerate/{id}")
@@ -931,14 +946,22 @@ public class UserController implements ErrorController {
     public String regenerateReview(
             @PathVariable("id") int id,
             @RequestBody RegenerateReviewRequest request) {
-        log.info("Regenerating review for client ID: {} with {} tags", id, request.getSelectedTags().size());
+        try {
+            log.info("Regenerating review for client ID: {} with {} tags", id, request.getSelectedTags().size());
 
-        if (request.getSelectedTags() == null || request.getSelectedTags().size() < 3) {
-            log.warn("Insufficient tags selected for client ID: {} - only {} tags provided",
-                    id, request.getSelectedTags() != null ? request.getSelectedTags().size() : 0);
-            throw new IllegalArgumentException("At least 3 tags must be selected");
+            if (request.getSelectedTags() == null || request.getSelectedTags().size() < 3) {
+                log.warn("Insufficient tags selected for client ID: {} - only {} tags provided",
+                        id, request.getSelectedTags() != null ? request.getSelectedTags().size() : 0);
+                throw new IllegalArgumentException("At least 3 tags must be selected");
+            }
+            return reviewGeneratorService.generateReviewWithTags(id, request.getSelectedTags(), request.getReviewLength(), true);
+        } catch (IllegalArgumentException e) {
+            // Re-throw to be handled by GlobalExceptionHandler
+            throw e;
+        } catch (Exception e) {
+            log.error("Error regenerating review for client ID {}: {}", id, e.getMessage(), e);
+            throw new RuntimeException("Failed to regenerate review", e);
         }
-        return reviewGeneratorService.generateReviewWithTags(id, request.getSelectedTags(), request.getReviewLength(), true);
     }
 
     @PostMapping("/generate")
@@ -947,11 +970,15 @@ public class UserController implements ErrorController {
             @RequestParam int clientId,
             @RequestParam(required = false) List<String> tags,
             @RequestParam(defaultValue = "medium") String reviewLength) {
-
-        if (tags != null && !tags.isEmpty()) {
-            return reviewGeneratorService.generateReviewWithTags(clientId, tags, reviewLength);
-        } else {
-            return reviewGeneratorService.generateReview(clientId);
+        try {
+            if (tags != null && !tags.isEmpty()) {
+                return reviewGeneratorService.generateReviewWithTags(clientId, tags, reviewLength);
+            } else {
+                return reviewGeneratorService.generateReview(clientId);
+            }
+        } catch (Exception e) {
+            log.error("Error generating review for client ID {}: {}", clientId, e.getMessage(), e);
+            throw new RuntimeException("Failed to generate review", e);
         }
     }
 
@@ -1006,50 +1033,60 @@ public class UserController implements ErrorController {
     @PostMapping("/submitReview")
     public ResponseEntity<String> submitReview(@RequestParam("clientId") int clientId,
                                                @RequestParam String reviewLink) {
-        log.info("Submitting review for client ID: {}", clientId);
+        try {
+            log.info("Submitting review for client ID: {}", clientId);
 
-        if (reviewLink.length() > 255) {
-            log.warn("Review URL too long for client ID: {} - length: {}", clientId, reviewLink.length());
-            return ResponseEntity.badRequest().body("URL too long");
-        }
+            if (reviewLink.length() > 255) {
+                log.warn("Review URL too long for client ID: {} - length: {}", clientId, reviewLink.length());
+                return ResponseEntity.badRequest().body("URL too long");
+            }
 
-        Optional<Client> clientOptional = clientRepo.findById(clientId);
-        if (clientOptional.isPresent()) {
-            Client client = clientOptional.get();
-            client.setReviewLink(reviewLink);
-            clientRepo.save(client);
-            log.info("Review link updated for client ID: {}", clientId);
-            return ResponseEntity.ok("Review submitted successfully");
-        } else {
-            log.error("Client not found for ID: {}", clientId);
-            return ResponseEntity.badRequest().body("Client not found");
+            Optional<Client> clientOptional = clientRepo.findById(clientId);
+            if (clientOptional.isPresent()) {
+                Client client = clientOptional.get();
+                client.setReviewLink(reviewLink);
+                clientRepo.save(client);
+                log.info("Review link updated for client ID: {}", clientId);
+                return ResponseEntity.ok("Review submitted successfully");
+            } else {
+                log.error("Client not found for ID: {}", clientId);
+                return ResponseEntity.badRequest().body("Client not found");
+            }
+        } catch (Exception e) {
+            log.error("Error submitting review for client ID {}: {}", clientId, e.getMessage(), e);
+            return ResponseEntity.status(500).body("Error submitting review");
         }
     }
 
     @GetMapping("/edit/{id}")
     public String editClient(@PathVariable("id") int id, Model model) {
-        Optional<Client> optionalClient = clientRepo.findById(id);
+        try {
+            Optional<Client> optionalClient = clientRepo.findById(id);
 
-        if (optionalClient.isPresent()) {
-            Client client = optionalClient.get();
-            ClientDao clientDao = new ClientDao();
+            if (optionalClient.isPresent()) {
+                Client client = optionalClient.get();
+                ClientDao clientDao = new ClientDao();
 
-            clientDao.setId(client.getId());
-            clientDao.setName(client.getName());
-            clientDao.setEmail(client.getEmail());
-            clientDao.setMobile(client.getMobile());
-            clientDao.setReviewLink(client.getReviewLink());
-            clientDao.setChatText(client.getChatText());
-            clientDao.setGenerateLink(client.getGenerateLink());
-            clientDao.setExistingLogo(client.getLogo());
-            clientDao.setRole(client.getRole());
+                clientDao.setId(client.getId());
+                clientDao.setName(client.getName());
+                clientDao.setEmail(client.getEmail());
+                clientDao.setMobile(client.getMobile());
+                clientDao.setReviewLink(client.getReviewLink());
+                clientDao.setChatText(client.getChatText());
+                clientDao.setGenerateLink(client.getGenerateLink());
+                clientDao.setExistingLogo(client.getLogo());
+                clientDao.setRole(client.getRole());
 
-            model.addAttribute("clientDao", clientDao);
-            model.addAttribute("clientId", id);
-            return "user/edit";
-        } else {
-            log.error("Client not found for ID: {}", id);
-            return "redirect:/user/home?error=notfound";
+                model.addAttribute("clientDao", clientDao);
+                model.addAttribute("clientId", id);
+                return "user/edit";
+            } else {
+                log.error("Client not found for ID: {}", id);
+                return "redirect:/user/home?error=notfound";
+            }
+        } catch (Exception e) {
+            log.error("Error editing client ID {}: {}", id, e.getMessage(), e);
+            return "redirect:/user/home?error=editFailed";
         }
     }
 
@@ -1058,105 +1095,100 @@ public class UserController implements ErrorController {
                                @ModelAttribute("clientDao") ClientDao clientDao,
                                BindingResult result, Model model) {
         log.info("Updating client ID: {}", id);
-
-        // Custom validation for password (only if provided)
-        if (clientDao.getPassword() != null && !clientDao.getPassword().trim().isEmpty()) {
-            if (clientDao.getPassword().length() < 6) {
-                result.rejectValue("password", "Size.password", "Password must be at least 6 characters");
+        try {
+            // Custom validation for password (only if provided)
+            if (clientDao.getPassword() != null && !clientDao.getPassword().trim().isEmpty()) {
+                if (clientDao.getPassword().length() < 6) {
+                    result.rejectValue("password", "Size.password", "Password must be at least 6 characters");
+                }
             }
-        }
-
-        if (result.hasErrors()) {
-            log.warn("Validation errors updating client ID {}: {}", id, result.getAllErrors());
+            if (result.hasErrors()) {
+                log.warn("Validation errors updating client ID {}: {}", id, result.getAllErrors());
+                model.addAttribute("clientId", id);
+                return "user/edit";
+            }
+            Optional<Client> optionalClient = clientRepo.findById(id);
+            if (optionalClient.isPresent()) {
+                Client client = optionalClient.get();
+                log.debug("Found existing client: {} (ID: {})", client.getName(), id);
+                // Validate unique name, email, and mobile
+                List<Client> existingClients = clientRepo.findByName(clientDao.getName());
+                if (!existingClients.isEmpty() && existingClients.get(0).getId() != client.getId()) {
+                    model.addAttribute("error", "A client with this name already exists. Please add a different name.");
+                    model.addAttribute("clientId", id);
+                    return "user/edit";
+                }
+                Optional<Client> existingEmailClient = clientRepo.findByEmail(clientDao.getEmail());
+                if (existingEmailClient.isPresent() && existingEmailClient.get().getId() != id) {
+                    model.addAttribute("error", "A client with this email already exists.");
+                    model.addAttribute("clientId", id);
+                    return "user/edit";
+                }
+                Optional<Client> existingMobileClient = clientRepo.findByMobile(clientDao.getMobile());
+                if (existingMobileClient.isPresent() && existingMobileClient.get().getId() != id) {
+                    model.addAttribute("error", "A client with this mobile number already exists.");
+                    model.addAttribute("clientId", id);
+                    return "user/edit";
+                }
+                // Update fields
+                client.setName(clientDao.getName());
+                client.setEmail(clientDao.getEmail());
+                client.setMobile(clientDao.getMobile());
+                client.setReviewLink(clientDao.getReviewLink());
+                client.setChatText(clientDao.getChatText());
+                client.setRole(clientDao.getRole());
+                // Only update password if a new one is provided
+                if (clientDao.getPassword() != null && !clientDao.getPassword().trim().isEmpty()) {
+                    client.setPassword(passwordEncoder.encode(clientDao.getPassword()));
+                }
+                // Preserve or update the logo
+                MultipartFile logo = clientDao.getLogo();
+                if (logo != null && !logo.isEmpty()) {
+                    String contentType = logo.getContentType();
+                    if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png"))) {
+                        log.error("Invalid file type for logo upload for client ID: {}", id);
+                        model.addAttribute("error", "Only JPG and PNG images are allowed.");
+                        model.addAttribute("clientId", id);
+                        return "user/edit";
+                    }
+                    if (logo.getSize() > 5 * 1024 * 1024) { // 5MB limit
+                        log.error("Logo file size exceeds 5MB for client ID: {}", id);
+                        model.addAttribute("error", "File size must be less than 5MB.");
+                        model.addAttribute("clientId", id);
+                        return "user/edit";
+                    }
+                    String logoFileName = UUID.randomUUID().toString() + "_" + logo.getOriginalFilename();
+                    File destinationFile = new File(uploadDir + File.separator + logoFileName);
+                    try {
+                        logo.transferTo(destinationFile);
+                        log.info("Uploaded new logo for client ID: {}", id);
+                        client.setLogo(logoFileName);
+                    } catch (IOException e) {
+                        log.error("Error uploading logo for client ID {}: {}", id, e.getMessage(), e);
+                        model.addAttribute("error", "Error uploading logo: " + e.getMessage());
+                        model.addAttribute("clientId", id);
+                        return "user/edit";
+                    }
+                } else {
+                    client.setLogo(clientDao.getExistingLogo());
+                    log.debug("Keeping existing logo for client ID: {}", id);
+                }
+                // Generate a unique client link
+                String uniqueLink = "/user/view/" + client.getName().replaceAll("\\s", "-").toLowerCase();
+                client.setGenerateLink(uniqueLink);
+                clientRepo.save(client);
+                log.info("Successfully updated client ID: {}", id);
+            } else {
+                log.error("Client not found for ID: {}", id);
+                return "redirect:/user/home?error=notfound";
+            }
+            return "redirect:/user/home";
+        } catch (Exception e) {
+            log.error("Unexpected error updating client ID {}: {}", id, e.getMessage(), e);
+            model.addAttribute("error", "Unexpected error: " + e.getMessage());
             model.addAttribute("clientId", id);
             return "user/edit";
         }
-
-        Optional<Client> optionalClient = clientRepo.findById(id);
-        if (optionalClient.isPresent()) {
-            Client client = optionalClient.get();
-            log.debug("Found existing client: {} (ID: {})", client.getName(), id);
-
-            // Validate unique name, email, and mobile
-            List<Client> existingClients = clientRepo.findByName(clientDao.getName());
-            if (!existingClients.isEmpty() && existingClients.get(0).getId() != client.getId()) {
-                model.addAttribute("error", "A client with this name already exists. Please add a different name.");
-                model.addAttribute("clientId", id);
-                return "user/edit";
-            }
-
-            Optional<Client> existingEmailClient = clientRepo.findByEmail(clientDao.getEmail());
-            if (existingEmailClient.isPresent() && existingEmailClient.get().getId() != id) {
-                model.addAttribute("error", "A client with this email already exists.");
-                model.addAttribute("clientId", id);
-                return "user/edit";
-            }
-
-            Optional<Client> existingMobileClient = clientRepo.findByMobile(clientDao.getMobile());
-            if (existingMobileClient.isPresent() && existingMobileClient.get().getId() != id) {
-                model.addAttribute("error", "A client with this mobile number already exists.");
-                model.addAttribute("clientId", id);
-                return "user/edit";
-            }
-
-            // Update fields
-            client.setName(clientDao.getName());
-            client.setEmail(clientDao.getEmail());
-            client.setMobile(clientDao.getMobile());
-            client.setReviewLink(clientDao.getReviewLink());
-            client.setChatText(clientDao.getChatText());
-            client.setRole(clientDao.getRole());
-
-            // Only update password if a new one is provided
-            if (clientDao.getPassword() != null && !clientDao.getPassword().trim().isEmpty()) {
-                client.setPassword(passwordEncoder.encode(clientDao.getPassword()));
-            }
-
-            // Preserve or update the logo
-            MultipartFile logo = clientDao.getLogo();
-            if (logo != null && !logo.isEmpty()) {
-                String contentType = logo.getContentType();
-                if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png"))) {
-                    log.error("Invalid file type for logo upload for client ID: {}", id);
-                    model.addAttribute("error", "Only JPG and PNG images are allowed.");
-                    model.addAttribute("clientId", id);
-                    return "user/edit";
-                }
-                if (logo.getSize() > 5 * 1024 * 1024) { // 5MB limit
-                    log.error("Logo file size exceeds 5MB for client ID: {}", id);
-                    model.addAttribute("error", "File size must be less than 5MB.");
-                    model.addAttribute("clientId", id);
-                    return "user/edit";
-                }
-                String logoFileName = UUID.randomUUID().toString() + "_" + logo.getOriginalFilename();
-                File destinationFile = new File(uploadDir + File.separator + logoFileName);
-                try {
-                    logo.transferTo(destinationFile);
-                    log.info("Uploaded new logo for client ID: {}", id);
-                    client.setLogo(logoFileName);
-                } catch (IOException e) {
-                    log.error("Error uploading logo for client ID {}: {}", id, e.getMessage(), e);
-                    model.addAttribute("error", "Error uploading logo: " + e.getMessage());
-                    model.addAttribute("clientId", id);
-                    return "user/edit";
-                }
-            } else {
-                client.setLogo(clientDao.getExistingLogo());
-                log.debug("Keeping existing logo for client ID: {}", id);
-            }
-
-            // Generate a unique client link
-            String uniqueLink = "/user/view/" + client.getName().replaceAll("\\s", "-").toLowerCase();
-            client.setGenerateLink(uniqueLink);
-
-            clientRepo.save(client);
-            log.info("Successfully updated client ID: {}", id);
-        } else {
-            log.error("Client not found for ID: {}", id);
-            return "redirect:/user/home?error=notfound";
-        }
-
-        return "redirect:/user/home";
     }
 
     @GetMapping("/delete/{id}")
@@ -1164,11 +1196,11 @@ public class UserController implements ErrorController {
         try {
             clientRepo.deleteById(id);
             log.info("Successfully deleted client ID: {}", id);
+            return "redirect:/user/home";
         } catch (Exception e) {
             log.error("Error deleting client ID {}: {}", id, e.getMessage(), e);
             return "redirect:/user/home?error=deletefailed";
         }
-        return "redirect:/user/home";
     }
 
     @PostMapping("/delete/{id}")
@@ -1181,24 +1213,29 @@ public class UserController implements ErrorController {
                                 @RequestParam(defaultValue = "0") int page,
                                 @RequestParam(defaultValue = "10") int size,
                                 Model model) {
-        log.info("Searching clients for query: '{}' (Page: {}, Size: {})", query, page, size);
+        try {
+            log.info("Searching clients for query: '{}' (Page: {}, Size: {})", query, page, size);
 
-        if (size > 50) size = 50;
-        if (size < 1) size = 10;
+            if (size > 50) size = 50;
+            if (size < 1) size = 10;
 
-        var pageable = PageRequest.of(page, size);
-        var searchResults = clientRepo.findByNameContainingIgnoreCaseOrMobileContainingOrEmailContainingIgnoreCase(
-                query, query, query, pageable);
+            var pageable = PageRequest.of(page, size);
+            var searchResults = clientRepo.findByNameContainingIgnoreCaseOrMobileContainingOrEmailContainingIgnoreCase(
+                    query, query, query, pageable);
 
-        log.debug("Found {} results for query '{}'", searchResults.getNumberOfElements(), query);
+            log.debug("Found {} results for query '{}'", searchResults.getNumberOfElements(), query);
 
-        model.addAttribute("clients", searchResults);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("pageSize", size);
-        model.addAttribute("searchQuery", query);
-        model.addAttribute("resourceURL", resourceAccessUrl);
+            model.addAttribute("clients", searchResults);
+            model.addAttribute("currentPage", page);
+            model.addAttribute("pageSize", size);
+            model.addAttribute("searchQuery", query);
+            model.addAttribute("resourceURL", resourceAccessUrl);
 
-        return "user/home";
+            return "user/home";
+        } catch (Exception e) {
+            log.error("Error searching clients for query '{}': {}", query, e.getMessage(), e);
+            return "redirect:/user/home?error=searchFailed";
+        }
     }
 
     @PostMapping("/download-csv")

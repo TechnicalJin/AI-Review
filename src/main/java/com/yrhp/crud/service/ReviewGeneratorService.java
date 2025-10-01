@@ -209,83 +209,81 @@ public class ReviewGeneratorService {
     };
 
     public String generateReviewWithTags(int clientId, List<String> selectedTags, String reviewLength, boolean isRegenerated) {
-        Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new IllegalArgumentException("Client not found"));
-
-        // Store the used tags for this client
-        List<String> trimmedTags = selectedTags.stream()
-                .map(String::trim)
-                .collect(Collectors.toList());
-        lastUsedTagsMap.put(clientId, trimmedTags);
-
-        Random random = new Random();
-
-        // Set character limit based on review length
-        int charLimit;
-        switch (reviewLength.toLowerCase()) {
-            case "short":
-                charLimit = random.nextInt(100) + 30; // 30-130 characters
-                break;
-            case "medium":
-                charLimit = random.nextInt(100) + 130; // 130-230 characters
-                break;
-            case "large":
-                charLimit = random.nextInt(200) + 230; // 230-430 characters
-                break;
-            default:
-                charLimit = random.nextInt(100) + 130; // default to medium
+        try {
+            Client client = clientRepository.findById(clientId)
+                    .orElseThrow(() -> new IllegalArgumentException("Client not found"));
+            // Store the used tags for this client
+            List<String> trimmedTags = selectedTags.stream()
+                    .map(String::trim)
+                    .collect(Collectors.toList());
+            lastUsedTagsMap.put(clientId, trimmedTags);
+            Random random = new Random();
+            // Set character limit based on review length
+            int charLimit;
+            switch (reviewLength.toLowerCase()) {
+                case "short":
+                    charLimit = random.nextInt(100) + 30; // 30-130 characters
+                    break;
+                case "medium":
+                    charLimit = random.nextInt(100) + 130; // 130-230 characters
+                    break;
+                case "large":
+                    charLimit = random.nextInt(200) + 230; // 230-430 characters
+                    break;
+                default:
+                    charLimit = random.nextInt(100) + 130; // default to medium
+            }
+            // Identify primary tag (first tag) and supporting tags
+            String primaryTag = trimmedTags.get(0);
+            List<String> supportingTags = new ArrayList<>();
+            if (trimmedTags.size() > 1) {
+                supportingTags = trimmedTags.subList(1, trimmedTags.size());
+            }
+            // Add experience phrases to supporting tags only
+            addRandomElements(supportingTags, EXPERIENCE_PHRASES, 1, random);
+            Collections.shuffle(supportingTags);
+            // Randomize the order of elements in the prompt
+            List<String> promptElements = new ArrayList<>();
+            promptElements.add(PERSPECTIVE_MODIFIERS[random.nextInt(PERSPECTIVE_MODIFIERS.length)]);
+            promptElements.add(WRITING_STYLES[random.nextInt(WRITING_STYLES.length)]);
+            promptElements.add(ADDITIONAL_INSTRUCTIONS[random.nextInt(ADDITIONAL_INSTRUCTIONS.length)]);
+            // Shuffle the elements to randomize their order
+            Collections.shuffle(promptElements);
+            String clientName = client.getName() != null ? client.getName() : "Unknown Client";
+            String supportingTagsString = supportingTags.isEmpty() ? "excellent service" : String.join(", ", supportingTags);
+            String promptTemplate = PROMPTS_WITH_PRIMARY_FOCUS[random.nextInt(PROMPTS_WITH_PRIMARY_FOCUS.length)];
+            String prompt = String.format(promptTemplate,
+                    clientName,
+                    promptElements.get(0),
+                    primaryTag,
+                    supportingTagsString,
+                    promptElements.get(1),
+                    charLimit
+            );
+            String baseTags = String.join(", ", trimmedTags);
+            saveGenerationLog(client.getName(), reviewLength, baseTags, isRegenerated);
+            logger.info("---                                   ---");
+            logger.info("Review Length: {}", reviewLength);
+            logger.info("Character Limit: {}", charLimit);
+            logger.info("Primary Tag (Main Focus): {}", primaryTag);
+            logger.info("Supporting Tags: {}", supportingTags);
+            logger.info("Generated Prompt: {}", prompt);
+            logger.info("Used Tags for client {}: {}", clientId, trimmedTags);
+            logger.info("---                                   ---");
+            return chatGPTService.getResponse(prompt);
+        } catch (Exception e) {
+            logger.error("Error generating review with tags for client {}: {}", clientId, e.getMessage(), e);
+            throw new RuntimeException("Failed to generate review with tags", e);
         }
-
-        // Identify primary tag (first tag) and supporting tags
-        String primaryTag = trimmedTags.get(0);
-        List<String> supportingTags = new ArrayList<>();
-        if (trimmedTags.size() > 1) {
-            supportingTags = trimmedTags.subList(1, trimmedTags.size());
-        }
-
-        // Add experience phrases to supporting tags only
-        addRandomElements(supportingTags, EXPERIENCE_PHRASES, 1, random);
-        Collections.shuffle(supportingTags);
-
-        // Randomize the order of elements in the prompt
-        List<String> promptElements = new ArrayList<>();
-        promptElements.add(PERSPECTIVE_MODIFIERS[random.nextInt(PERSPECTIVE_MODIFIERS.length)]);
-        promptElements.add(WRITING_STYLES[random.nextInt(WRITING_STYLES.length)]);
-        promptElements.add(ADDITIONAL_INSTRUCTIONS[random.nextInt(ADDITIONAL_INSTRUCTIONS.length)]);
-
-        // Shuffle the elements to randomize their order
-        Collections.shuffle(promptElements);
-
-        String clientName = client.getName() != null ? client.getName() : "Unknown Client";
-        String supportingTagsString = supportingTags.isEmpty() ? "excellent service" : String.join(", ", supportingTags);
-
-        String promptTemplate = PROMPTS_WITH_PRIMARY_FOCUS[random.nextInt(PROMPTS_WITH_PRIMARY_FOCUS.length)];
-        String prompt = String.format(promptTemplate,
-                clientName,
-                promptElements.get(0),
-                primaryTag,
-                supportingTagsString,
-                promptElements.get(1),
-                charLimit
-        );
-
-        String baseTags = String.join(", ", trimmedTags);
-        saveGenerationLog(client.getName(), reviewLength, baseTags, isRegenerated);
-
-        logger.info("---                                   ---");
-        logger.info("Review Length: {}", reviewLength);
-        logger.info("Character Limit: {}", charLimit);
-        logger.info("Primary Tag (Main Focus): {}", primaryTag);
-        logger.info("Supporting Tags: {}", supportingTags);
-        logger.info("Generated Prompt: {}", prompt);
-        logger.info("Used Tags for client {}: {}", clientId, trimmedTags);
-        logger.info("---                                   ---");
-
-        return chatGPTService.getResponse(prompt);
     }
 
     public String generateReviewWithTags(int clientId, List<String> selectedTags, String reviewLength) {
-        return generateReviewWithTags(clientId, selectedTags, reviewLength, false);
+        try {
+            return generateReviewWithTags(clientId, selectedTags, reviewLength, false);
+        } catch (Exception e) {
+            logger.error("Error generating review with tags (non-regenerated) for client {}: {}", clientId, e.getMessage(), e);
+            throw new RuntimeException("Failed to generate review with tags", e);
+        }
     }
 
     // Helper method to add random elements from source array
@@ -299,76 +297,71 @@ public class ReviewGeneratorService {
 
     // Modify the original generateReview method with primary tag focus
     public String generateReview(int clientId, boolean isRegenerated) {
+    try {
         Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new IllegalArgumentException("Client not found"));
-
+            .orElseThrow(() -> new IllegalArgumentException("Client not found"));
         Random random = new Random();
         int charLimit = random.nextInt(471) + 30;
-
         String clientName = client.getName() != null ? client.getName() : "Unknown Client";
         String chatText = client.getChatText() != null ? client.getChatText() : "No details provided";
-
         List<String> baseTags = Arrays.asList(chatText.split(","));
         List<String> selectedBaseTags = random.ints(0, baseTags.size())
-                .distinct()
-                .limit(3)
-                .mapToObj(baseTags::get)
-                .map(String::trim) // Trim whitespace
-                .collect(Collectors.toList());
-
+            .distinct()
+            .limit(3)
+            .mapToObj(baseTags::get)
+            .map(String::trim)
+            .collect(Collectors.toList());
         // Store the used tags for this client
         lastUsedTagsMap.put(clientId, selectedBaseTags);
-
         // Identify primary tag (first tag) and supporting tags
         String primaryTag = selectedBaseTags.get(0);
         List<String> supportingTags = new ArrayList<>();
         if (selectedBaseTags.size() > 1) {
-            supportingTags = selectedBaseTags.subList(1, selectedBaseTags.size());
+        supportingTags = selectedBaseTags.subList(1, selectedBaseTags.size());
         }
-
         // Add experience phrases to supporting tags only
         addRandomElements(supportingTags, EXPERIENCE_PHRASES, 1, random);
         Collections.shuffle(supportingTags);
-
         // Randomize the order of elements in the prompt
         List<String> promptElements = new ArrayList<>();
         promptElements.add(PERSPECTIVE_MODIFIERS[random.nextInt(PERSPECTIVE_MODIFIERS.length)]);
         promptElements.add(WRITING_STYLES[random.nextInt(WRITING_STYLES.length)]);
         promptElements.add(ADDITIONAL_INSTRUCTIONS[random.nextInt(ADDITIONAL_INSTRUCTIONS.length)]);
-
-        // Shuffle the elements to randomize their order
         Collections.shuffle(promptElements);
-
         String supportingTagsString = supportingTags.isEmpty() ? "excellent service" : String.join(", ", supportingTags);
-
         String promptTemplate = PROMPTS_WITH_PRIMARY_FOCUS[random.nextInt(PROMPTS_WITH_PRIMARY_FOCUS.length)];
         String prompt = String.format(promptTemplate,
-                clientName,
-                promptElements.get(0),
-                primaryTag,
-                supportingTagsString,
-                promptElements.get(1),
-                charLimit
+            clientName,
+            promptElements.get(0),
+            primaryTag,
+            supportingTagsString,
+            promptElements.get(1),
+            charLimit
         );
-
         String keyPoints = String.join(", ", baseTags);
-
         String reviewLengthCategory = determineReviewLengthCategory(charLimit);
         saveGenerationLog(client.getName(), reviewLengthCategory, keyPoints, isRegenerated);
-
         logger.info("---                                   ---");
         logger.info("Primary Tag (Main Focus): {}", primaryTag);
         logger.info("Supporting Tags: {}", supportingTags);
         logger.info("Generated Prompt: {}", prompt);
         logger.info("Used Tags for client {}: {}", clientId, selectedBaseTags);
         logger.info("---                                   ---");
-
         return chatGPTService.getResponse(prompt);
+    } catch (Exception e) {
+        logger.error("Error generating review for client {}: {}", clientId, e.getMessage(), e);
+        throw new RuntimeException("Failed to generate review", e);
+    }
     }
 
     // Backward-compatible version
     public String generateReview(int clientId) {
-        return generateReview(clientId, false);
+        try {
+            return generateReview(clientId, false);
+        } catch (Exception e) {
+            logger.error("Error generating review (non-regenerated) for client {}: {}", clientId, e.getMessage(), e);
+            throw new RuntimeException("Failed to generate review", e);
+        }
     }
 
     private void saveGenerationLog(String companyName, String reviewLength,
@@ -401,18 +394,27 @@ public class ReviewGeneratorService {
 
     // New method to get last used tags for a client
     public List<String> getLastUsedTags(int clientId) {
-        return lastUsedTagsMap.getOrDefault(clientId, new ArrayList<>());
+        try {
+            return lastUsedTagsMap.getOrDefault(clientId, new ArrayList<>());
+        } catch (Exception e) {
+            logger.error("Error getting last used tags for client {}: {}", clientId, e.getMessage(), e);
+            throw new RuntimeException("Failed to get last used tags", e);
+        }
     }
 
     // New method to get all available tags for a client
     public List<String> getAllAvailableTags(int clientId) {
+    try {
         Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new IllegalArgumentException("Client not found"));
-
+            .orElseThrow(() -> new IllegalArgumentException("Client not found"));
         String chatText = client.getChatText() != null ? client.getChatText() : "";
         return Arrays.stream(chatText.split(","))
-                .map(String::trim)
-                .filter(tag -> !tag.isEmpty())
-                .collect(Collectors.toList());
+            .map(String::trim)
+            .filter(tag -> !tag.isEmpty())
+            .collect(Collectors.toList());
+    } catch (Exception e) {
+        logger.error("Error getting all available tags for client {}: {}", clientId, e.getMessage(), e);
+        throw new RuntimeException("Failed to get all available tags", e);
+    }
     }
 }

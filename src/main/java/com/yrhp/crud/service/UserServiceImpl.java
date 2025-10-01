@@ -23,17 +23,27 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDtls createUser(UserDtls user) {
-        log.info("Creating user with email: {}", user.getEmail());
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole("ROLE_USER");
-        UserDtls savedUser = userRepo.save(user);
-        log.info("User saved successfully: {}", user.getEmail());
-        return savedUser;
+        try {
+            log.info("Creating user with email: {}", user.getEmail());
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            user.setRole("ROLE_USER");
+            UserDtls savedUser = userRepo.save(user);
+            log.info("User saved successfully: {}", user.getEmail());
+            return savedUser;
+        } catch (Exception e) {
+            log.error("Error creating user with email {}: {}", user.getEmail(), e.getMessage(), e);
+            throw new RuntimeException("Failed to create user", e);
+        }
     }
 
     @Override
     public boolean checkEmail(String email) {
-        log.debug("Checking if email exists: {}", email);
-        return userRepo.existsByEmail(email);
+        try {
+            log.debug("Checking if email exists: {}", email);
+            return userRepo.existsByEmail(email);
+        } catch (Exception e) {
+            log.error("Error checking if email exists {}: {}", email, e.getMessage(), e);
+            throw new RuntimeException("Failed to check email existence", e);
+        }
     }
 }

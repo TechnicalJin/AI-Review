@@ -30,62 +30,25 @@ public class ClientService {
     private PasswordEncoder passwordEncoder;
 
     public Client saveClient(ClientDao clientDao) {
-        Client client = new Client();
-        client.setName(clientDao.getName());
-        client.setEmail(clientDao.getEmail());
-        client.setMobile(clientDao.getMobile());
-        client.setReviewLink(clientDao.getReviewLink());
-        /*client.setReviewCharLimit(clientDao.getReviewCharLimit());*/
-        client.setChatText(clientDao.getChatText());
-        client.setGenerateLink("/user/view/" + client.getName().replaceAll("\\s", "-").toLowerCase());
+        try {
+            Client client = new Client();
+            client.setName(clientDao.getName());
+            client.setEmail(clientDao.getEmail());
+            client.setMobile(clientDao.getMobile());
+            client.setReviewLink(clientDao.getReviewLink());
+            /*client.setReviewCharLimit(clientDao.getReviewCharLimit());*/
+            client.setChatText(clientDao.getChatText());
+            client.setGenerateLink("/user/view/" + client.getName().replaceAll("\\s", "-").toLowerCase());
 
-        return clientRepository.save(client);
+            return clientRepository.save(client);
+        } catch (Exception e) {
+            log.error("Error saving client from ClientDao: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to save client", e);
+        }
     }
 
     public Client saveClient(Client client, MultipartFile file) throws IOException {
-        if (file != null && !file.isEmpty()) {
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            Path uploadPath = Paths.get("uploads");
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-            Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
-            client.setLogo(fileName);
-        }
-
-        // Encode password before saving
-        if (client.getPassword() != null && !client.getPassword().isEmpty()) {
-            client.setPassword(passwordEncoder.encode(client.getPassword()));
-        }
-
-        // Set default role if not set
-        if (client.getRole() == null || client.getRole().isEmpty()) {
-            client.setRole("ROLE_CLIENT");
-        }
-
-        return clientRepository.save(client);
-    }
-
-    public Client updateClient(Client client, MultipartFile file) throws IOException {
-        log.debug("Updating client with ID: {}", client.getId());
-
-        Optional<Client> existingClient = clientRepository.findById(client.getId());
-        if (existingClient.isPresent()) {
-            Client updatedClient = existingClient.get();
-            
-            // Update fields
-            updatedClient.setName(client.getName());
-            updatedClient.setEmail(client.getEmail());
-            updatedClient.setMobile(client.getMobile());
-            updatedClient.setReviewLink(client.getReviewLink());
-            updatedClient.setChatText(client.getChatText());
-
-            // Only update password if a new one is provided
-            if (client.getPassword() != null && !client.getPassword().isEmpty()) {
-                updatedClient.setPassword(passwordEncoder.encode(client.getPassword()));
-            }
-
-            // Handle logo update
+        try {
             if (file != null && !file.isEmpty()) {
                 String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
                 Path uploadPath = Paths.get("uploads");
@@ -93,16 +56,80 @@ public class ClientService {
                     Files.createDirectories(uploadPath);
                 }
                 Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
-                updatedClient.setLogo(fileName);
+                client.setLogo(fileName);
             }
 
-            return clientRepository.save(updatedClient);
+            // Encode password before saving
+            if (client.getPassword() != null && !client.getPassword().isEmpty()) {
+                client.setPassword(passwordEncoder.encode(client.getPassword()));
+            }
+
+            // Set default role if not set
+            if (client.getRole() == null || client.getRole().isEmpty()) {
+                client.setRole("ROLE_CLIENT");
+            }
+
+            return clientRepository.save(client);
+        } catch (IOException e) {
+            log.error("IO error saving client: {}", e.getMessage(), e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Error saving client: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to save client", e);
         }
-        return null;
+    }
+
+    public Client updateClient(Client client, MultipartFile file) throws IOException {
+        log.debug("Updating client with ID: {}", client.getId());
+        try {
+            Optional<Client> existingClient = clientRepository.findById(client.getId());
+            if (existingClient.isPresent()) {
+                Client updatedClient = existingClient.get();
+                
+                // Update fields
+                updatedClient.setName(client.getName());
+                updatedClient.setEmail(client.getEmail());
+                updatedClient.setMobile(client.getMobile());
+                updatedClient.setReviewLink(client.getReviewLink());
+                updatedClient.setChatText(client.getChatText());
+
+                // Only update password if a new one is provided
+                if (client.getPassword() != null && !client.getPassword().isEmpty()) {
+                    updatedClient.setPassword(passwordEncoder.encode(client.getPassword()));
+                }
+
+                // Handle logo update
+                if (file != null && !file.isEmpty()) {
+                    String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+                    Path uploadPath = Paths.get("uploads");
+                    if (!Files.exists(uploadPath)) {
+                        Files.createDirectories(uploadPath);
+                    }
+                    Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
+                    updatedClient.setLogo(fileName);
+                }
+
+                return clientRepository.save(updatedClient);
+            } else {
+                log.error("Client not found with ID: {} for update", client.getId());
+                throw new RuntimeException("Client not found for update");
+            }
+        } catch (IOException e) {
+            log.error("IO error updating client: {}", e.getMessage(), e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Error updating client: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to update client", e);
+        }
     }
 
     public List<Client> getAllClients() {
-        return clientRepository.findAll();
+        try {
+            return clientRepository.findAll();
+        } catch (Exception e) {
+            log.error("Error getting all clients: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to get all clients", e);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -126,19 +153,35 @@ public class ClientService {
     }
 
     public void deleteClient(int id) {
-        clientRepository.deleteById(id);
+        try {
+            clientRepository.deleteById(id);
+            log.info("Deleted client with ID: {}", id);
+        } catch (Exception e) {
+            log.error("Error deleting client with ID {}: {}", id, e.getMessage(), e);
+            throw new RuntimeException("Failed to delete client", e);
+        }
     }
 
     @Transactional(readOnly = true)
     public boolean existsByEmail(String email) {
-        log.debug("Checking if client exists with email: {}", email);
-        return clientRepository.existsByEmail(email);
+        try {
+            log.debug("Checking if client exists with email: {}", email);
+            return clientRepository.existsByEmail(email);
+        } catch (Exception e) {
+            log.error("Error checking if client exists with email {}: {}", email, e.getMessage(), e);
+            throw new RuntimeException("Failed to check if email exists", e);
+        }
     }
 
     @Transactional(readOnly = true)
     public boolean existsByMobile(String mobile) {
-        log.debug("Checking if client exists with mobile: {}", mobile);
-        return clientRepository.existsByMobile(mobile);
+        try {
+            log.debug("Checking if client exists with mobile: {}", mobile);
+            return clientRepository.existsByMobile(mobile);
+        } catch (Exception e) {
+            log.error("Error checking if client exists with mobile {}: {}", mobile, e.getMessage(), e);
+            throw new RuntimeException("Failed to check if mobile exists", e);
+        }
     }
 
     // Add this method to ClientService

@@ -17,14 +17,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-
-        UserDtls user = userRepo.findByEmail(email);
-
-        if (user != null) {
-
-            return new CustomUserDetails(user);
+        try {
+            UserDtls user = userRepo.findByEmail(email);
+            if (user != null) {
+                return new CustomUserDetails(user);
+            }
+            throw new UsernameNotFoundException("User Not Available");
+        } catch (Exception e) {
+            throw new UsernameNotFoundException("Error loading user by username: " + e.getMessage(), e);
         }
-
-        throw new UsernameNotFoundException("User Not Available");
     }
 }
