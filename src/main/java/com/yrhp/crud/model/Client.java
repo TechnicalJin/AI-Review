@@ -40,6 +40,7 @@ public class Client {
     private String logo;
 
     @NotEmpty(message = "chatText is required")
+    @Column(columnDefinition = "LONGTEXT")
     private String chatText;
 
     private String generateLink;

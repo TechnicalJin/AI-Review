@@ -142,9 +142,12 @@ public class SecurityConfig {
             @Override
             public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
                 logger.debug("Adding Resource handler : {} for location : {}", resourceHandler, resourceLocation);
+                // Add handler for both lowercase and uppercase variations
                 registry.addResourceHandler(resourceHandler)
                         .addResourceLocations("file:" + resourceLocation);
-                logger.info("Resource handler configured successfully");
+                registry.addResourceHandler("/Uploads/**")
+                        .addResourceLocations("file:" + resourceLocation);
+                logger.info("Resource handlers configured successfully (both /uploads/** and /Uploads/**)");
             }
         };
     }
