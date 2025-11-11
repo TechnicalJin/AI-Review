@@ -866,10 +866,18 @@ public class UserController implements ErrorController {
                 throw new IllegalArgumentException("File size must be less than 5MB");
             }
 
+            // Ensure upload directory exists
+            File uploadDirectory = new File(uploadDir);
+            if (!uploadDirectory.exists()) {
+                uploadDirectory.mkdirs();
+                log.info("Created upload directory: {}", uploadDirectory.getAbsolutePath());
+            }
+
             String logoFileName = UUID.randomUUID().toString() + "_" + logo.getOriginalFilename();
             File destinationFile = new File(uploadDir + File.separator + logoFileName);
             logo.transferTo(destinationFile);
             client.setLogo(logoFileName);
+            log.debug("Logo uploaded: {} to {}", logoFileName, destinationFile.getAbsolutePath());
         }
     }
 
@@ -1157,6 +1165,14 @@ public class UserController implements ErrorController {
                         model.addAttribute("clientId", id);
                         return "user/edit";
                     }
+                    
+                    // Ensure upload directory exists
+                    File uploadDirectory = new File(uploadDir);
+                    if (!uploadDirectory.exists()) {
+                        uploadDirectory.mkdirs();
+                        log.info("Created upload directory: {}", uploadDirectory.getAbsolutePath());
+                    }
+                    
                     String logoFileName = UUID.randomUUID().toString() + "_" + logo.getOriginalFilename();
                     File destinationFile = new File(uploadDir + File.separator + logoFileName);
                     try {

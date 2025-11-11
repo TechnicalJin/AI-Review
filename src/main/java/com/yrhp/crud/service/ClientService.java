@@ -51,17 +51,22 @@ public class ClientService {
         try {
             if (file != null && !file.isEmpty()) {
                 String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-                Path uploadPath = Paths.get("uploads");
+                // Get upload directory from system property or use default
+                String uploadDir = System.getProperty("upload.dir", "C:/uploads");
+                Path uploadPath = Paths.get(uploadDir);
                 if (!Files.exists(uploadPath)) {
                     Files.createDirectories(uploadPath);
+                    log.info("Created upload directory: {}", uploadPath);
                 }
                 Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
                 client.setLogo(fileName);
+                log.debug("Saved logo file: {} to {}", fileName, uploadPath);
             }
 
             // Encode password before saving
             if (client.getPassword() != null && !client.getPassword().isEmpty()) {
                 client.setPassword(passwordEncoder.encode(client.getPassword()));
+                log.debug("Password encoded for client: {}", client.getEmail());
             }
 
             // Set default role if not set
@@ -69,7 +74,9 @@ public class ClientService {
                 client.setRole("ROLE_CLIENT");
             }
 
-            return clientRepository.save(client);
+            Client savedClient = clientRepository.save(client);
+            log.info("Client saved successfully: {} with ID: {}", savedClient.getEmail(), savedClient.getId());
+            return savedClient;
         } catch (IOException e) {
             log.error("IO error saving client: {}", e.getMessage(), e);
             throw e;
@@ -101,12 +108,16 @@ public class ClientService {
                 // Handle logo update
                 if (file != null && !file.isEmpty()) {
                     String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-                    Path uploadPath = Paths.get("uploads");
+                    // Get upload directory from system property or use default
+                    String uploadDir = System.getProperty("upload.dir", "C:/uploads");
+                    Path uploadPath = Paths.get(uploadDir);
                     if (!Files.exists(uploadPath)) {
                         Files.createDirectories(uploadPath);
+                        log.info("Created upload directory: {}", uploadPath);
                     }
                     Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
                     updatedClient.setLogo(fileName);
+                    log.debug("Updated logo file: {} to {}", fileName, uploadPath);
                 }
 
                 return clientRepository.save(updatedClient);

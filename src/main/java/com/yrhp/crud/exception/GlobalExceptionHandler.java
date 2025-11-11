@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.transaction.TransactionException;
 
@@ -24,6 +25,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleResourceNotFoundException(ResourceNotFoundException ex) {
         log.warn("Resource not found: {}", ex.getMessage());
         ErrorResponse error = new ErrorResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<?> handleNoResourceFoundException(NoResourceFoundException ex) {
+        log.warn("Static resource not found: {}", ex.getMessage());
+        // Return 404 status but don't show detailed error to user
+        ErrorResponse error = new ErrorResponse(HttpStatus.NOT_FOUND.value(), "Resource not found");
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 

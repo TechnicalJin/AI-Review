@@ -18,6 +18,11 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.lang.NonNull;
 
+import jakarta.annotation.PostConstruct;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 @Configuration
 public class SecurityConfig {
 
@@ -31,6 +36,26 @@ public class SecurityConfig {
 
     @Autowired
     private UserDetailsService userDetailsService;
+
+    @PostConstruct
+    public void init() {
+        try {
+            // Ensure upload directory exists
+            Path uploadPath = Paths.get(resourceLocation);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+                logger.info("Created upload directory: {}", uploadPath.toAbsolutePath());
+            } else {
+                logger.info("Upload directory already exists: {}", uploadPath.toAbsolutePath());
+            }
+            
+            // Set system property for use in other classes
+            System.setProperty("upload.dir", resourceLocation);
+            logger.info("Upload directory configured: {}", resourceLocation);
+        } catch (Exception e) {
+            logger.error("Failed to create upload directory: {}", resourceLocation, e);
+        }
+    }
 
 
     @Bean
@@ -61,7 +86,7 @@ public class SecurityConfig {
                             // Public resources
                             .requestMatchers("/", "/createUser", "/signin",
                                     "/css/**", "/js/**", "/images/**", "/error/**", 
-                                    "/uploads/**", "/Uploads/**").permitAll()
+                                    "/uploads/**").permitAll()
                             // Public pages
                             .requestMatchers("/user/view/**", "/user/regenerate/**").permitAll()
                             // Role-based access
