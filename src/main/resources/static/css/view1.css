@@ -354,50 +354,106 @@ body.overlay-active .container {
 /* Mode Option Button */
 .mode-option-btn {
     width: 100%;
-    padding: var(--space-lg);
-    border: 2px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    padding: var(--space-xl);
+    border: 2px solid rgba(148, 163, 184, 0.2);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(145deg, #2c3e50 0%, #34495e 100%);
     cursor: pointer;
-    text-align: left;
+    text-align: center;
     display: flex;
     flex-direction: column;
-    gap: var(--space-sm);
+    align-items: center;
+    gap: var(--space-md);
+    position: relative;
+    overflow: hidden;
     /* Hardware acceleration */
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     /* Touch optimization */
     touch-action: manipulation;
 }
 
+/* Subtle gradient overlay for depth */
+.mode-option-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+}
+
+/* Enhanced hover effect - maintains dark background with purple glow */
 .mode-option-btn:hover {
-    border-color: var(--primary-color);
-    background: linear-gradient(145deg, #f8f9ff 0%, #eef2ff 100%);
-    transform: translateY(-3px) translateZ(0);
-    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.25);
+    border-color: #a78bfa;
+    background: linear-gradient(145deg, #3d4f63 0%, #465a70 100%);
+    transform: translateY(-6px) translateZ(0);
+    box-shadow: 0 12px 28px rgba(124, 58, 237, 0.35), 
+                0 0 20px rgba(124, 58, 237, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
+.mode-option-btn:hover::before {
+    opacity: 1;
+}
+
+/* Active state - pressed effect */
 .mode-option-btn:active {
-    transform: translateY(-1px) scale(0.98) translateZ(0);
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+    transform: translateY(-2px) scale(0.98) translateZ(0);
+    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
+    transition: all 0.1s ease;
 }
 
+/* Icon styling with enhanced hover animation */
 .mode-option-btn i {
-    font-size: var(--font-2xl);
+    font-size: 36px;
+    color: #a78bfa;
     margin-bottom: var(--space-xs);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(124, 58, 237, 0.3));
 }
 
+.mode-option-btn:hover i {
+    color: #c4b5fd;
+    transform: scale(1.15) translateZ(0);
+    filter: drop-shadow(0 4px 12px rgba(124, 58, 237, 0.6));
+}
+
+/* Title styling */
 .mode-option-btn .mode-title {
-    font-size: var(--font-md);
+    font-size: var(--font-lg);
     font-weight: 700;
-    color: var(--text-primary);
+    color: #f1f5f9;
+    position: relative;
+    z-index: 1;
+    transition: color 0.3s ease;
 }
 
+.mode-option-btn:hover .mode-title {
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+}
+
+/* Description styling */
 .mode-option-btn .mode-description {
     font-size: var(--font-sm);
-    color: var(--text-muted);
-    line-height: 1.4;
+    color: #cbd5e1;
+    line-height: 1.5;
+    position: relative;
+    z-index: 1;
+    transition: color 0.3s ease;
+}
+
+.mode-option-btn:hover .mode-description {
+    color: #e2e8f0;
 }
 
 /* =====================================================
@@ -1272,61 +1328,103 @@ h3 {
     width: 100%;
     min-height: 100px;
     padding: var(--space-xl);
-    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-    border: 2px solid var(--border-color);
+    background: linear-gradient(145deg, #2c3e50 0%, #34495e 100%);
+    border: 2px solid rgba(148, 163, 184, 0.2);
     border-radius: var(--radius-lg);
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--space-sm);
+    gap: var(--space-md);
     text-align: center;
+    position: relative;
+    overflow: hidden;
     /* Hardware acceleration */
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
-    transition: all var(--transition-fast);
-    box-shadow: var(--shadow-sm);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     /* Touch optimization */
     touch-action: manipulation;
 }
 
-/* IMPROVED: Hover effect for mode selection */
+/* Subtle gradient overlay for depth */
+.mode-option-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+}
+
+/* IMPROVED: Enhanced hover effect with purple glow - maintains dark background */
 .mode-option-btn:hover {
-    background: linear-gradient(145deg, #f8f9ff 0%, #eef2ff 100%);
-    border-color: var(--purple-primary);
-    -webkit-transform: translateY(-4px) translateZ(0);
-    transform: translateY(-4px) translateZ(0);
-    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
+    background: linear-gradient(145deg, #3d4f63 0%, #465a70 100%);
+    border-color: #a78bfa;
+    -webkit-transform: translateY(-6px) translateZ(0);
+    transform: translateY(-6px) translateZ(0);
+    box-shadow: 0 12px 28px rgba(124, 58, 237, 0.35), 
+                0 0 20px rgba(124, 58, 237, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.mode-option-btn:hover::before {
+    opacity: 1;
 }
 
 .mode-option-btn:active {
-    -webkit-transform: scale(0.98) translateZ(0);
-    transform: scale(0.98) translateZ(0);
-    box-shadow: var(--shadow-md);
+    -webkit-transform: translateY(-2px) scale(0.98) translateZ(0);
+    transform: translateY(-2px) scale(0.98) translateZ(0);
+    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
 }
 
 .mode-option-btn i {
-    font-size: 32px;
-    color: var(--purple-primary);
-    transition: transform var(--transition-base);
+    font-size: 36px;
+    color: #a78bfa;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(124, 58, 237, 0.3));
 }
 
 .mode-option-btn:hover i {
-    -webkit-transform: scale(1.1) translateZ(0);
-    transform: scale(1.1) translateZ(0);
+    -webkit-transform: scale(1.15) translateZ(0);
+    transform: scale(1.15) translateZ(0);
+    color: #c4b5fd;
+    filter: drop-shadow(0 4px 12px rgba(124, 58, 237, 0.6));
 }
 
 .mode-option-btn .mode-title {
     font-size: var(--font-lg);
     font-weight: 700;
-    color: var(--text-primary);
+    color: #f1f5f9;
+    position: relative;
+    z-index: 1;
+    transition: color 0.3s ease;
+}
+
+.mode-option-btn:hover .mode-title {
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
 }
 
 .mode-option-btn .mode-description {
     font-size: var(--font-sm);
-    color: var(--text-secondary);
-    line-height: 1.4;
+    color: #cbd5e1;
+    line-height: 1.5;
+    position: relative;
+    z-index: 1;
+    transition: color 0.3s ease;
+}
+
+.mode-option-btn:hover .mode-description {
+    color: #e2e8f0;
 }
 
 /* =====================================================
