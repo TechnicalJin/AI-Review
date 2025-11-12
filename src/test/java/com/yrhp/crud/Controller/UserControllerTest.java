@@ -217,9 +217,48 @@ class UserControllerTest {
     }
 
     @Test
-    void testRegenerateReview_InsufficientTags() {
+    void testRegenerateReview_AutoModeWithFiveTags() {
+        // Test Auto Mode: 5 tags automatically selected
         RegenerateReviewRequest request = new RegenerateReviewRequest();
-        request.setSelectedTags(Arrays.asList("tag1", "tag2"));
+        request.setSelectedTags(Arrays.asList("tag1", "tag2", "tag3", "tag4", "tag5"));
+        request.setReviewLength("medium");
+        when(reviewGeneratorService.generateReviewWithTags(1, request.getSelectedTags(), "medium", true))
+                .thenReturn("Auto Generated Review");
+
+        String response = userController.regenerateReview(1, request);
+
+        assertEquals("Auto Generated Review", response);
+    }
+
+    @Test
+    void testRegenerateReview_TagModeWithMinimumTags() {
+        // Test Tag Mode: User selects exactly 3 tags
+        RegenerateReviewRequest request = new RegenerateReviewRequest();
+        request.setSelectedTags(Arrays.asList("tag1", "tag2", "tag3"));
+        request.setReviewLength("short");
+        when(reviewGeneratorService.generateReviewWithTags(1, request.getSelectedTags(), "short", true))
+                .thenReturn("Tag-based Review");
+
+        String response = userController.regenerateReview(1, request);
+
+        assertEquals("Tag-based Review", response);
+    }
+
+    @Test
+    void testRegenerateReview_NoTags() {
+        // Test validation: No tags provided (should fail)
+        RegenerateReviewRequest request = new RegenerateReviewRequest();
+        request.setSelectedTags(Arrays.asList());
+
+        assertThrows(IllegalArgumentException.class, () ->
+                userController.regenerateReview(1, request));
+    }
+
+    @Test
+    void testRegenerateReview_NullTags() {
+        // Test validation: Null tags (should fail)
+        RegenerateReviewRequest request = new RegenerateReviewRequest();
+        request.setSelectedTags(null);
 
         assertThrows(IllegalArgumentException.class, () ->
                 userController.regenerateReview(1, request));

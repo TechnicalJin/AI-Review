@@ -1,10 +1,298 @@
+// ========================================
+// MODE MANAGEMENT SYSTEM
+// ========================================
+
+const MODE_STORAGE_KEY = 'reviewGenerationMode';
+const MODES = {
+    AUTO: 'auto',
+    TAG: 'tag'
+};
+
+// Initialize mode on page load
+let currentMode = localStorage.getItem(MODE_STORAGE_KEY) || MODES.TAG;
+
+// Show overlay ALWAYS - ask for mode every time user visits
+window.addEventListener('DOMContentLoaded', function() {
+    // ALWAYS show overlay for mode selection on every page visit
+    showModeSelectionOverlay();
+    
+    // Setup mode option buttons
+    document.querySelectorAll('.mode-option-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const selectedMode = this.dataset.mode;
+            selectMode(selectedMode);
+        });
+    });
+    
+    // Setup mode toggle button using MULTIPLE methods for reliability
+    setupToggleButton();
+});
+
+// Setup toggle button with multiple fallback methods
+function setupToggleButton() {
+    // Method 1: Event delegation on document (works even with dynamic content)
+    document.addEventListener('click', function(event) {
+        const toggleBtn = event.target.closest('#mode-toggle-btn');
+        if (toggleBtn) {
+            event.preventDefault();
+            event.stopPropagation();
+            toggleMode(event);
+        }
+    });
+    
+    // Method 2: Direct listener after delay
+    setTimeout(() => {
+        const toggleBtn = document.getElementById('mode-toggle-btn');
+        if (toggleBtn) {
+            // Clone to remove existing listeners
+            const newBtn = toggleBtn.cloneNode(true);
+            toggleBtn.parentNode.replaceChild(newBtn, toggleBtn);
+            
+            // Add fresh listener
+            newBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleMode(e);
+            });
+        }
+    }, 500);
+    
+    // Method 3: Touch events for mobile
+    setTimeout(() => {
+        const toggleBtn = document.getElementById('mode-toggle-btn');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                toggleMode(e);
+            }, { passive: false });
+        }
+    }, 600);
+}
+
+// Show mode selection overlay with blur
+function showModeSelectionOverlay() {
+    const overlay = document.getElementById('mode-selection-overlay');
+    if (overlay) {
+        // Show overlay
+        overlay.style.display = 'flex';
+        overlay.style.opacity = '0';
+        
+        // Add blur class to body
+        document.body.classList.add('overlay-active');
+        
+        // Fade in animation
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+        });
+        
+        // Prevent closing on backdrop click
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                e.stopPropagation();
+                // Do nothing - user must select a mode
+            }
+        });
+        
+        // Prevent ESC key from closing
+        document.addEventListener('keydown', preventEscape);
+    }
+}
+
+// Prevent ESC key from closing overlay
+function preventEscape(e) {
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+}
+
+// Hide mode selection overlay with smooth transition
+function hideModeSelectionOverlay() {
+    const overlay = document.getElementById('mode-selection-overlay');
+    if (overlay) {
+        // Remove blur from background
+        document.body.classList.remove('overlay-active');
+        
+        // Fade out overlay
+        overlay.style.opacity = '0';
+        
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            // Remove ESC key listener
+            document.removeEventListener('keydown', preventEscape);
+        }, 300);
+    }
+}
+
+// Select and apply mode
+function selectMode(mode) {
+    currentMode = mode;
+    localStorage.setItem(MODE_STORAGE_KEY, mode);
+    
+    // Hide overlay with animation
+    hideModeSelectionOverlay();
+    
+    // Apply mode after overlay animation completes
+    setTimeout(() => {
+        applyMode(mode);
+    }, 350);
+}
+
+// Apply mode to UI (without transitions)
+function applyMode(mode) {
+    const tagWrapper = document.getElementById('tag-selection-wrapper');
+    const modeIcon = document.getElementById('mode-status-icon');
+    const modeText = document.getElementById('mode-status-text');
+    const toggleBtn = document.getElementById('mode-toggle-btn');
+    const tagWarning = document.getElementById('tag-warning');
+    
+    if (!tagWrapper || !modeIcon || !modeText || !toggleBtn) {
+        console.warn('Mode control elements not found');
+        return;
+    }
+    
+    if (mode === MODES.AUTO) {
+        // Auto Mode
+        tagWrapper.classList.add('hidden');
+        tagWrapper.style.maxHeight = '0';
+        tagWrapper.style.opacity = '0';
+        
+        if (tagWarning) {
+            tagWarning.classList.add('d-none');
+        }
+        
+        modeIcon.textContent = '🟣';
+        modeText.textContent = 'Current Mode: Auto';
+        toggleBtn.innerHTML = '<i class="fas fa-tags"></i> Switch to Tag Mode';
+    } else {
+        // Tag Mode
+        tagWrapper.classList.remove('hidden');
+        tagWrapper.style.maxHeight = 'none';
+        tagWrapper.style.opacity = '1';
+        
+        modeIcon.textContent = '🟢';
+        modeText.textContent = 'Current Mode: Tag';
+        toggleBtn.innerHTML = '<i class="fas fa-magic"></i> Switch to Auto Mode';
+    }
+}
+
+// Apply mode with smooth transitions
+function applyModeWithTransition(mode) {
+    const tagWrapper = document.getElementById('tag-selection-wrapper');
+    const modeIcon = document.getElementById('mode-status-icon');
+    const modeText = document.getElementById('mode-status-text');
+    const toggleBtn = document.getElementById('mode-toggle-btn');
+    const tagWarning = document.getElementById('tag-warning');
+    const container = document.querySelector('.client-info');
+    
+    if (!tagWrapper || !modeIcon || !modeText || !toggleBtn) {
+        console.warn('Mode control elements not found');
+        return;
+    }
+    
+    // Add transition class
+    tagWrapper.classList.add('transitioning');
+    if (container) {
+        container.classList.add('transitioning');
+    }
+    
+    if (mode === MODES.AUTO) {
+        // Switching to Auto Mode - Hide tags section
+        tagWrapper.style.opacity = '0';
+        tagWrapper.style.maxHeight = '0';
+        
+        if (tagWarning) {
+            tagWarning.classList.add('d-none');
+        }
+        
+        modeIcon.textContent = '🟣';
+        modeText.textContent = 'Current Mode: Auto';
+        toggleBtn.innerHTML = '<i class="fas fa-tags"></i> Switch to Tag Mode';
+        
+        setTimeout(() => {
+            tagWrapper.classList.add('hidden');
+            tagWrapper.classList.remove('transitioning');
+            if (container) {
+                container.classList.remove('transitioning');
+            }
+        }, 300);
+        
+    } else {
+        // Switching to Tag Mode - Show tags section
+        tagWrapper.classList.remove('hidden');
+        
+        // Force reflow for animation
+        tagWrapper.offsetHeight;
+        
+        requestAnimationFrame(() => {
+            tagWrapper.style.maxHeight = 'none';
+            tagWrapper.style.opacity = '1';
+        });
+        
+        modeIcon.textContent = '🟢';
+        modeText.textContent = 'Current Mode: Tag';
+        toggleBtn.innerHTML = '<i class="fas fa-magic"></i> Switch to Auto Mode';
+        
+        // Check if we need to show warning
+        setTimeout(() => {
+            const selectedCount = document.querySelectorAll('.tag-checkbox:checked').length;
+            if (selectedCount < 3 && tagWarning) {
+                tagWarning.classList.remove('d-none');
+            }
+        }, 50);
+        
+        setTimeout(() => {
+            tagWrapper.classList.remove('transitioning');
+            if (container) {
+                container.classList.remove('transitioning');
+            }
+        }, 300);
+    }
+    
+    // Optional: Container pulse effect
+    if (container) {
+        container.style.opacity = '0.7';
+        setTimeout(() => {
+            container.style.opacity = '1';
+        }, 150);
+    }
+}
+
+// Toggle between modes
+function toggleMode(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
+    console.log('Toggle clicked. Current mode:', currentMode);
+    const newMode = currentMode === MODES.AUTO ? MODES.TAG : MODES.AUTO;
+    console.log('Switching to:', newMode);
+    
+    // Update current mode
+    currentMode = newMode;
+    localStorage.setItem(MODE_STORAGE_KEY, newMode);
+    
+    // Apply the new mode with smooth transitions
+    applyModeWithTransition(newMode);
+    
+    console.log('Mode switched successfully to:', newMode);
+}
+
+// ========================================
+// EXISTING FUNCTIONALITY
+// ========================================
+
 document.getElementById("copy-btn").addEventListener("click", async function() {
     const button = this;
     const originalText = button.textContent;
     const textArea = document.getElementById("review-msg-content");
     const reviewText = textArea.value;
     const clientInfo = button.closest('.client-info');
-    const reviewLink = clientInfo.getAttribute('data-review-link');
+    const reviewLink = clientInfo ? clientInfo.getAttribute('data-review-link') : null;
+
+    console.log('Copy button clicked');
+    console.log('Review Link:', reviewLink);
 
     try {
         if (navigator.clipboard && window.isSecureContext) {
@@ -26,11 +314,23 @@ document.getElementById("copy-btn").addEventListener("click", async function() {
 
         button.classList.add('copy-success');
 
+        // Redirect to review link after 1.5 seconds
         setTimeout(() => {
             button.textContent = originalText;
             button.classList.remove('copy-success');
-            if (reviewLink) {
-                window.open(reviewLink, '_blank') || window.location.assign(reviewLink);
+            
+            // Open review link if available
+            if (reviewLink && reviewLink.trim() !== '') {
+                console.log('Opening review link:', reviewLink);
+                const newWindow = window.open(reviewLink, '_blank');
+                if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+                    // Popup blocked, try location.assign
+                    console.log('Popup blocked, using location.assign');
+                    window.location.assign(reviewLink);
+                }
+            } else {
+                console.warn('No review link found!');
+                alert('Review copied! Please paste it on your Google review page.');
             }
         }, 1500);
 
@@ -60,6 +360,7 @@ buttons.forEach(button => {
 document.querySelectorAll(".regenerate-btn").forEach(button => {
     let selectedLength = 'medium';
 
+    // Length button selection (unchanged)
     document.querySelectorAll('.length-btn').forEach(lengthBtn => {
         lengthBtn.addEventListener('click', function() {
             document.querySelectorAll('.length-btn').forEach(btn => {
@@ -74,19 +375,32 @@ document.querySelectorAll(".regenerate-btn").forEach(button => {
 
     button.addEventListener("click", function() {
         let clientId = this.dataset.clientId;
-        const selectedTags = Array.from(document.querySelectorAll('.tag-checkbox:checked'))
-            .map(checkbox => checkbox.value.trim());
+        let selectedTags = [];
+        
+        // MODE-BASED TAG HANDLING
+        if (currentMode === MODES.TAG) {
+            // Tag Mode: Collect selected tags
+            selectedTags = Array.from(document.querySelectorAll('.tag-checkbox:checked'))
+                .map(checkbox => checkbox.value.trim());
 
-        if (selectedTags.length < 3) {
-            document.getElementById('tag-warning').classList.remove('d-none');
-            return;
+            // Validate minimum 3 tags
+            if (selectedTags.length < 3) {
+                document.getElementById('tag-warning').classList.remove('d-none');
+                return;
+            }
+            document.getElementById('tag-warning').classList.add('d-none');
+        } else {
+            // Auto Mode: Use all available tags or send empty array
+            selectedTags = Array.from(document.querySelectorAll('.tag-checkbox'))
+                .map(checkbox => checkbox.value.trim())
+                .slice(0, 5); // Use first 5 tags as default
         }
 
-        document.getElementById('tag-warning').classList.add('d-none');
-
+        // Disable button & show loading
         button.disabled = true;
         button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Regenerating...';
 
+        // API Call (using existing endpoint)
         fetch(`/user/regenerate/${clientId}`, {
             method: 'POST',
             headers: {

@@ -947,13 +947,25 @@ public class UserController implements ErrorController {
             @PathVariable("id") int id,
             @RequestBody RegenerateReviewRequest request) {
         try {
-            log.info("Regenerating review for client ID: {} with {} tags", id, request.getSelectedTags().size());
-
-            if (request.getSelectedTags() == null || request.getSelectedTags().size() < 3) {
-                log.warn("Insufficient tags selected for client ID: {} - only {} tags provided",
-                        id, request.getSelectedTags() != null ? request.getSelectedTags().size() : 0);
-                throw new IllegalArgumentException("At least 3 tags must be selected");
+            // Mode-aware validation: Support both Auto and Tag modes
+            // Auto mode sends first 5 tags automatically, Tag mode requires user selection
+            if (request.getSelectedTags() == null || request.getSelectedTags().isEmpty()) {
+                log.warn("No tags provided for client ID: {}", id);
+                throw new IllegalArgumentException("Tags are required for review generation");
             }
+
+            // Log the number of tags being used
+            log.info("Regenerating review for client ID: {} with {} tags", 
+                    id, request.getSelectedTags().size());
+
+            // Minimum validation: At least 1 tag is required (relaxed from 3 for auto mode)
+            // Frontend in Tag mode enforces 3+ tags, Auto mode sends 5 tags
+            if (request.getSelectedTags().size() < 1) {
+                log.warn("Insufficient tags selected for client ID: {} - only {} tags provided",
+                        id, request.getSelectedTags().size());
+                throw new IllegalArgumentException("At least 1 tag must be provided");
+            }
+
             return reviewGeneratorService.generateReviewWithTags(id, request.getSelectedTags(), request.getReviewLength(), true);
         } catch (IllegalArgumentException e) {
             // Re-throw to be handled by GlobalExceptionHandler
