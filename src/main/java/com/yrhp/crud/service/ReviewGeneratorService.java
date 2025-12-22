@@ -468,28 +468,39 @@ public class ReviewGeneratorService {
                 );
             }
             
-            // Step 4: Generate review using existing logic with client ID
-            // Using the first 5 tags automatically as per Auto mode
-            String chatText = client.getChatText() != null ? client.getChatText() : "";
-            List<String> allTags = Arrays.stream(chatText.split(","))
-                .map(String::trim)
-                .filter(tag -> !tag.isEmpty())
-                .limit(5)  // Take first 5 tags for auto mode
-                .collect(Collectors.toList());
-            
-            if (allTags.isEmpty()) {
-                return new VoiceReviewResponse("No tags available for client: " + clientName);
-            }
-            
-            // Generate review with normalized text as context
-            String review = generateReviewWithTags(
-                client.getId(), 
-                allTags, 
-                "medium",  // Default to medium length
-                false      // Not a regeneration
+            // Step 4: Generate review directly from transcription
+            // Create a natural review prompt from the user's spoken words
+            String prompt = String.format(
+                "Convert this customer's spoken feedback about %s into a professional Google Review in English. " +
+                "Their original words: \"%s\". " +
+                "Create a natural, authentic-sounding review that captures their sentiments and experience. " +
+                "Keep the tone positive and genuine. Maximum 300 characters.",
+                client.getName(),
+                normalizedText
             );
             
+            logger.info("Voice review prompt: {}", prompt);
+            
+            // Generate review using ChatGPT
+            String review = chatGPTService.getResponse(prompt);
+            
             if (review != null && !review.isEmpty()) {
+                // Save to database log
+                ReviewGenerationLog log = new ReviewGenerationLog();
+                log.setCompanyName(client.getName());
+                log.setTimestamp(LocalDateTime.now());
+                log.setReviewLength("voice");
+                log.setKeyPoints("Voice transcription: " + normalizedText.substring(0, Math.min(100, normalizedText.length())));
+                log.setRegenerated("no");
+                logRepository.save(log);
+                
+                // Log the generation
+                logger.info("---                                   ---");
+                logger.info("Voice-based review generated | Company: {} | Transcription length: {} | Language: {} | Review length: {}", 
+                    client.getName(), normalizedText.length(), transcription.getLanguage(), review.length());
+                logger.info("Voice transcription saved to database");
+                logger.info("---                                   ---");
+                
                 // Step 5: Create response
                 return new VoiceReviewResponse(
                     review,

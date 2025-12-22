@@ -1,6 +1,14 @@
 // ========================================
 // MODE MANAGEMENT SYSTEM
 // ========================================
+// 
+// To see the mode selection overlay again (for testing):
+// Open browser console and run: localStorage.removeItem('hasSeenModeSelection')
+// Then refresh the page.
+//
+// To reset everything:
+// localStorage.clear()
+// ========================================
 
 const MODE_STORAGE_KEY = 'reviewGenerationMode';
 const MODES = {
@@ -12,9 +20,11 @@ const MODES = {
 // Initialize mode on page load
 let currentMode = localStorage.getItem(MODE_STORAGE_KEY) || MODES.TAG;
 
-// Show overlay ALWAYS - ask for mode every time user visits
+// Show overlay EVERY TIME user visits a client review page
 window.addEventListener('DOMContentLoaded', function() {
-    // ALWAYS show overlay for mode selection on every page visit
+    console.log('Mode Management: Showing overlay for mode selection, currentMode =', currentMode);
+    
+    // Always show overlay to select mode for each client visit
     showModeSelectionOverlay();
     
     // Setup mode option buttons
@@ -145,8 +155,11 @@ function applyMode(mode) {
     const voiceContainer = document.getElementById('voiceInputContainer');
     const modeIcon = document.getElementById('mode-status-icon');
     const modeText = document.getElementById('mode-status-text');
+    const modeDescription = document.getElementById('mode-description');
     const toggleBtn = document.getElementById('mode-toggle-btn');
     const tagWarning = document.getElementById('tag-warning');
+    const regenerateControls = document.getElementById('regenerateControls');
+    const reviewTextarea = document.getElementById('review-msg-content');
     
     if (!tagWrapper || !modeIcon || !modeText || !toggleBtn) {
         console.warn('Mode control elements not found');
@@ -165,10 +178,14 @@ function applyMode(mode) {
         if (tagWarning) {
             tagWarning.classList.add('d-none');
         }
-        
-        modeIcon.textContent = '🟣';
-        modeText.textContent = 'Current Mode: Auto';
-        toggleBtn.innerHTML = '<i class="fas fa-tags"></i> Switch to Tag Mode';
+                // Show regenerate controls in Auto mode
+        if (regenerateControls) {
+            regenerateControls.style.display = 'block';
+        }
+                modeIcon.textContent = '🟣';
+        modeText.textContent = 'Current Mode: Auto';        if (modeDescription) {
+            modeDescription.textContent = '🪄 Review will be auto-generated without tag selection';
+        }        toggleBtn.innerHTML = '<i class="fas fa-tags"></i> Switch to Tag Mode';
     } else if (mode === MODES.VOICE) {
         // Voice Mode
         tagWrapper.classList.add('hidden');
@@ -182,8 +199,23 @@ function applyMode(mode) {
             tagWarning.classList.add('d-none');
         }
         
+        // Hide regenerate controls in Voice mode
+        if (regenerateControls) {
+            regenerateControls.style.display = 'none';
+        }
+        
+        // Show placeholder for voice review
+        if (reviewTextarea) {
+            reviewTextarea.value = '🎤 Generated Review will appear here after voice processing...\n\nTap the microphone button above to start recording your review.';
+            reviewTextarea.style.fontStyle = 'italic';
+            reviewTextarea.style.opacity = '0.7';
+        }
+        
         modeIcon.textContent = '🎤';
         modeText.textContent = 'Current Mode: Voice';
+        if (modeDescription) {
+            modeDescription.textContent = '🎤 Record your voice to generate review from your spoken words';
+        }
         toggleBtn.innerHTML = '<i class="fas fa-magic"></i> Switch to Auto Mode';
     } else {
         // Tag Mode
@@ -194,11 +226,28 @@ function applyMode(mode) {
             voiceContainer.style.display = 'none';
         }
         
+        // Show regenerate controls in Tag mode
+        if (regenerateControls) {
+            regenerateControls.style.display = 'block';
+        }
+                // Reset textarea style if it was placeholder
+        if (reviewTextarea && reviewTextarea.style.fontStyle === 'italic') {
+            reviewTextarea.style.fontStyle = 'normal';
+            reviewTextarea.style.opacity = '1';
+        }
+                // Reset textarea style if it was placeholder
+        if (reviewTextarea && reviewTextarea.style.fontStyle === 'italic') {
+            reviewTextarea.style.fontStyle = 'normal';
+            reviewTextarea.style.opacity = '1';
+        }
+        
         modeIcon.textContent = '🟢';
         modeText.textContent = 'Current Mode: Tag';
+        if (modeDescription) {
+            modeDescription.textContent = '🏷️ Select tags to customize your review';
+        }
         toggleBtn.innerHTML = '<i class="fas fa-magic"></i> Switch to Auto Mode';
     }
-}
 }
 
 // Apply mode with smooth transitions
@@ -231,8 +280,9 @@ function applyModeWithTransition(mode) {
         }
         
         modeIcon.textContent = '🟣';
-        modeText.textContent = 'Current Mode: Auto';
-        toggleBtn.innerHTML = '<i class="fas fa-tags"></i> Switch to Tag Mode';
+        modeText.textContent = 'Current Mode: Auto';        if (modeDescription) {
+            modeDescription.textContent = 'Review will be auto-generated without tag selection';
+        }        toggleBtn.innerHTML = '<i class="fas fa-tags"></i> Switch to Tag Mode';
         
         setTimeout(() => {
             tagWrapper.classList.add('hidden');
@@ -308,7 +358,17 @@ function toggleMode(event) {
 // EXISTING FUNCTIONALITY
 // ========================================
 
-document.getElementById("copy-btn").addEventListener("click", async function() {
+// Wait for DOM to be fully ready before attaching event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    initializeExistingFunctionality();
+});
+
+function initializeExistingFunctionality() {
+    // Copy button functionality
+    const copyBtn = document.getElementById("copy-btn");
+    if (!copyBtn) return;
+    
+    copyBtn.addEventListener("click", async function() {
     const button = this;
     const originalText = button.textContent;
     const textArea = document.getElementById("review-msg-content");
@@ -369,20 +429,22 @@ document.getElementById("copy-btn").addEventListener("click", async function() {
             button.style.backgroundColor = "";
         }, 1500);
     }
-});
+    }); // End of copyBtn addEventListener
 
-const buttons = document.querySelectorAll('.btn');
-buttons.forEach(button => {
-    button.addEventListener('touchstart', function() {
-        this.style.transform = 'scale(0.95)';
-    });
+    // Touch feedback for all buttons
+    const buttons = document.querySelectorAll('.btn');
+    buttons.forEach(button => {
+        button.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.95)';
+        });
 
-    button.addEventListener('touchend', function() {
-        this.style.transform = '';
-    });
-});
+        button.addEventListener('touchend', function() {
+            this.style.transform = '';
+        });
+    }); // End of buttons forEach
 
-document.querySelectorAll(".regenerate-btn").forEach(button => {
+    // Regenerate button functionality
+    document.querySelectorAll(".regenerate-btn").forEach(button => {
     let selectedLength = 'medium';
 
     // Length button selection (unchanged)
@@ -464,9 +526,10 @@ document.querySelectorAll(".regenerate-btn").forEach(button => {
             button.innerHTML = 'Regenerate Review';
         });
     });
-});
+    }); // End of regenerate-btn forEach
 
-document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
+    // Tag checkbox functionality
+    document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
     checkbox.addEventListener('change', function() {
         const selectedCount = document.querySelectorAll('.tag-checkbox:checked').length;
         const tagItem = this.closest('.tag-item');
@@ -535,9 +598,10 @@ document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
             this.style.transition = '';
         }, { passive: true });
     }
-});
+    }); // End of tag-checkbox forEach
 
-document.querySelectorAll('.form-check-label').forEach(label => {
+    // Form label hover effects
+    document.querySelectorAll('.form-check-label').forEach(label => {
     label.addEventListener('mouseenter', function() {
         this.style.transform = 'translateY(-2px)';
     });
@@ -545,10 +609,9 @@ document.querySelectorAll('.form-check-label').forEach(label => {
     label.addEventListener('mouseleave', function() {
         this.style.transform = '';
     });
-});
+    }); // End of form-check-label forEach
 
-// Initialize selected tags on page load
-document.addEventListener('DOMContentLoaded', function() {
+    // Initialize selected tags count
     const initialSelectedCount = document.querySelectorAll('.tag-checkbox:checked').length;
     if (initialSelectedCount > 0) {
         document.querySelectorAll('.tag-checkbox:checked').forEach(checkbox => {
@@ -685,4 +748,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, { passive: true });
     }
-});
+} // End of initializeExistingFunctionality

@@ -7,16 +7,35 @@ class VoiceReviewRecorder {
         this.audioUrl = null;
         this.startTime = null;
         this.timerInterval = null;
-        this.selectedLanguage = 'auto';
+        this.selectedLanguage = null; // null for auto-detect
         
         this.init();
     }
     
     init() {
+        // Check if page is served over HTTPS (required for mobile browsers)
+        const isSecureContext = window.isSecureContext || location.protocol === 'https:';
+        const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        
         // Check browser support
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            this.showError('Your browser does not support audio recording. Please use Chrome, Firefox, or Safari.');
+            if (!isSecureContext && !isLocalhost) {
+                this.showError('⚠️ Voice recording requires HTTPS on mobile devices. Please access via: https://' + location.host + ' or use desktop browser.');
+            } else {
+                this.showError('Your browser does not support audio recording. Please use Chrome, Firefox, or Safari.');
+            }
+            document.getElementById('recordButton').disabled = true;
             return;
+        }
+        
+        // Additional check for secure context on mobile
+        if (!isSecureContext && !isLocalhost) {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                this.showError('⚠️ Mobile browsers require HTTPS for voice recording. Please access via: https://' + location.host);
+                document.getElementById('recordButton').disabled = true;
+                return;
+            }
         }
         
         // Initialize event listeners
@@ -32,12 +51,6 @@ class VoiceReviewRecorder {
         if (recordBtn) {
             recordBtn.addEventListener('click', () => this.toggleRecording());
         }
-        
-        // Language buttons
-        const languageBtns = document.querySelectorAll('.language-btn');
-        languageBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => this.selectLanguage(e.target.dataset.lang));
-        });
     }
     
     async checkServiceHealth() {
@@ -52,16 +65,6 @@ class VoiceReviewRecorder {
         } catch (error) {
             console.error('Health check failed:', error);
         }
-    }
-    
-    selectLanguage(lang) {
-        this.selectedLanguage = lang;
-        
-        // Update UI
-        document.querySelectorAll('.language-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.querySelector(`[data-lang="${lang}"]`).classList.add('active');
     }
     
     async toggleRecording() {
@@ -156,7 +159,7 @@ class VoiceReviewRecorder {
             // Prepare form data
             const formData = new FormData();
             formData.append('audio', this.audioBlob, 'recording.webm');
-            formData.append('language', this.selectedLanguage);
+            // Don't send language parameter for auto-detection (backend will handle it)
             
             // Send to server
             const response = await fetch(`/user/generate-review-from-voice/${this.clientName}`, {
@@ -184,10 +187,13 @@ class VoiceReviewRecorder {
         // Show transcription
         this.showTranscription(result);
         
-        // Update review textarea (using the correct ID from view.html)
+        // Update review textarea with generated review (NOT placeholder)
         const reviewTextarea = document.getElementById('review-msg-content');
         if (reviewTextarea) {
             reviewTextarea.value = result.review;
+            // Reset placeholder styling
+            reviewTextarea.style.fontStyle = 'normal';
+            reviewTextarea.style.opacity = '1';
         }
         
         // Show success message
@@ -327,10 +333,12 @@ class VoiceReviewRecorder {
             `;
             container.style.display = 'block';
             
-            // Hide after 5 seconds
-            setTimeout(() => {
-                container.style.display = 'none';
-            }, 5000);
+            // Don't auto-hide for HTTPS errors - keep visible
+            if (!message.includes('HTTPS') && !message.includes('https://')) {
+                setTimeout(() => {
+                    container.style.display = 'none';
+                }, 10000);
+            }
         } else {
             alert(message);
         }

@@ -24,9 +24,12 @@
                 <h2 class="client-name" th:text="${client.name}"></h2>
                 
                 <div class="mode-controls-wrapper">
-                    <div class="current-mode-indicator">
+                    <div class="current-mode-indicator" id="mode-indicator">
                         <span id="mode-status-icon">🟢</span>
                         <span id="mode-status-text">Current Mode: Tag</span>
+                        <span id="mode-description" style="display: block; font-size: 0.85rem; opacity: 0.8; margin-top: 4px;">
+                            Select tags to customize your review
+                        </span>
                     </div>
                     
                     <button id="mode-toggle-btn" class="mode-toggle-btn">
@@ -68,23 +71,8 @@
                     Voice Review (NEW!)
                 </h3>
                 
-                <p>Speak your review naturally in Hindi, Gujarati, or English. We'll convert it to a perfect Google Review!</p>
-                
-                <!-- Language Selection -->
-                <div class="language-selection">
-                    <button class="language-btn active" data-lang="auto">
-                        <i class="fas fa-globe"></i> Auto-Detect
-                    </button>
-                    <button class="language-btn" data-lang="hi">
-                        <i class="fas fa-language"></i> Hindi
-                    </button>
-                    <button class="language-btn" data-lang="gu">
-                        <i class="fas fa-language"></i> Gujarati
-                    </button>
-                    <button class="language-btn" data-lang="en">
-                        <i class="fas fa-language"></i> English
-                    </button>
-                </div>
+                <p>🎤 Speak your review naturally in <strong>Hindi, Gujarati, or English</strong>.</p>
+                <p>✨ We'll automatically detect your language and convert it to a perfect English Google Review!</p>
                 
                 <!-- Recording Controls -->
                 <div class="voice-controls">
@@ -127,7 +115,7 @@
             </div>
 
             <div th:if="${review != null}">
-                <div class="btn-container mt-2">
+                <div class="btn-container mt-2" id="regenerateControls">
                     <div class="review-length-controls">
                         <div class="btn-group" role="group" aria-label="Review length options">
                             <button type="button" class="btn btn-outline-secondary length-btn" data-length="short">Short</button>

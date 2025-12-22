@@ -1365,10 +1365,11 @@ public class UserController implements ErrorController {
     public ResponseEntity<VoiceReviewResponse> generateReviewFromVoice(
             @PathVariable String clientName,
             @RequestParam("audio") MultipartFile audioFile,
-            @RequestParam(value = "language", required = false, defaultValue = "auto") String language) {
+            @RequestParam(value = "language", required = false) String language) {
         
         try {
-            log.info("Received voice review request for client: {}", clientName);
+            log.info("Received voice review request for client: {} with language: {}", 
+                clientName, language != null ? language : "auto-detect");
             
             // Check if voice feature is enabled
             if (!isVoiceFeatureEnabled()) {
