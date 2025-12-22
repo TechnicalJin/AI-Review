@@ -2037,7 +2037,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 Add this section to your `src/main/resources/templates/user/view.html`:
 
-Find the location where you want to add the voice input (probably after the existing text input section) and add:
+In Mode Selection Overlay add 3rd Mode card named "Voice-based Review" and add:
 
 ```html
 <!-- Voice Review Section -->

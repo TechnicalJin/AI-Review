@@ -5,7 +5,8 @@
 const MODE_STORAGE_KEY = 'reviewGenerationMode';
 const MODES = {
     AUTO: 'auto',
-    TAG: 'tag'
+    TAG: 'tag',
+    VOICE: 'voice'
 };
 
 // Initialize mode on page load
@@ -141,6 +142,7 @@ function selectMode(mode) {
 // Apply mode to UI (without transitions)
 function applyMode(mode) {
     const tagWrapper = document.getElementById('tag-selection-wrapper');
+    const voiceContainer = document.getElementById('voiceInputContainer');
     const modeIcon = document.getElementById('mode-status-icon');
     const modeText = document.getElementById('mode-status-text');
     const toggleBtn = document.getElementById('mode-toggle-btn');
@@ -156,6 +158,9 @@ function applyMode(mode) {
         tagWrapper.classList.add('hidden');
         tagWrapper.style.maxHeight = '0';
         tagWrapper.style.opacity = '0';
+        if (voiceContainer) {
+            voiceContainer.style.display = 'none';
+        }
         
         if (tagWarning) {
             tagWarning.classList.add('d-none');
@@ -164,16 +169,36 @@ function applyMode(mode) {
         modeIcon.textContent = '🟣';
         modeText.textContent = 'Current Mode: Auto';
         toggleBtn.innerHTML = '<i class="fas fa-tags"></i> Switch to Tag Mode';
+    } else if (mode === MODES.VOICE) {
+        // Voice Mode
+        tagWrapper.classList.add('hidden');
+        tagWrapper.style.maxHeight = '0';
+        tagWrapper.style.opacity = '0';
+        if (voiceContainer) {
+            voiceContainer.style.display = 'block';
+        }
+        
+        if (tagWarning) {
+            tagWarning.classList.add('d-none');
+        }
+        
+        modeIcon.textContent = '🎤';
+        modeText.textContent = 'Current Mode: Voice';
+        toggleBtn.innerHTML = '<i class="fas fa-magic"></i> Switch to Auto Mode';
     } else {
         // Tag Mode
         tagWrapper.classList.remove('hidden');
         tagWrapper.style.maxHeight = 'none';
         tagWrapper.style.opacity = '1';
+        if (voiceContainer) {
+            voiceContainer.style.display = 'none';
+        }
         
         modeIcon.textContent = '🟢';
         modeText.textContent = 'Current Mode: Tag';
         toggleBtn.innerHTML = '<i class="fas fa-magic"></i> Switch to Auto Mode';
     }
+}
 }
 
 // Apply mode with smooth transitions

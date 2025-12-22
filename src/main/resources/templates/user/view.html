@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/view1.css}">
     <link rel="stylesheet" th:href="@{/css/enhanced-tags.css}">
+    <link rel="stylesheet" th:href="@{/css/voice-review.css}">
 </head>
 <body>
 <div class="container">
@@ -57,6 +58,71 @@
                     <div class="alert alert-warning mt-2 d-none" id="tag-warning">
                         <span>Please select at least 3 tags to regenerate the review.</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- Voice Review Section - Hidden by default -->
+            <div class="voice-input-container" id="voiceInputContainer" style="display: none;">
+                <h3>
+                    <i class="fas fa-microphone"></i>
+                    Voice Review (NEW!)
+                </h3>
+                
+                <p>Speak your review naturally in Hindi, Gujarati, or English. We'll convert it to a perfect Google Review!</p>
+                
+                <!-- Language Selection -->
+                <div class="language-selection">
+                    <button class="language-btn active" data-lang="auto">
+                        <i class="fas fa-globe"></i> Auto-Detect
+                    </button>
+                    <button class="language-btn" data-lang="hi">
+                        <i class="fas fa-language"></i> Hindi
+                    </button>
+                    <button class="language-btn" data-lang="gu">
+                        <i class="fas fa-language"></i> Gujarati
+                    </button>
+                    <button class="language-btn" data-lang="en">
+                        <i class="fas fa-language"></i> English
+                    </button>
+                </div>
+                
+                <!-- Recording Controls -->
+                <div class="voice-controls">
+                    <button id="recordButton" class="record-button" aria-label="Start Recording">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    
+                    <div id="voiceTimer" class="voice-timer">0:00</div>
+                    
+                    <div id="voiceStatus" class="voice-status">
+                        Tap to start recording
+                    </div>
+                </div>
+                
+                <!-- Audio Preview -->
+                <div id="audioPreview" class="audio-preview" style="display: none;">
+                    <!-- Audio player will be inserted here -->
+                </div>
+                
+                <!-- Transcription Display -->
+                <div id="transcriptionDisplay" class="transcription-display" style="display: none;">
+                    <!-- Transcription will be shown here -->
+                </div>
+                
+                <!-- Error Display -->
+                <div id="voiceError" class="voice-error" style="display: none;">
+                    <!-- Errors will be shown here -->
+                </div>
+                
+                <!-- Tips -->
+                <div class="voice-tips">
+                    <h4><i class="fas fa-lightbulb"></i> Tips for best results:</h4>
+                    <ul>
+                        <li>🔇 Find a quiet place</li>
+                        <li>🗣️ Speak clearly and naturally</li>
+                        <li>⏱️ Keep it under 60 seconds</li>
+                        <li>💬 Describe your experience, feelings, and recommendation</li>
+                    </ul>
                 </div>
             </div>
 
@@ -130,12 +196,25 @@
                 <span class="mode-title">Tag-based Review</span>
                 <span class="mode-description">Select tags manually for customized review</span>
             </button>
+            <button class="mode-option-btn" data-mode="voice">
+                <i class="fas fa-microphone"></i>
+                <span class="mode-title">Voice-based Review</span>
+                <span class="mode-description">Record your review by speaking naturally</span>
+            </button>
         </div>
+    </div>
+</div>
+
+<!-- Hidden data attribute for client name -->
+<div th:if="${clients != null and clients.size() > 0}">
+    <div th:each="client : ${clients}" style="display: none;">
+        <div th:attr="data-client-name=${client.name}" id="clientNameData"></div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/view.js}"></script>
+<script th:src="@{/js/voiceReview.js}"></script>
 
 </body>
 </html>

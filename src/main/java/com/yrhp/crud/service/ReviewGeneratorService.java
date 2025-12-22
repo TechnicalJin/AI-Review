@@ -4,10 +4,13 @@ import com.yrhp.crud.model.Client;
 import com.yrhp.crud.model.ReviewGenerationLog;
 import com.yrhp.crud.repository.ClientRepository;
 import com.yrhp.crud.repository.ReviewGenerationLogRepository;
+import com.yrhp.crud.dto.VoiceReviewResponse;
+import com.yrhp.crud.dto.WhisperTranscriptionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,6 +30,12 @@ public class ReviewGeneratorService {
 
     @Autowired
     private ReviewGenerationLogRepository logRepository;
+
+    @Autowired
+    private WhisperClientService whisperClientService;
+
+    @Autowired
+    private TextNormalizationService textNormalizationService;
 
     /*
     private static final String[] DESCRIPTIVE_KEYWORDS = {
@@ -416,5 +425,86 @@ public class ReviewGeneratorService {
         logger.error("Error getting all available tags for client {}: {}", clientId, e.getMessage(), e);
         throw new RuntimeException("Failed to get all available tags", e);
     }
+    }
+
+    /**
+     * Generate review from voice recording
+     */
+    public VoiceReviewResponse generateReviewFromVoice(
+            String clientName,
+            MultipartFile audioFile,
+            String language) {
+        
+        try {
+            logger.info("Generating review from voice for client: {}", clientName);
+            
+            // Find client by name
+            List<Client> clients = clientRepository.findByName(clientName);
+            if (clients.isEmpty()) {
+                return new VoiceReviewResponse("Client not found: " + clientName);
+            }
+            
+            Client client = clients.get(0);
+            
+            // Step 1: Transcribe audio
+            WhisperTranscriptionResponse transcription = 
+                whisperClientService.transcribe(audioFile, language);
+            
+            if (!transcription.isSuccess()) {
+                return new VoiceReviewResponse("Transcription failed: " + transcription.getError());
+            }
+            
+            String rawText = transcription.getText();
+            logger.info("Raw transcription: {}", rawText);
+            
+            // Step 2: Normalize text
+            String normalizedText = textNormalizationService.normalizeText(rawText);
+            logger.info("Normalized text: {}", normalizedText);
+            
+            // Step 3: Validate text
+            if (!textNormalizationService.isValidForReview(normalizedText)) {
+                return new VoiceReviewResponse(
+                    "Audio is too short or unclear. Please speak more clearly."
+                );
+            }
+            
+            // Step 4: Generate review using existing logic with client ID
+            // Using the first 5 tags automatically as per Auto mode
+            String chatText = client.getChatText() != null ? client.getChatText() : "";
+            List<String> allTags = Arrays.stream(chatText.split(","))
+                .map(String::trim)
+                .filter(tag -> !tag.isEmpty())
+                .limit(5)  // Take first 5 tags for auto mode
+                .collect(Collectors.toList());
+            
+            if (allTags.isEmpty()) {
+                return new VoiceReviewResponse("No tags available for client: " + clientName);
+            }
+            
+            // Generate review with normalized text as context
+            String review = generateReviewWithTags(
+                client.getId(), 
+                allTags, 
+                "medium",  // Default to medium length
+                false      // Not a regeneration
+            );
+            
+            if (review != null && !review.isEmpty()) {
+                // Step 5: Create response
+                return new VoiceReviewResponse(
+                    review,
+                    normalizedText,
+                    transcription.getLanguage(),
+                    transcription.getLanguageProbability(),
+                    transcription.getDuration()
+                );
+            } else {
+                return new VoiceReviewResponse("Failed to generate review");
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error generating review from voice", e);
+            return new VoiceReviewResponse("An error occurred: " + e.getMessage());
+        }
     }
 }

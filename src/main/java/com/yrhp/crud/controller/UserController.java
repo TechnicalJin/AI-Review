@@ -674,7 +674,9 @@ import com.yrhp.crud.repository.ClientRepository;
 import com.yrhp.crud.repository.ReviewGenerationLogRepository;
 import com.yrhp.crud.repository.UserRepository;
 import com.yrhp.crud.service.ReviewGeneratorService;
+import com.yrhp.crud.service.WhisperClientService;
 import com.yrhp.crud.dto.RegenerateReviewRequest;
+import com.yrhp.crud.dto.VoiceReviewResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -683,6 +685,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -731,6 +734,12 @@ public class UserController implements ErrorController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private Environment environment;
+
+    @Autowired
+    private WhisperClientService whisperClientService;
 
     @Value("${spring.servlet.multipart.location}")
     private String uploadDir;
@@ -1346,5 +1355,71 @@ public class UserController implements ErrorController {
     @GetMapping("/download-csv/{id}")
     public ResponseEntity<org.springframework.core.io.Resource> downloadClientLogsGet(@PathVariable("id") Long clientId, HttpServletRequest request) {
         return downloadClientLogs(clientId, request);
+    }
+
+    /**
+     * Generate review from voice recording
+     */
+    @PostMapping("/generate-review-from-voice/{clientName}")
+    @ResponseBody
+    public ResponseEntity<VoiceReviewResponse> generateReviewFromVoice(
+            @PathVariable String clientName,
+            @RequestParam("audio") MultipartFile audioFile,
+            @RequestParam(value = "language", required = false, defaultValue = "auto") String language) {
+        
+        try {
+            log.info("Received voice review request for client: {}", clientName);
+            
+            // Check if voice feature is enabled
+            if (!isVoiceFeatureEnabled()) {
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(new VoiceReviewResponse("Voice feature is currently disabled"));
+            }
+            
+            // Generate review
+            VoiceReviewResponse response = reviewGeneratorService.generateReviewFromVoice(
+                clientName, 
+                audioFile, 
+                language
+            );
+            
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            log.error("Error processing voice review", e);
+            return ResponseEntity.internalServerError()
+                .body(new VoiceReviewResponse("Server error: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Check if voice feature is enabled
+     */
+    private boolean isVoiceFeatureEnabled() {
+        // Check from application.properties
+        return environment.getProperty("feature.voice.enabled", Boolean.class, false) &&
+               whisperClientService.isServiceHealthy();
+    }
+
+    /**
+     * Health check for voice feature
+     */
+    @GetMapping("/voice-health")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> checkVoiceHealth() {
+        Map<String, Object> health = new HashMap<>();
+        
+        boolean featureEnabled = environment.getProperty("feature.voice.enabled", Boolean.class, false);
+        boolean serviceHealthy = whisperClientService.isServiceHealthy();
+        
+        health.put("featureEnabled", featureEnabled);
+        health.put("serviceHealthy", serviceHealthy);
+        health.put("status", (featureEnabled && serviceHealthy) ? "available" : "unavailable");
+        
+        return ResponseEntity.ok(health);
     }
 }
