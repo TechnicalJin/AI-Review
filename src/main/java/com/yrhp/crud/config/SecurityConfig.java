@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,7 +19,10 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.lang.NonNull;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
@@ -54,10 +58,16 @@ public class SecurityConfig {
         logger.info("Configuring security filter chain");
 
         http
+            .cors(Customizer.withDefaults())
                 .authenticationProvider(getDaoAuthProvider())
                 .authorizeHttpRequests(auth -> {
                     logger.debug("Configuring authorization rules");
                     auth
+                    // Public API endpoints
+                    .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
+                    // Role-based API access
+                    .requestMatchers("/api/admin/**").hasRole("USER")
+                    .requestMatchers("/api/client/**").hasRole("CLIENT")
                             // Public resources
                             .requestMatchers("/", "/createUser", "/signin",
                                     "/css/**", "/js/**", "/images/**", "/error/**", 
@@ -112,7 +122,14 @@ public class SecurityConfig {
                             .accessDeniedPage("/error/403")
                             .authenticationEntryPoint((request, response, authException) -> {
                                 logger.error("Unauthorized access attempt: {}", authException.getMessage());
-                                
+
+                                if (request.getRequestURI().startsWith("/api/")) {
+                                    response.setContentType("application/json");
+                                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                    response.getWriter().write("{\"error\": \"" + authException.getMessage() + "\"}");
+                                    return;
+                                }
+
                                 // Use relative redirect to maintain protocol
                                 response.sendRedirect("/signin?error=unauthorized");
                             });
@@ -129,6 +146,10 @@ public class SecurityConfig {
                     logger.debug("Disabling CSRF protection");
                     csrf.disable();
                     logger.warn("CSRF protection is disabled");
+                })
+                .sessionManagement(session -> {
+                    logger.debug("Disabling session fixation protection");
+                    session.sessionFixation(sessionFixation -> sessionFixation.none());
                 });
 
         logger.info("Security filter chain configuration completed");
