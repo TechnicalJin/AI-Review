@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-signin-client_id" th:content="${googleClientId}">
+    <title>| Google Auto Reply |</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/clientHome.css}">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+
+        .section-card { background: white; border-radius: 16px; box-shadow: 0 4px 24px -4px rgba(0,0,0,0.08); border: 1px solid rgba(226,232,240,0.8); overflow: hidden; margin-bottom: 1.5rem; }
+        .section-header { padding: 1.1rem 1.5rem; border-bottom: 1px solid rgba(226,232,240,0.6); display: flex; align-items: center; gap: 0.75rem; background: #fafbfc; }
+        .section-body { padding: 1.5rem; }
+
+        .google-btn { background: white; border: 1.5px solid #dadce0; color: #3c4043; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-decoration: none; }
+        .google-btn:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.18); transform: translateY(-1px); background: #f8f9fa; }
+
+        .status-connected    { background: #dcfce7; color: #15803d; border: 1px solid #86efac; padding: 0.375rem 0.875rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.375rem; }
+        .status-disconnected { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; padding: 0.375rem 0.875rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.375rem; }
+
+        .alert-success { background: #f0fdf4; border: 1px solid #86efac; color: #15803d; padding: 1rem 1.25rem; border-radius: 10px; border-left: 4px solid #22c55e; display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+        .alert-error   { background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; padding: 1rem 1.25rem; border-radius: 10px; border-left: 4px solid #ef4444; display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+
+        .info-row { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.875rem 1rem; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; }
+        .info-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+        .badge { padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem; }
+        .badge-replied { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .badge-failed  { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .badge-skipped { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+        .stat-card-mini { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 1rem; display: flex; align-items: center; gap: 0.75rem; }
+
+        .truncate-cell { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+        .truncate-cell:hover { white-space: normal; overflow: visible; max-width: none; z-index: 10; position: relative; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.12); padding: 0.5rem; border-radius: 6px; }
+
+        .auto-reply-status-on  { background: #dcfce7; color: #15803d; border: 1px solid #86efac; padding: 0.375rem 1rem; border-radius: 20px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .auto-reply-status-off { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; padding: 0.375rem 1rem; border-radius: 20px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem; }
+
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .data-table thead tr { background: linear-gradient(135deg, #1e293b, #334155); }
+        .data-table thead th { color: white; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.875rem 1.1rem; }
+        .data-table tbody tr { border-bottom: 1px solid rgba(226,232,240,0.6); transition: background 0.15s; }
+        .data-table tbody tr:hover { background: #f8fafc; }
+        .data-table tbody td { padding: 0.8rem 1.1rem; font-size: 0.85rem; color: #475569; vertical-align: middle; }
+
+        .reviewer-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: inline-flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.75rem; flex-shrink: 0; }
+
+        .stars     { color: #f59e0b; font-size: 0.85rem; }
+        .stars-low { color: #ef4444; font-size: 0.85rem; }
+        .info-symbol { font-size: 14px; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+<div class="flex h-screen">
+
+    <!-- ── Sidebar (same as clientHome.html) ── -->
+    <aside id="sidebar" class="sidebar bg-gray-900 text-white w-64 flex-shrink-0 hidden md:block">
+        <div class="p-5 border-b border-gray-800">
+            <div class="flex items-center space-x-3">
+                <img th:src="@{${client.logo != null ? '/uploads/' + client.logo : '/images/default-logo.svg'}}"
+                     class="w-10 h-10 rounded-full" alt="Company Logo"/>
+                <div>
+                    <h1 class="text-xl font-bold" th:text="${client.name}">Company</h1>
+                    <p class="text-gray-400 text-sm">Client Portal</p>
+                </div>
+            </div>
+        </div>
+        <nav class="p-4">
+            <ul>
+                <li class="mb-2">
+                    <a th:href="@{/client/home}" class="flex items-center p-3 text-gray-400 hover:bg-gray-800 rounded-lg hover:text-white transition-colors">
+                        <i class="fas fa-chart-pie mr-3"></i><span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <a th:href="@{/client/history}" class="flex items-center p-3 text-gray-400 hover:bg-gray-800 rounded-lg hover:text-white transition-colors">
+                        <i class="fas fa-history mr-3"></i><span>Log History</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <a th:href="@{/client/chatText}" class="flex items-center p-3 text-gray-400 hover:bg-gray-800 rounded-lg hover:text-white transition-colors">
+                        <i class="fas fa-comment-alt mr-3"></i><span>Chat Tag</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <!-- ★ Active link for this page ★ -->
+                    <a th:href="@{/client/google/connect}" class="flex items-center p-3 bg-gray-700 rounded-lg text-white">
+                        <i class="fab fa-google mr-3 text-blue-400"></i><span>Google Reviews</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <a th:href="${client.generateLink}" target="_blank" class="flex items-center p-3 text-gray-400 hover:bg-gray-800 rounded-lg hover:text-white transition-colors">
+                        <i class="fas fa-eye mr-3"></i><span>View Page</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <a href="/logout" class="flex items-center p-3 text-gray-400 hover:bg-red-600 rounded-lg hover:text-white transition-colors">
+                        <i class="fas fa-sign-out-alt mr-3"></i><span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- ── Main Content ── -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center p-4">
+                <div class="flex items-center gap-3">
+                    <button id="mobileMenuButton" class="md:hidden text-gray-500 mr-3">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-xl font-bold flex items-center gap-2">
+                            <!-- Google G icon -->
+                            <svg width="22" height="22" viewBox="0 0 24 24">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                            </svg>
+                            Google Auto Reply
+                        </h2>
+                        <p class="text-gray-500 text-sm">Connect your Google Business Profile</p>
+                    </div>
+                </div>
+                <!-- Connection status in header -->
+                <div>
+                    <span th:if="${client.googleAccessToken != null}" class="status-connected">
+                        <i class="fas fa-circle text-xs animate-pulse"></i> Connected
+                    </span>
+                    <span th:unless="${client.googleAccessToken != null}" class="status-disconnected">
+                        <i class="fas fa-circle text-xs"></i> Not Connected
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main scrollable content -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50 dark:bg-gray-900">
+
+            <!-- Flash Messages -->
+            <div th:if="${success}" class="alert-success">
+                <i class="fas fa-check-circle text-xl"></i>
+                <span th:text="${success}"></span>
+            </div>
+            <div th:if="${error}" class="alert-error">
+                <i class="fas fa-exclamation-circle text-xl"></i>
+                <span th:text="${error}"></span>
+            </div>
+
+            <!-- ════════════════════════════════════════ -->
+            <!--  CONNECT SECTION                         -->
+            <!-- ════════════════════════════════════════ -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="fab fa-google text-blue-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-800">Connect Google Business Profile</h3>
+                        <p class="text-xs text-gray-500">One click — we fetch everything automatically</p>
+                    </div>
+                </div>
+                <div class="section-body">
+
+                    <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 mb-6">
+                        <div class="flex items-start justify-between gap-4 flex-wrap">
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Google Sign-In Preview</h4>
+                                <p class="text-sm text-gray-500 mt-1">Sign in here first to confirm the Google account you want to authorize for your Business Profile.</p>
+                            </div>
+                            <a href="#" id="googleSignOutLink" onclick="signOut(); return false;" class="hidden inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
+                                <i class="fas fa-sign-out-alt"></i> Sign out
+                            </a>
+                        </div>
+
+                        <div class="mt-4 flex flex-wrap items-center gap-4">
+                            <div class="g-signin2" data-onsuccess="onSignIn"></div>
+                            <div id="googleProfileCard" class="hidden flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3">
+                                <img id="googleProfileImage" src="" alt="Google profile" class="w-12 h-12 rounded-full object-cover border border-gray-200 hidden">
+                                <div>
+                                    <div id="googleProfileName" class="font-semibold text-gray-800">Not signed in</div>
+                                    <div id="googleProfileEmail" class="text-sm text-gray-500"></div>
+                                    <div id="googleProfileId" class="text-xs text-gray-400 mt-1"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-gray-400 mt-3">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            This sign-in only reads your basic Google profile. The Business Profile connect button below still performs the review-management OAuth authorization.
+                        </p>
+                    </div>
+
+                    <!-- ── Already Connected ── -->
+                    <div th:if="${client.googleAccessToken != null}">
+                        <div class="flex items-center gap-4 flex-wrap mb-5">
+                            <div class="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                                <div class="w-9 h-9 bg-green-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-check text-green-600"></i>
+                                </div>
+                                <div>
+                            <script th:src="@{/js/google-platform-signin.js}"></script>
+                                    <div class="font-semibold text-green-800 text-sm">Google Account Connected</div>
+                                    <div class="text-green-600 text-xs">Tokens are encrypted and stored securely</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Auto-fetched business info -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5"
+                             th:if="${client.googleBusinessName != null or client.googleAccountId != null}">
+
+                            <div class="info-row" th:if="${client.googleBusinessName != null}">
+                                <div class="info-icon bg-blue-100">
+                                    <i class="fas fa-building text-blue-600 info-symbol"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 font-medium">Business Name</div>
+                                    <div class="font-semibold text-gray-800 text-sm"
+                                         th:text="${client.googleBusinessName}">—</div>
+                                </div>
+                            </div>
+
+                            <div class="info-row" th:if="${client.googleBusinessAddress != null}">
+                                <div class="info-icon bg-green-100">
+                                    <i class="fas fa-map-marker-alt text-green-600 info-symbol"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 font-medium">Business Address</div>
+                                    <div class="font-semibold text-gray-800 text-sm"
+                                         th:text="${client.googleBusinessAddress}">—</div>
+                                </div>
+                            </div>
+
+                            <div class="info-row" th:if="${client.googleAccountId != null}">
+                                <div class="info-icon bg-indigo-100">
+                                    <i class="fas fa-id-badge text-indigo-600 info-symbol"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 font-medium">Account ID (Auto-fetched)</div>
+                                    <div class="font-mono text-gray-700 text-xs mt-0.5"
+                                         th:text="${client.googleAccountId}">—</div>
+                                </div>
+                            </div>
+
+                            <div class="info-row" th:if="${client.googleLocationId != null}">
+                                <div class="info-icon bg-purple-100">
+                                    <i class="fas fa-location-arrow text-purple-600 info-symbol"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 font-medium">Location ID (Auto-fetched)</div>
+                                    <div class="font-mono text-gray-700 text-xs mt-0.5"
+                                         th:text="${client.googleLocationId}">—</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Auto Reply Status -->
+                        <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 mb-4">
+                            <div>
+                                <div class="text-sm font-semibold text-gray-700 mb-1">Auto Reply Status</div>
+                                <span th:if="${client.autoReplyEnabled}" class="auto-reply-status-on">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse inline-block"></span>
+                                    Active — Replies being sent automatically
+                                </span>
+                                <span th:unless="${client.autoReplyEnabled}" class="auto-reply-status-off">
+                                    <span class="w-2 h-2 bg-red-400 rounded-full inline-block"></span>
+                                    Inactive — Contact admin to enable
+                                </span>
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-gray-400">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Auto reply is controlled by your account manager.
+                            To re-connect or update your Google account, click below.
+                        </p>
+                        <div class="mt-3">
+                            <a th:href="${connectUrl}" class="google-btn">
+                                <svg width="20" height="20" viewBox="0 0 24 24">
+                                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                                </svg>
+                                Reconnect Google Account
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- ── Not Connected ── -->
+                    <div th:unless="${client.googleAccessToken != null}">
+                        <p class="text-gray-600 text-sm mb-5 max-w-lg">
+                            Connect your Google Business Profile account. We will automatically fetch your
+                            business details — you don't need to copy any IDs or configuration.
+                        </p>
+
+                        <!-- What happens steps -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+                            <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 text-center">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                    <span class="text-blue-700 font-bold text-sm">1</span>
+                                </div>
+                                <div class="text-xs font-semibold text-blue-800">Click Connect</div>
+                                <div class="text-xs text-blue-600 mt-1">Sign in with your Google account</div>
+                            </div>
+                            <div class="bg-green-50 border border-green-100 rounded-xl p-3 text-center">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                    <span class="text-green-700 font-bold text-sm">2</span>
+                                </div>
+                                <div class="text-xs font-semibold text-green-800">We fetch everything</div>
+                                <div class="text-xs text-green-600 mt-1">Business name, address, IDs — automatic</div>
+                            </div>
+                            <div class="bg-purple-50 border border-purple-100 rounded-xl p-3 text-center">
+                                <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                    <span class="text-purple-700 font-bold text-sm">3</span>
+                                </div>
+                                <div class="text-xs font-semibold text-purple-800">Admin enables</div>
+                                <div class="text-xs text-purple-600 mt-1">Your manager activates auto reply</div>
+                            </div>
+                        </div>
+
+                        <a th:href="${connectUrl}" class="google-btn">
+                            <svg width="22" height="22" viewBox="0 0 24 24">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                            </svg>
+                            Connect Google Business Profile
+                        </a>
+
+                        <p class="text-xs text-gray-400 mt-3">
+                            <i class="fas fa-lock mr-1"></i>
+                            Only "manage reviews" permission is requested. Your password is never shared with us.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ════════════════════════════════════════ -->
+            <!--  REPLY LOGS SECTION                      -->
+            <!-- ════════════════════════════════════════ -->
+            <div class="section-card" th:if="${client.googleAccessToken != null}">
+                <div class="section-header">
+                    <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-list-alt text-indigo-600 info-symbol"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-gray-800">My Google Reply Logs</h3>
+                        <p class="text-xs text-gray-500">Reviews that have been replied to automatically</p>
+                    </div>
+                    <!-- Stats pills -->
+                    <div class="hidden md:flex items-center gap-2">
+                        <span class="badge badge-replied"
+                              th:text="'Replied: ' + ${#lists.size(logs.?[status == 'REPLIED'])}">0</span>
+                        <span class="badge badge-failed"
+                              th:text="'Failed: ' + ${#lists.size(logs.?[status == 'FAILED'])}">0</span>
+                        <span class="badge badge-skipped"
+                              th:text="'Skipped: ' + ${#lists.size(logs.?[status == 'SKIPPED'])}">0</span>
+                    </div>
+                </div>
+                <div class="section-body p-0">
+
+                    <!-- Empty state -->
+                    <div th:if="${logs.empty}" class="text-center py-12 text-gray-400">
+                        <i class="fas fa-inbox text-4xl mb-3 block text-gray-300"></i>
+                        <div class="font-semibold text-gray-500 mb-1">No reply logs yet</div>
+                        <div class="text-sm">Logs will appear here once auto reply starts running.</div>
+                    </div>
+
+                    <!-- Logs table -->
+                    <div th:unless="${logs.empty}" class="overflow-x-auto">
+                        <table class="data-table">
+                            <thead>
+                            <tr>
+                                <th>Reviewer</th>
+                                <th>Rating</th>
+                                <th>Review</th>
+                                <th>Reply</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="logEntry : ${logs}">
+                                <!-- Reviewer -->
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <div class="reviewer-avatar"
+                                             th:text="${logEntry.reviewerName != null ? logEntry.reviewerName.substring(0,1).toUpperCase() : '?'}">?</div>
+                                        <span class="text-sm font-medium text-gray-700"
+                                              th:text="${logEntry.reviewerName != null ? logEntry.reviewerName : 'Anonymous'}">—</span>
+                                    </div>
+                                </td>
+                                <!-- Rating -->
+                                <td>
+                                    <span th:if="${logEntry.reviewRating == 'FIVE'}"  class="stars">★★★★★</span>
+                                    <span th:if="${logEntry.reviewRating == 'FOUR'}"  class="stars">★★★★☆</span>
+                                    <span th:if="${logEntry.reviewRating == 'THREE'}" class="stars">★★★☆☆</span>
+                                    <span th:if="${logEntry.reviewRating == 'TWO'}"   class="stars stars-low">★★☆☆☆</span>
+                                    <span th:if="${logEntry.reviewRating == 'ONE'}"   class="stars stars-low">★☆☆☆☆</span>
+                                    <span th:unless="${logEntry.reviewRating != null}" class="text-gray-400 text-xs">—</span>
+                                </td>
+                                <!-- Review text -->
+                                <td>
+                                    <div class="truncate-cell text-gray-600"
+                                         th:if="${logEntry.reviewText != null and !logEntry.reviewText.isEmpty()}"
+                                         th:text="${logEntry.reviewText}"
+                                         th:title="${logEntry.reviewText}"></div>
+                                    <span th:unless="${logEntry.reviewText != null and !logEntry.reviewText.isEmpty()}"
+                                          class="text-gray-400 italic text-xs">No text</span>
+                                </td>
+                                <!-- Reply text -->
+                                <td>
+                                    <div class="truncate-cell text-gray-700"
+                                         th:if="${logEntry.replyText != null and !logEntry.replyText.isEmpty()}"
+                                         th:text="${logEntry.replyText}"></div>
+                                    <span th:if="${logEntry.status == 'SKIPPED'}" class="text-gray-400 italic text-xs">Already replied</span>
+                                    <span th:if="${logEntry.status == 'FAILED'}"  class="text-red-400 italic text-xs">Error occurred</span>
+                                    <span th:unless="${(logEntry.replyText != null and !logEntry.replyText.isEmpty()) or logEntry.status == 'SKIPPED' or logEntry.status == 'FAILED'}"
+                                          class="text-gray-400 italic text-xs">—</span>
+                                </td>
+                                <!-- Status -->
+                                <td>
+                                    <span th:if="${logEntry.status == 'REPLIED'}" class="badge badge-replied"><i class="fas fa-check-circle"></i> Replied</span>
+                                    <span th:if="${logEntry.status == 'FAILED'}"  class="badge badge-failed"><i class="fas fa-times-circle"></i> Failed</span>
+                                    <span th:if="${logEntry.status == 'SKIPPED'}" class="badge badge-skipped"><i class="fas fa-forward"></i> Skipped</span>
+                                </td>
+                                <!-- Date -->
+                                <td>
+                                    <div th:if="${logEntry.repliedAt != null}">
+                                        <div class="font-medium text-gray-700 text-sm"
+                                             th:text="${#temporals.format(logEntry.repliedAt, 'dd MMM yyyy')}"></div>
+                                        <div class="text-gray-400 text-xs"
+                                             th:text="${#temporals.format(logEntry.repliedAt, 'HH:mm')}"></div>
+                                    </div>
+                                    <span th:unless="${logEntry.repliedAt != null}" class="text-gray-400 text-xs">—</span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-400">
+                            <i class="fas fa-info-circle mr-1 text-indigo-400"></i>
+                            Total <strong th:text="${logs.size()}" class="text-gray-600">0</strong> entries.
+                            Hover review/reply text to read full content.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuBtn = document.getElementById('mobileMenuButton');
+        const sidebar = document.getElementById('sidebar');
+        if (menuBtn && sidebar) {
+            menuBtn.addEventListener('click', () => sidebar.classList.toggle('hidden'));
+        }
+    });
+</script>
+</body>
+</html>

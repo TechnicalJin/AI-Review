@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>| Google Reply Logs |</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<script>
+		tailwind.config = {
+			theme: {
+				extend: {
+					colors: {
+						primary: '#6366f1',
+						secondary: '#8b5cf6',
+						accent: '#06b6d4',
+						success: '#10b981',
+						warning: '#f59e0b',
+						danger: '#ef4444',
+						dark: '#0f172a'
+					},
+					animation: {
+						'fade-in': 'fadeIn 0.8s ease-in-out',
+						'shimmer': 'shimmer 2s infinite'
+					}
+				}
+			}
+		}
+	</script>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+		* {
+			font-family: 'Inter', sans-serif;
+		}
+
+		@keyframes fadeIn {
+			from { opacity: 0; transform: translateY(20px); }
+			to { opacity: 1; transform: translateY(0); }
+		}
+
+		@keyframes shimmer {
+			0% { transform: translateX(-100%); }
+			100% { transform: translateX(100%); }
+		}
+
+		.sidebar-active {
+			overflow: hidden;
+		}
+
+		#sidebar {
+			transform: translateX(-100%);
+			transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+		}
+
+		#sidebar.active {
+			transform: translateX(0);
+		}
+
+		@media (min-width: 768px) {
+			#sidebar {
+				transform: translateX(0);
+			}
+
+			#content.active {
+				margin-left: 0;
+			}
+		}
+
+		.glass-effect {
+			backdrop-filter: blur(20px) saturate(180%);
+			background: rgba(255, 255, 255, 0.95);
+			border: 1px solid rgba(255, 255, 255, 0.3);
+		}
+
+		.modern-table {
+			background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+			border-radius: 1rem;
+			overflow: hidden;
+			box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+			border: 1px solid rgba(226, 232, 240, 0.8);
+		}
+
+		.table-header {
+			background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+			position: relative;
+			overflow: hidden;
+		}
+
+		.table-header::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: -100%;
+			width: 100%;
+			height: 100%;
+			background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+			animation: shimmer 3s infinite;
+		}
+
+		.table-header th {
+			position: relative;
+			color: white;
+			font-weight: 700;
+			letter-spacing: 0.025em;
+			text-transform: uppercase;
+			font-size: 0.75rem;
+			padding: 1rem 1.15rem;
+			border-right: 1px solid rgba(255, 255, 255, 0.1);
+		}
+
+		.table-header th:last-child {
+			border-right: none;
+		}
+
+		.table-row {
+			transition: all 0.25s ease;
+			border-bottom: 1px solid #e2e8f0;
+		}
+
+		.table-row:hover {
+			background: #f8fafc;
+			transform: scale(1.003);
+			box-shadow: 0 6px 20px -8px rgba(15, 23, 42, 0.2);
+		}
+
+		.table-cell {
+			padding: 1rem 1.15rem;
+			vertical-align: middle;
+			font-size: 0.875rem;
+			color: #475569;
+		}
+
+		.reviewer-avatar {
+			width: 2rem;
+			height: 2rem;
+			border-radius: 999px;
+			background: linear-gradient(135deg, #6366f1, #8b5cf6);
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			color: white;
+			font-size: 0.75rem;
+			font-weight: 700;
+			flex-shrink: 0;
+			box-shadow: 0 4px 12px -4px rgba(79, 70, 229, 0.6);
+		}
+
+		.status-badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.35rem;
+			padding: 0.3rem 0.7rem;
+			border-radius: 999px;
+			font-size: 0.72rem;
+			font-weight: 700;
+			letter-spacing: 0.02em;
+		}
+
+		.status-replied {
+			background: #dcfce7;
+			color: #15803d;
+			border: 1px solid #86efac;
+		}
+
+		.status-failed {
+			background: #fef2f2;
+			color: #b91c1c;
+			border: 1px solid #fca5a5;
+		}
+
+		.status-skipped {
+			background: #f1f5f9;
+			color: #475569;
+			border: 1px solid #cbd5e1;
+		}
+
+		.stars {
+			color: #f59e0b;
+			letter-spacing: 0.05em;
+			font-size: 0.85rem;
+		}
+
+		.stars-low {
+			color: #ef4444;
+		}
+
+		.truncate-cell {
+			max-width: 260px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			cursor: help;
+		}
+
+		.truncate-cell:hover {
+			white-space: normal;
+			max-width: none;
+			position: relative;
+			z-index: 20;
+			background: #ffffff;
+			box-shadow: 0 12px 28px -12px rgba(15, 23, 42, 0.35);
+			border: 1px solid #e2e8f0;
+			border-radius: 0.6rem;
+			padding: 0.55rem;
+		}
+
+		.stat-card {
+			background: #ffffff;
+			border-radius: 0.9rem;
+			border: 1px solid #e2e8f0;
+			box-shadow: 0 12px 24px -16px rgba(15, 23, 42, 0.25);
+			transition: all 0.25s ease;
+		}
+
+		.stat-card:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 18px 30px -16px rgba(15, 23, 42, 0.3);
+		}
+
+		.empty-state {
+			text-align: center;
+			padding: 4rem 1.5rem;
+			color: #94a3b8;
+		}
+
+		.empty-state i {
+			font-size: 3rem;
+			margin-bottom: 0.75rem;
+		}
+
+		@media (max-width: 768px) {
+			.table-cell,
+			.table-header th {
+				padding: 0.85rem 0.75rem;
+			}
+
+			.truncate-cell {
+				max-width: 180px;
+			}
+		}
+	</style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+<nav id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-gradient-to-b from-slate-800 to-slate-900 shadow-2xl z-50 md:translate-x-0">
+	<div class="px-6 py-8 border-b border-slate-700">
+		<h3 class="text-2xl font-bold text-white tracking-wide">
+			<i class="fas fa-star text-yellow-400 mr-2"></i>
+			YRHP
+		</h3>
+		<p class="text-slate-400 text-sm mt-1">Review Generator</p>
+	</div>
+
+	<div class="py-6">
+		<ul class="space-y-2 px-4">
+			<li>
+				<a href="/user/home" class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all duration-300 group">
+					<i class="fas fa-home text-lg mr-3 group-hover:scale-110 transition-transform duration-300"></i>
+					<span class="font-medium">Dashboard</span>
+				</a>
+			</li>
+			<li>
+				<a href="/user/create" class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all duration-300 group">
+					<i class="fas fa-user-plus text-lg mr-3 group-hover:scale-110 transition-transform duration-300"></i>
+					<span class="font-medium">Add Client</span>
+				</a>
+			</li>
+		</ul>
+	</div>
+
+	<div class="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700 space-y-2">
+		<a th:if="${user != null}" th:href="@{/user/details}" class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all duration-300 group">
+			<i class="fas fa-user-circle text-lg mr-3 group-hover:scale-110 transition-transform duration-300"></i>
+			<span class="font-medium">Profile</span>
+		</a>
+		<a th:href="@{/user/log}" class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all duration-300 group">
+			<i class="fas fa-history text-lg mr-3 group-hover:scale-110 transition-transform duration-300"></i>
+			<span class="font-medium">Log History</span>
+		</a>
+		<a href="/logout" class="flex items-center px-4 py-3 text-red-300 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-300 group">
+			<i class="fas fa-sign-out-alt text-lg mr-3 group-hover:scale-110 transition-transform duration-300"></i>
+			<span class="font-medium">Logout</span>
+		</a>
+	</div>
+</nav>
+
+<div id="content" class="md:ml-64 transition-all duration-300">
+	<nav class="glass-effect border-b border-slate-200 sticky top-0 z-40">
+		<div class="px-6 py-4 flex items-center gap-4">
+			<button type="button" id="sidebarCollapse" class="md:hidden bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105">
+				<i class="fas fa-bars mr-2"></i>
+				<span class="font-medium">Menu</span>
+			</button>
+
+			<nav class="text-sm text-slate-500 hidden md:flex items-center gap-2">
+				<a href="/user/home" class="hover:text-primary transition-colors">Dashboard</a>
+				<i class="fas fa-chevron-right text-xs"></i>
+				<a th:href="@{/user/google/settings/{id}(id=${client.id})}" class="hover:text-primary transition-colors" th:text="${client.name}">Client</a>
+				<i class="fas fa-chevron-right text-xs"></i>
+				<span class="text-slate-800 font-medium">Reply Logs</span>
+			</nav>
+		</div>
+	</nav>
+
+	<div class="p-6 animate-fade-in">
+		<div class="mb-8 flex items-start justify-between flex-wrap gap-4">
+			<div>
+				<h2 class="text-3xl font-bold text-slate-800 mb-2 flex items-center gap-3">
+					<div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+						<i class="fas fa-list-alt text-indigo-600 text-lg"></i>
+					</div>
+					Google Reply Logs
+				</h2>
+				<p class="text-slate-600">
+					Auto reply history for
+					<span class="font-semibold text-primary" th:text="${client.name}">Client Name</span>
+				</p>
+			</div>
+
+			<a th:href="@{/user/google/settings/{id}(id=${client.id})}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-all duration-300 text-sm">
+				<i class="fas fa-arrow-left"></i>
+				Back To Settings
+			</a>
+		</div>
+
+		<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+			<div class="stat-card p-4 flex items-center gap-3">
+				<div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
+					<i class="fas fa-comments text-slate-600"></i>
+				</div>
+				<div>
+					<div class="text-xs text-slate-500 font-medium">Total</div>
+					<div class="text-xl font-bold text-slate-800" th:text="${logs.size()}">0</div>
+				</div>
+			</div>
+			<div class="stat-card p-4 flex items-center gap-3">
+				<div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+					<i class="fas fa-check text-green-600"></i>
+				</div>
+				<div>
+					<div class="text-xs text-slate-500 font-medium">Replied</div>
+					<div class="text-xl font-bold text-green-700" th:text="${#lists.size(logs.?[status == 'REPLIED'])}">0</div>
+				</div>
+			</div>
+			<div class="stat-card p-4 flex items-center gap-3">
+				<div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+					<i class="fas fa-times text-red-600"></i>
+				</div>
+				<div>
+					<div class="text-xs text-slate-500 font-medium">Failed</div>
+					<div class="text-xl font-bold text-red-700" th:text="${#lists.size(logs.?[status == 'FAILED'])}">0</div>
+				</div>
+			</div>
+			<div class="stat-card p-4 flex items-center gap-3">
+				<div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
+					<i class="fas fa-forward text-slate-500"></i>
+				</div>
+				<div>
+					<div class="text-xs text-slate-500 font-medium">Skipped</div>
+					<div class="text-xl font-bold text-slate-700" th:text="${#lists.size(logs.?[status == 'SKIPPED'])}">0</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modern-table">
+			<div th:if="${logs.empty}" class="empty-state">
+				<i class="fas fa-inbox text-slate-300"></i>
+				<h3 class="text-lg font-semibold text-slate-600 mb-2">No reply logs yet</h3>
+				<p class="text-slate-400 text-sm max-w-sm mx-auto">
+					Auto reply logs will appear here once processing starts. Enable auto reply from Google settings.
+				</p>
+				<a th:href="@{/user/google/settings/{id}(id=${client.id})}" class="inline-flex items-center gap-2 mt-5 px-5 py-2.5 bg-primary text-white font-semibold rounded-xl text-sm hover:bg-indigo-700 transition-colors">
+					<i class="fas fa-cog"></i>
+					Go To Settings
+				</a>
+			</div>
+
+			<div th:unless="${logs.empty}" class="overflow-x-auto">
+				<table class="w-full min-w-[980px]">
+					<thead class="table-header">
+					<tr>
+						<th>Reviewer</th>
+						<th>Rating</th>
+						<th>Review Text</th>
+						<th>Reply Text</th>
+						<th>Status</th>
+						<th>Date &amp; Time</th>
+					</tr>
+					</thead>
+					<tbody class="bg-white">
+					<tr th:each="log : ${logs}" class="table-row">
+						<td class="table-cell">
+							<div class="flex items-center gap-2">
+								<div class="reviewer-avatar" th:text="${log.reviewerName != null ? log.reviewerName.substring(0,1).toUpperCase() : '?'}">?</div>
+								<span class="font-medium text-slate-700" th:text="${log.reviewerName != null ? log.reviewerName : 'Anonymous'}">Anonymous</span>
+							</div>
+						</td>
+						<td class="table-cell">
+							<div th:if="${log.reviewRating != null}">
+								<span th:if="${log.reviewRating == 'FIVE'}" class="stars" title="5 stars">★★★★★</span>
+								<span th:if="${log.reviewRating == 'FOUR'}" class="stars" title="4 stars">★★★★☆</span>
+								<span th:if="${log.reviewRating == 'THREE'}" class="stars" title="3 stars">★★★☆☆</span>
+								<span th:if="${log.reviewRating == 'TWO'}" class="stars stars-low" title="2 stars">★★☆☆☆</span>
+								<span th:if="${log.reviewRating == 'ONE'}" class="stars stars-low" title="1 star">★☆☆☆☆</span>
+								<span th:unless="${log.reviewRating == 'FIVE' or log.reviewRating == 'FOUR' or log.reviewRating == 'THREE' or log.reviewRating == 'TWO' or log.reviewRating == 'ONE'}" class="text-slate-500 text-xs" th:text="${log.reviewRating}">-</span>
+							</div>
+							<span th:unless="${log.reviewRating != null}" class="text-slate-400 text-xs">-</span>
+						</td>
+						<td class="table-cell">
+							<div th:if="${log.reviewText != null and !log.reviewText.isEmpty()}" class="truncate-cell" th:text="${log.reviewText}" th:title="${log.reviewText}"></div>
+							<span th:unless="${log.reviewText != null and !log.reviewText.isEmpty()}" class="text-slate-400 italic text-xs">No text</span>
+						</td>
+						<td class="table-cell">
+							<div th:if="${log.replyText != null and !log.replyText.isEmpty()}" class="truncate-cell text-slate-700" th:text="${log.replyText}" th:title="${log.replyText}"></div>
+							<span th:if="${log.status == 'SKIPPED'}" class="text-slate-400 italic text-xs">Already had reply</span>
+							<span th:if="${log.status == 'FAILED'}" class="text-red-400 italic text-xs" th:text="${log.errorMessage != null ? log.errorMessage : 'Error occurred'}">Error</span>
+							<span th:unless="${(log.replyText != null and !log.replyText.isEmpty()) or log.status == 'SKIPPED' or log.status == 'FAILED'}" class="text-slate-400 italic text-xs">-</span>
+						</td>
+						<td class="table-cell">
+							<span th:if="${log.status == 'REPLIED'}" class="status-badge status-replied">
+								<i class="fas fa-check-circle"></i>
+								Replied
+							</span>
+							<span th:if="${log.status == 'FAILED'}" class="status-badge status-failed">
+								<i class="fas fa-times-circle"></i>
+								Failed
+							</span>
+							<span th:if="${log.status == 'SKIPPED'}" class="status-badge status-skipped">
+								<i class="fas fa-forward"></i>
+								Skipped
+							</span>
+							<span th:unless="${log.status == 'REPLIED' or log.status == 'FAILED' or log.status == 'SKIPPED'}" class="status-badge status-skipped" th:text="${log.status}">-</span>
+						</td>
+						<td class="table-cell">
+							<div th:if="${log.repliedAt != null}">
+								<div class="font-medium text-slate-700 text-sm" th:text="${#temporals.format(log.repliedAt, 'dd MMM yyyy')}">Date</div>
+								<div class="text-slate-400 text-xs" th:text="${#temporals.format(log.repliedAt, 'HH:mm')}">Time</div>
+							</div>
+							<span th:unless="${log.repliedAt != null}" class="text-slate-400 text-xs">-</span>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+
+				<div class="px-5 py-4 border-t border-slate-200 bg-slate-50 text-sm text-slate-500 flex items-center justify-between">
+					<span>
+						<i class="fas fa-info-circle text-primary mr-1.5"></i>
+						Showing <strong th:text="${logs.size()}" class="text-slate-700">0</strong> log entries
+					</span>
+					<span class="text-xs">Hover over review and reply text to see full content</span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden hidden"></div>
+
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		const sidebarCollapse = document.getElementById('sidebarCollapse');
+		const sidebar = document.getElementById('sidebar');
+		const content = document.getElementById('content');
+		const body = document.body;
+		const overlay = document.getElementById('sidebar-overlay');
+
+		if (sidebarCollapse) {
+			sidebarCollapse.addEventListener('click', function() {
+				sidebar.classList.toggle('active');
+				content.classList.toggle('active');
+				body.classList.toggle('sidebar-active');
+				overlay.classList.toggle('hidden');
+			});
+		}
+
+		if (overlay) {
+			overlay.addEventListener('click', function() {
+				sidebar.classList.remove('active');
+				content.classList.remove('active');
+				body.classList.remove('sidebar-active');
+				overlay.classList.add('hidden');
+			});
+		}
+
+		window.addEventListener('resize', function() {
+			if (window.innerWidth >= 768) {
+				sidebar.classList.remove('active');
+				content.classList.remove('active');
+				body.classList.remove('sidebar-active');
+				overlay.classList.add('hidden');
+			}
+		});
+	});
+</script>
+</body>
+</html>

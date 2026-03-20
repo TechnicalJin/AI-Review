@@ -51,6 +51,9 @@ class UserControllerTest {
     private ReviewGenerationLogRepository reviewLogRepository;
 
     @Mock
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @Mock
     private Model model;
 
     @Mock
@@ -342,7 +345,7 @@ class UserControllerTest {
 
         String view = userController.editClient(1, model);
 
-        assertEquals("redirect:/user?error=notfound", view);
+        assertEquals("redirect:/user/home?error=notfound", view);
     }
 
     @Test

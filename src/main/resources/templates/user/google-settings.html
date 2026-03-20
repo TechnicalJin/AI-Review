@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="google-signin-client_id" th:content="${googleClientId}">
+	<title>| Google Auto Reply Settings |</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://apis.google.com/js/platform.js" async defer></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<script>tailwind.config = { theme: { extend: { colors: { primary: '#6366f1' } } } }</script>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+        .fade-in { animation: fadeIn 0.6s ease-out; }
+        #sidebar { transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        #sidebar.active { transform: translateX(0); }
+        @media (min-width: 768px) { #sidebar { transform: translateX(0); } }
+        .glass-effect { backdrop-filter: blur(20px); background: rgba(255,255,255,0.95); border: 1px solid rgba(255,255,255,0.3); }
+        .section-card { background: white; border-radius: 16px; box-shadow: 0 4px 24px -4px rgba(0,0,0,0.08); border: 1px solid rgba(226,232,240,0.8); overflow: hidden; margin-bottom: 1.5rem; }
+        .section-header { padding: 1.1rem 1.5rem; border-bottom: 1px solid rgba(226,232,240,0.6); display: flex; align-items: center; gap: 0.75rem; background: #fafbfc; }
+        .section-body { padding: 1.5rem; }
+        .google-btn { background: white; border: 1.5px solid #dadce0; color: #3c4043; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-decoration: none; }
+        .google-btn:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.18); transform: translateY(-1px); }
+        .status-connected    { background:#dcfce7; color:#15803d; border:1px solid #86efac; padding:0.375rem 0.875rem; border-radius:20px; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:0.375rem; }
+        .status-disconnected { background:#fef2f2; color:#b91c1c; border:1px solid #fca5a5; padding:0.375rem 0.875rem; border-radius:20px; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:0.375rem; }
+        .alert-success { background:#f0fdf4; border:1px solid #86efac; color:#15803d; padding:1rem 1.25rem; border-radius:10px; border-left:4px solid #22c55e; display:flex; align-items:center; gap:0.75rem; margin-bottom:1.5rem; }
+        .alert-error   { background:#fef2f2; border:1px solid #fca5a5; color:#b91c1c; padding:1rem 1.25rem; border-radius:10px; border-left:4px solid #ef4444; display:flex; align-items:center; gap:0.75rem; margin-bottom:1.5rem; }
+        .info-row { display:flex; align-items:flex-start; gap:0.75rem; padding:0.875rem 1rem; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; }
+        .info-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .select-input { width:100%; padding:0.75rem 1rem; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.9rem; background:#f8fafc; outline:none; appearance:none; background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-repeat:no-repeat; background-position:right 0.75rem center; background-size:1.25em; }
+        .select-input:focus { border-color:#6366f1; background-color:white; box-shadow:0 0 0 3px rgba(99,102,241,0.1); }
+        .btn-save { background:linear-gradient(135deg,#6366f1,#4f46e5); color:white; padding:0.65rem 1.75rem; border-radius:10px; font-weight:600; font-size:0.9rem; border:none; cursor:pointer; transition:all 0.3s ease; }
+        .btn-save:hover { transform:translateY(-1px); box-shadow:0 6px 20px -4px rgba(99,102,241,0.5); }
+		.info-symbol { font-size: 13px; }
+	</style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+
+<!-- Sidebar -->
+<nav id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-gradient-to-b from-slate-800 to-slate-900 shadow-2xl z-50 md:translate-x-0">
+	<div class="px-6 py-8 border-b border-slate-700">
+		<h3 class="text-2xl font-bold text-white"><i class="fas fa-star text-yellow-400 mr-2"></i>YRHP</h3>
+		<p class="text-slate-400 text-sm mt-1">Review Generator</p>
+	</div>
+	<div class="py-6 px-4 space-y-1">
+		<a href="/user/home" class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all duration-300 group">
+			<i class="fas fa-home text-lg mr-3"></i><span class="font-medium">Dashboard</span>
+		</a>
+		<a href="/user/create" class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all duration-300 group">
+			<i class="fas fa-user-plus text-lg mr-3"></i><span class="font-medium">Add Client</span>
+		</a>
+	</div>
+	<div class="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700 space-y-2">
+		<a th:href="@{/user/log}" class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all">
+			<i class="fas fa-history text-lg mr-3"></i><span class="font-medium">Log History</span>
+		</a>
+		<a href="/logout" class="flex items-center px-4 py-3 text-red-300 hover:text-white hover:bg-red-600 rounded-lg transition-all">
+			<i class="fas fa-sign-out-alt text-lg mr-3"></i><span class="font-medium">Logout</span>
+		</a>
+	</div>
+</nav>
+
+<div id="content" class="md:ml-64">
+	<nav class="glass-effect border-b border-slate-200 sticky top-0 z-40">
+		<div class="px-6 py-4 flex items-center gap-4">
+			<button id="sidebarCollapse" class="md:hidden bg-indigo-500 text-white px-4 py-2 rounded-lg">
+				<i class="fas fa-bars mr-2"></i>Menu
+			</button>
+			<nav class="text-sm text-slate-500 hidden md:flex items-center gap-2">
+				<a href="/user/home" class="hover:text-indigo-500 transition-colors">Dashboard</a>
+				<i class="fas fa-chevron-right text-xs"></i>
+				<span th:text="${client.name}" class="text-slate-800 font-medium">Client</span>
+				<i class="fas fa-chevron-right text-xs"></i>
+				<span class="text-slate-800 font-medium">Google Auto Reply</span>
+			</nav>
+		</div>
+	</nav>
+
+	<div class="p-6 fade-in max-w-3xl">
+
+		<!-- Page Header -->
+		<div class="mb-8 flex items-start justify-between flex-wrap gap-4">
+			<div>
+				<h2 class="text-3xl font-bold text-slate-800 mb-1 flex items-center gap-3">
+					<div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+						<svg width="22" height="22" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+					</div>
+					Google Auto Reply
+				</h2>
+				<p class="text-slate-600">Managing for: <span class="font-semibold text-indigo-600" th:text="${client.name}">Client</span></p>
+			</div>
+			<div>
+				<span th:if="${client.googleAccessToken != null}" class="status-connected"><i class="fas fa-circle text-xs animate-pulse"></i> Connected</span>
+				<span th:unless="${client.googleAccessToken != null}" class="status-disconnected"><i class="fas fa-circle text-xs"></i> Not Connected</span>
+			</div>
+		</div>
+
+		<!-- Flash Messages -->
+		<div th:if="${success}" class="alert-success"><i class="fas fa-check-circle text-xl"></i><span th:text="${success}"></span></div>
+		<div th:if="${error}"   class="alert-error"><i class="fas fa-exclamation-circle text-xl"></i><span th:text="${error}"></span></div>
+
+		<div class="section-card">
+			<div class="section-header">
+				<span class="w-7 h-7 bg-slate-100 text-slate-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">0</span>
+				<div><h3 class="font-bold text-slate-800">Google Sign-In Preview</h3>
+					<p class="text-xs text-slate-500">Confirm which Google account is active before starting the Business Profile authorization flow</p></div>
+			</div>
+			<div class="section-body">
+				<div class="flex flex-wrap items-center gap-3 mb-4">
+					<div class="g-signin2" data-onsuccess="onSignIn"></div>
+					<a href="#" id="googleSignOutLink" onclick="signOut(); return false;" class="hidden inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all">
+						<i class="fas fa-sign-out-alt"></i> Sign out
+					</a>
+				</div>
+				<div id="googleProfileCard" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-4">
+					<div class="flex items-center gap-4">
+						<img id="googleProfileImage" src="" alt="Google profile" class="w-14 h-14 rounded-full border border-slate-200 object-cover hidden">
+						<div>
+							<div id="googleProfileName" class="font-semibold text-slate-800">Not signed in</div>
+							<div id="googleProfileEmail" class="text-sm text-slate-500"></div>
+							<div id="googleProfileId" class="text-xs text-slate-400 mt-1"></div>
+						</div>
+					</div>
+				</div>
+				<p class="text-xs text-slate-400 mt-3">
+					<i class="fas fa-info-circle mr-1"></i>
+					This preview uses the Google Platform Library for basic profile details. The connect button below still runs the existing OAuth flow that requests Business Profile access.
+				</p>
+			</div>
+		</div>
+
+		<!-- ════════════════ SECTION 1: Connection status ════════════════ -->
+		<div class="section-card">
+			<div class="section-header">
+				<span class="w-7 h-7 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
+				<div><h3 class="font-bold text-slate-800">Google Account Connection</h3>
+					<p class="text-xs text-slate-500">Client connects from their portal — business data is fetched automatically</p></div>
+			</div>
+			<div class="section-body">
+
+				<!-- Connected — show auto-fetched data -->
+				<div th:if="${client.googleAccessToken != null}">
+					<div class="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2.5 mb-4">
+						<i class="fas fa-check-circle text-green-600"></i>
+						<span class="text-green-800 font-semibold text-sm">Google account connected — tokens encrypted in DB</span>
+					</div>
+
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+						<div class="info-row">
+							<div class="info-icon bg-blue-100"><i class="fas fa-building text-blue-600 info-symbol"></i></div>
+							<div>
+								<div class="text-xs text-slate-500">Business Name</div>
+								<div class="font-semibold text-slate-800 text-sm"
+									 th:text="${client.googleBusinessName != null ? client.googleBusinessName : 'Not fetched yet'}">—</div>
+							</div>
+						</div>
+						<div class="info-row">
+							<div class="info-icon bg-green-100"><i class="fas fa-map-marker-alt text-green-600 info-symbol"></i></div>
+							<div>
+								<div class="text-xs text-slate-500">Business Address</div>
+								<div class="font-semibold text-slate-800 text-sm"
+									 th:text="${client.googleBusinessAddress != null ? client.googleBusinessAddress : '—'}">—</div>
+							</div>
+						</div>
+						<div class="info-row">
+							<div class="info-icon bg-indigo-100"><i class="fas fa-id-badge text-indigo-600 info-symbol"></i></div>
+							<div>
+								<div class="text-xs text-slate-500">Account ID (auto-fetched)</div>
+								<div class="font-mono text-slate-700 text-xs mt-0.5"
+									 th:text="${client.googleAccountId != null ? client.googleAccountId : 'Not yet fetched'}">—</div>
+							</div>
+						</div>
+						<div class="info-row">
+							<div class="info-icon bg-purple-100"><i class="fas fa-location-arrow text-purple-600 info-symbol"></i></div>
+							<div>
+								<div class="text-xs text-slate-500">Location ID (auto-fetched)</div>
+								<div class="font-mono text-slate-700 text-xs mt-0.5"
+									 th:text="${client.googleLocationId != null ? client.googleLocationId : 'Not yet fetched'}">—</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Admin can force-reconnect on behalf of client if needed -->
+					<div class="mt-4 pt-4 border-t border-slate-100">
+						<p class="text-xs text-slate-400 mb-3">
+							<i class="fas fa-info-circle mr-1"></i>
+							If the client's token is invalid, you can force a reconnect below.
+							Ideally the client reconnects from their own portal.
+						</p>
+						<a th:href="${connectUrl}" class="google-btn text-sm">
+							<svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+							Force Reconnect (Admin)
+						</a>
+					</div>
+				</div>
+
+				<!-- Not connected -->
+				<div th:unless="${client.googleAccessToken != null}">
+					<div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 flex items-center gap-3">
+						<i class="fas fa-exclamation-triangle text-amber-500"></i>
+						<div>
+							<div class="font-semibold text-amber-800 text-sm">Client has not connected Google yet</div>
+							<div class="text-amber-700 text-xs mt-0.5">
+								Ask the client to go to their portal → Google Reviews and click Connect.
+								Or you can connect on their behalf below.
+							</div>
+						</div>
+					</div>
+					<a th:href="${connectUrl}" class="google-btn">
+						<svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+						Connect on behalf of client
+					</a>
+				</div>
+			</div>
+		</div>
+
+		<!-- ════════════════ SECTION 2: Enable/Disable (ADMIN ONLY) ════════════════ -->
+		<div class="section-card">
+			<div class="section-header">
+				<span class="w-7 h-7 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
+				<div><h3 class="font-bold text-slate-800">Auto Reply Control</h3>
+					<p class="text-xs text-slate-500">Only you (admin) can enable or disable auto reply</p></div>
+			</div>
+			<div class="section-body">
+				<div th:unless="${client.googleAccessToken != null}" class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 flex items-center gap-3">
+					<i class="fas fa-lock text-amber-500"></i>
+					<span class="text-amber-800 text-sm font-medium">Connect Google first before enabling auto reply.</span>
+				</div>
+
+				<div class="flex items-center justify-between flex-wrap gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+					<div>
+						<div class="font-semibold text-slate-800 mb-1">Auto Reply for <span th:text="${client.name}">Client</span></div>
+						<div class="text-sm text-slate-500">Checks for new reviews every 5 minutes and replies using ChatGPT.</div>
+						<div class="mt-2">
+                            <span th:if="${client.autoReplyEnabled}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-green-700">
+                                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse inline-block"></span> Active
+                            </span>
+							<span th:unless="${client.autoReplyEnabled}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500">
+                                <span class="w-2 h-2 bg-slate-400 rounded-full inline-block"></span> Inactive
+                            </span>
+						</div>
+					</div>
+					<form th:if="${client.googleAccessToken != null}"
+						  th:action="@{/user/google/toggle/{id}(id=${client.id})}" method="post">
+						<button th:unless="${client.autoReplyEnabled}" type="submit" name="enabled" value="true"
+								onclick="return confirm('Enable auto reply for [[${client.name}]]?')"
+								class="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl text-sm hover:-translate-y-0.5 transition-all">
+							<i class="fas fa-play"></i> Enable
+						</button>
+						<button th:if="${client.autoReplyEnabled}" type="submit" name="enabled" value="false"
+								onclick="return confirm('Disable auto reply for [[${client.name}]]?')"
+								class="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-xl text-sm hover:-translate-y-0.5 transition-all">
+							<i class="fas fa-pause"></i> Disable
+						</button>
+					</form>
+					<div th:unless="${client.googleAccessToken != null}">
+						<button disabled class="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-200 text-slate-400 font-semibold rounded-xl text-sm cursor-not-allowed">
+							<i class="fas fa-lock"></i> Connect First
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- ════════════════ SECTION 3: Reply Style ════════════════ -->
+		<div class="section-card" th:if="${client.googleAccessToken != null}">
+			<div class="section-header">
+				<span class="w-7 h-7 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
+				<div><h3 class="font-bold text-slate-800">Reply Style</h3>
+					<p class="text-xs text-slate-500">The tone ChatGPT uses when generating replies</p></div>
+			</div>
+			<div class="section-body">
+				<form th:action="@{/user/google/style/{id}(id=${client.id})}" method="post" class="flex items-end gap-4 flex-wrap">
+					<div class="flex-1 min-w-48">
+						<label class="block text-sm font-semibold text-slate-700 mb-2">AI Reply Style</label>
+						<select name="replyStyle" class="select-input">
+							<option value="professional" th:selected="${client.googleReplyStyle == 'professional' or client.googleReplyStyle == null}">Professional — Formal and business-like</option>
+							<option value="friendly"     th:selected="${client.googleReplyStyle == 'friendly'}">Friendly — Warm and conversational</option>
+							<option value="formal"       th:selected="${client.googleReplyStyle == 'formal'}">Formal — Very structured and official</option>
+							<option value="luxury"       th:selected="${client.googleReplyStyle == 'luxury'}">Luxury — Premium and sophisticated</option>
+						</select>
+					</div>
+					<button type="submit" class="btn-save"><i class="fas fa-save mr-2"></i>Save Style</button>
+				</form>
+			</div>
+		</div>
+
+		<!-- ════════════════ View Logs link ════════════════ -->
+		<div class="section-card" th:if="${client.googleAccessToken != null}">
+			<div class="section-body">
+				<div class="flex items-center justify-between flex-wrap gap-4">
+					<div class="flex items-center gap-3">
+						<div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center"><i class="fas fa-list-alt text-indigo-600"></i></div>
+						<div>
+							<div class="font-semibold text-slate-800">Reply Logs</div>
+							<div class="text-sm text-slate-500">View all replies, skips, and failures for this client</div>
+						</div>
+					</div>
+					<a th:href="@{/user/google/logs/{id}(id=${client.id})}"
+					   class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white font-semibold rounded-xl text-sm hover:-translate-y-0.5 transition-all">
+						<i class="fas fa-external-link-alt"></i> View Logs
+					</a>
+				</div>
+			</div>
+		</div>
+
+		<a href="/user/home" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg text-sm transition-all">
+			<i class="fas fa-arrow-left"></i> Back to Dashboard
+		</a>
+	</div>
+</div>
+
+<div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden hidden"></div>
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+        const btn = document.getElementById('sidebarCollapse');
+        const sb  = document.getElementById('sidebar');
+        const ov  = document.getElementById('sidebar-overlay');
+        if (btn) btn.addEventListener('click', () => { sb.classList.toggle('active'); ov.classList.toggle('hidden'); });
+        ov.addEventListener('click', () => { sb.classList.remove('active'); ov.classList.add('hidden'); });
+    });
+</script>
+<script th:src="@{/js/google-platform-signin.js}"></script>
+</body>
+</html>

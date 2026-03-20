@@ -34,4 +34,6 @@ public interface ClientRepository extends JpaRepository<Client, Integer> {
 
 //    Client findById(Long clientId);
     Optional<Client> findById(Long clientId);
+
+    List<Client> findByAutoReplyEnabledTrue();
 }

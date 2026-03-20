@@ -723,6 +723,16 @@
                                    title="Delete">
                                     <i class="fas fa-trash-alt group-hover:scale-110 transition-transform duration-300"></i>
                                 </a>
+                                          <a th:href="@{/user/google/settings/{id}(id=${client.id})}"
+                                              class="bg-indigo-500 hover:bg-indigo-600 text-white p-2 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 group"
+                                              title="Google Auto Reply">
+                                                <i class="fab fa-google group-hover:scale-110 transition-transform duration-300"></i>
+                                          </a>
+                                          <a th:href="@{/user/google/logs/{id}(id=${client.id})}"
+                                              class="bg-slate-500 hover:bg-slate-600 text-white p-2 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 group"
+                                              title="Reply Logs">
+                                                <i class="fas fa-list-alt group-hover:scale-110 transition-transform duration-300"></i>
+                                          </a>
                                 <a th:href="@{/user/download-csv/{id}(id=${client.id})}"
                                    onclick="return handleDownload(event, [[${client.id}]], '[[${client.name}]]')"
                                    class="bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 group"

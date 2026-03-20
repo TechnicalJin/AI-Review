@@ -47,6 +47,106 @@ public class Client {
     @Column(nullable = false)
     private String role = "ROLE_CLIENT"; // Default role
 
+    // === Google Auto Reply Fields ===
+    @Column(name = "google_account_id")
+    private String googleAccountId;
+
+    @Column(name = "google_location_id")
+    private String googleLocationId;
+
+    @Column(name = "google_access_token", columnDefinition = "TEXT")
+    private String googleAccessToken;
+
+    @Column(name = "google_refresh_token", columnDefinition = "TEXT")
+    private String googleRefreshToken;
+
+    @Column(name = "google_token_expiry")
+    private Long googleTokenExpiry;
+
+    @Column(name = "auto_reply_enabled", nullable = false)
+    private boolean autoReplyEnabled = false;
+
+    @Column(name = "google_reply_style")
+    private String googleReplyStyle = "professional";
+
+    public String getGoogleAccountId() {
+        return googleAccountId;
+    }
+
+    @Column(name = "google_business_name")
+    private String googleBusinessName;
+
+    @Column(name = "google_business_address", length = 500)
+    private String googleBusinessAddress;
+
+    public String getGoogleBusinessName() {
+        return googleBusinessName;
+    }
+
+    public void setGoogleBusinessName(String googleBusinessName) {
+        this.googleBusinessName = googleBusinessName;
+    }
+
+    public String getGoogleBusinessAddress() {
+        return googleBusinessAddress;
+    }
+
+    public void setGoogleBusinessAddress(String googleBusinessAddress) {
+        this.googleBusinessAddress = googleBusinessAddress;
+    }
+
+    public void setGoogleAccountId(String googleAccountId) {
+        this.googleAccountId = googleAccountId;
+    }
+
+    public String getGoogleLocationId() {
+        return googleLocationId;
+    }
+
+    public void setGoogleLocationId(String googleLocationId) {
+        this.googleLocationId = googleLocationId;
+    }
+
+    public String getGoogleAccessToken() {
+        return googleAccessToken;
+    }
+
+    public void setGoogleAccessToken(String googleAccessToken) {
+        this.googleAccessToken = googleAccessToken;
+    }
+
+    public String getGoogleRefreshToken() {
+        return googleRefreshToken;
+    }
+
+    public void setGoogleRefreshToken(String googleRefreshToken) {
+        this.googleRefreshToken = googleRefreshToken;
+    }
+
+    public Long getGoogleTokenExpiry() {
+        return googleTokenExpiry;
+    }
+
+    public void setGoogleTokenExpiry(Long googleTokenExpiry) {
+        this.googleTokenExpiry = googleTokenExpiry;
+    }
+
+    public boolean isAutoReplyEnabled() {
+        return autoReplyEnabled;
+    }
+
+    public void setAutoReplyEnabled(boolean autoReplyEnabled) {
+        this.autoReplyEnabled = autoReplyEnabled;
+    }
+
+    public String getGoogleReplyStyle() {
+        return googleReplyStyle;
+    }
+
+    public void setGoogleReplyStyle(String googleReplyStyle) {
+        this.googleReplyStyle = googleReplyStyle;
+    }
+
     public int getId() {
         return id;
     }

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -31,6 +32,9 @@ public class SecurityConfig {
 
     @Autowired
     private UserDetailsService userDetailsService;
+
+    @Autowired
+    private Environment environment;
 
 
     @Bean
@@ -64,6 +68,9 @@ public class SecurityConfig {
                                     "/uploads/**", "/Uploads/**").permitAll()
                             // Public pages
                             .requestMatchers("/user/view/**", "/user/regenerate/**").permitAll()
+                            // Google OAuth callbacks (must be before wildcard rules)
+                            .requestMatchers("/user/google/callback").permitAll()
+                            .requestMatchers("/client/google/callback").permitAll()
                             // Role-based access
                             .requestMatchers("/register").denyAll()
                             .requestMatchers("/user/**").hasRole("USER")
@@ -120,10 +127,16 @@ public class SecurityConfig {
                 .headers(headers -> {
                     headers
                         .frameOptions(frameOptions -> frameOptions.deny())
-                        .contentTypeOptions(Customizer.withDefaults())
-                        .httpStrictTransportSecurity(hstsConfig -> hstsConfig
+                        .contentTypeOptions(Customizer.withDefaults());
+                    // Only enable HSTS in production where HTTPS is configured
+                    // In dev, HSTS causes browser to force HTTPS on localhost, breaking OAuth callbacks
+                    if (java.util.Arrays.asList(environment.getActiveProfiles()).contains("prod")) {
+                        headers.httpStrictTransportSecurity(hstsConfig -> hstsConfig
                             .maxAgeInSeconds(31536000)
                             .includeSubDomains(true));
+                    } else {
+                        headers.httpStrictTransportSecurity(hstsConfig -> hstsConfig.disable());
+                    }
                 })
                 .csrf(csrf -> {
                     logger.debug("Disabling CSRF protection");
