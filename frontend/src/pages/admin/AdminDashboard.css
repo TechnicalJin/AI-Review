@@ -1,0 +1,69 @@
+.admin-dashboard {
+  padding: 20px;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  color: #333;
+  font-size: 28px;
+}
+
+.dashboard-header p {
+  margin: 5px 0 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.dashboard-header button {
+  margin-left: auto;
+}
+
+.dashboard-filters {
+  margin-bottom: 20px;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.pagination {
+  margin-top: 20px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .dashboard-header button {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .search-input {
+    max-width: 100%;
+  }
+}

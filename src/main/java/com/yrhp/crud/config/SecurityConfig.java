@@ -1,5 +1,6 @@
 package com.yrhp.crud.config;
 
+import com.yrhp.crud.security.JwtAuthenticationFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.lang.NonNull;
@@ -35,6 +37,9 @@ public class SecurityConfig {
 
     @Autowired
     private UserDetailsService userDetailsService;
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
 
     @Bean
@@ -58,19 +63,19 @@ public class SecurityConfig {
         logger.info("Configuring security filter chain");
 
         http
-            .cors(Customizer.withDefaults())
+                .cors(Customizer.withDefaults())
                 .authenticationProvider(getDaoAuthProvider())
                 .authorizeHttpRequests(auth -> {
                     logger.debug("Configuring authorization rules");
                     auth
-                    // Public API endpoints
-                    .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
-                    // Role-based API access
-                    .requestMatchers("/api/admin/**").hasRole("USER")
-                    .requestMatchers("/api/client/**").hasRole("CLIENT")
+                            // Public API endpoints
+                            .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
+                            // Role-based API access
+                            .requestMatchers("/api/admin/**").hasRole("USER")
+                            .requestMatchers("/api/client/**").hasRole("CLIENT")
                             // Public resources
                             .requestMatchers("/", "/createUser", "/signin",
-                                    "/css/**", "/js/**", "/images/**", "/error/**", 
+                                    "/css/**", "/js/**", "/images/**", "/error/**",
                                     "/uploads/**", "/Uploads/**").permitAll()
                             // Public pages
                             .requestMatchers("/user/view/**", "/user/regenerate/**").permitAll()
@@ -89,7 +94,7 @@ public class SecurityConfig {
                             .successHandler((request, response, authentication) -> {
                                 String role = authentication.getAuthorities().iterator().next().getAuthority();
                                 logger.info("User logged in with role: {}", role);
-                                
+
                                 if ("ROLE_USER".equals(role)) {
                                     response.sendRedirect("/user/home");
                                 } else if ("ROLE_CLIENT".equals(role)) {
@@ -100,7 +105,7 @@ public class SecurityConfig {
                             })
                             .failureHandler((request, response, exception) -> {
                                 logger.error("Login failed: {}", exception.getMessage());
-                                
+
                                 // Use relative redirect to maintain protocol
                                 response.sendRedirect("/signin?error=true");
                             })
@@ -136,17 +141,18 @@ public class SecurityConfig {
                 })
                 .headers(headers -> {
                     headers
-                        .frameOptions(frameOptions -> frameOptions.deny())
-                        .contentTypeOptions(Customizer.withDefaults())
-                        .httpStrictTransportSecurity(hstsConfig -> hstsConfig
-                            .maxAgeInSeconds(31536000)
-                            .includeSubDomains(true));
+                            .frameOptions(frameOptions -> frameOptions.deny())
+                            .contentTypeOptions(Customizer.withDefaults())
+                            .httpStrictTransportSecurity(hstsConfig -> hstsConfig
+                                    .maxAgeInSeconds(31536000)
+                                    .includeSubDomains(true));
                 })
                 .csrf(csrf -> {
                     logger.debug("Disabling CSRF protection");
                     csrf.disable();
                     logger.warn("CSRF protection is disabled");
                 })
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(session -> {
                     logger.debug("Disabling session fixation protection");
                     session.sessionFixation(sessionFixation -> sessionFixation.none());

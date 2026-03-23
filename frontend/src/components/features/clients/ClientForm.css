@@ -1,0 +1,67 @@
+.client-form {
+  background: white;
+  border-radius: 8px;
+  padding: 30px;
+  max-width: 600px;
+}
+
+.form-section {
+  margin-bottom: 25px;
+}
+
+.form-section h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.logo-upload {
+  position: relative;
+  border: 2px dashed #ddd;
+  border-radius: 4px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logo-upload:hover {
+  border-color: #667eea;
+  background: #f9f9f9;
+}
+
+.logo-preview {
+  max-width: 100%;
+  max-height: 150px;
+  margin-bottom: 15px;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-input-label {
+  margin: 0;
+  color: #666;
+  font-size: 13px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.form-actions button {
+  flex: 1;
+}
+
+@media (max-width: 600px) {
+  .client-form {
+    padding: 20px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+}
