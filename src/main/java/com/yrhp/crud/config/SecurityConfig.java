@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.lang.NonNull;
@@ -31,6 +32,9 @@ public class SecurityConfig {
 
     @Autowired
     private UserDetailsService userDetailsService;
+
+    @Autowired
+    private CorsConfigurationSource corsConfigurationSource;
 
 
     @Bean
@@ -54,13 +58,16 @@ public class SecurityConfig {
         logger.info("Configuring security filter chain");
 
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authenticationProvider(getDaoAuthProvider())
                 .authorizeHttpRequests(auth -> {
                     logger.debug("Configuring authorization rules");
                     auth
+                            // API endpoints (for React frontend)
+                            .requestMatchers("/api/**").permitAll()
                             // Public resources
                             .requestMatchers("/", "/createUser", "/signin",
-                                    "/css/**", "/js/**", "/images/**", "/error/**", 
+                                    "/css/**", "/js/**", "/images/**", "/error/**",
                                     "/uploads/**", "/Uploads/**").permitAll()
                             // Public pages
                             .requestMatchers("/user/view/**", "/user/regenerate/**").permitAll()

@@ -86,4 +86,46 @@ public class ReviewGenerationLogService {
             throw new RuntimeException("Failed to fetch distinct company names", e);
         }
     }
+
+    /**
+     * Retrieves all logs.
+     *
+     * @return List of all ReviewGenerationLog entries
+     */
+    public List<ReviewGenerationLog> getAllLogs() {
+        try {
+            log.info("Fetching all logs");
+            List<ReviewGenerationLog> logs = logRepository.findAll();
+            log.debug("Retrieved {} total logs", logs.size());
+            return logs;
+        } catch (Exception e) {
+            log.error("Error fetching all logs: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch all logs", e);
+        }
+    }
+
+    /**
+     * Logs a review generation event.
+     *
+     * @param companyName  The company name
+     * @param reviewLength The review length (short, medium, large)
+     * @param keyPoints    The key points/tags used
+     * @param regenerated  Whether this was a regeneration
+     */
+    public void logReviewGeneration(String companyName, String reviewLength, String keyPoints, boolean regenerated) {
+        try {
+            log.info("Logging review generation for company: {}", companyName);
+            ReviewGenerationLog logEntry = new ReviewGenerationLog();
+            logEntry.setCompanyName(companyName);
+            logEntry.setReviewLength(reviewLength);
+            logEntry.setKeyPoints(keyPoints);
+            logEntry.setRegenerated(regenerated ? "yes" : "no");
+            logEntry.setTimestamp(LocalDateTime.now());
+            logRepository.save(logEntry);
+            log.debug("Successfully logged review generation for company: {}", companyName);
+        } catch (Exception e) {
+            log.error("Error logging review generation for company {}: {}", companyName, e.getMessage(), e);
+            // Don't throw - logging shouldn't break the main flow
+        }
+    }
 }
