@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Input } from '../../components/form';
+import './Login.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -10,6 +10,38 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const cardRef = useRef(null);
+
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    if (isMobile) return;
+
+    const handleMouseMove = (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = (y - centerY) / 20;
+      const rotateY = (centerX - x) / 20;
+      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1, 1, 1)`;
+    };
+
+    const handleMouseLeave = () => {
+      card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+    };
+
+    card.addEventListener('mousemove', handleMouseMove);
+    card.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      card.removeEventListener('mousemove', handleMouseMove);
+      card.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +63,6 @@ const Login = () => {
       }
 
       const userData = await login(email, password);
-      // Navigate based on user role
       if (userData.role === 'CLIENT') {
         navigate('/client/home');
       } else {
@@ -45,91 +76,74 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
-      {/* Background animation */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+    <div className="login-page">
+      {/* Animated Background */}
+      <div className="login-bg-animation"></div>
+      
+      {/* Floating Particles */}
+      <div className="login-particles">
+        {[...Array(9)].map((_, i) => (
+          <div key={i} className="login-particle"></div>
+        ))}
       </div>
 
-      <div className="relative z-10 w-full max-w-md">
-        {/* Login Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 backdrop-blur-xl bg-opacity-95">
+      {/* Login Container */}
+      <div className="login-container">
+        <div className="login-card" ref={cardRef}>
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Welcome Back
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">Sign in to your account</p>
+          <div className="login-card-header">
+            <h1>Welcome Back</h1>
+            <p>Sign in to your account</p>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+            <div className="login-alert login-alert-danger">
+              {error}
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit}>
             {/* Email Input */}
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              icon="fas fa-envelope"
-            />
+            <div className="login-form-group">
+              <div className="login-input-group">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="login-form-control"
+                  placeholder="Enter your email"
+                  required
+                />
+                <i className="fas fa-envelope login-input-icon"></i>
+              </div>
+            </div>
 
             {/* Password Input */}
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              icon="fas fa-lock"
-            />
+            <div className="login-form-group">
+              <div className="login-input-group">
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="login-form-control"
+                  placeholder="Enter your password"
+                  required
+                />
+                <i className="fas fa-lock login-input-icon"></i>
+              </div>
+            </div>
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn btn-lg bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white border-0 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`login-btn ${loading ? 'loading' : ''}`}
             >
-              {loading ? (
-                <>
-                  <span className="inline-block animate-spin">⏳</span>
-                  Signing in...
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-sign-in-alt"></i>
-                  Sign In
-                </>
-              )}
+              <span>{loading ? 'Signing in...' : 'Sign In'}</span>
             </button>
           </form>
-
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                Or continue with
-              </span>
-            </div>
-          </div>
-
-          {/* Sign Up Link */}
-          <p className="text-center text-gray-600 dark:text-gray-400 text-sm">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 font-semibold">
-              Create one now
-            </Link>
-          </p>
         </div>
       </div>
     </div>

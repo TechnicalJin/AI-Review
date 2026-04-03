@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -68,7 +70,7 @@
   --border: var(--border-color);
 
   /* Typography */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-400: 400;
   --font-500: 500;
   --font-600: 600;
@@ -1028,13 +1030,23 @@ h6 {
     margin-bottom: var(--space-6);
     color: var(--text-muted);
   }
+
+  /* Stat Card - Matching Old HTML Design */
+  .stat-card {
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
 }
 
 @layer utilities {
   .glass {
     background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
   }
 
   .dark .glass {
@@ -1323,3 +1335,170 @@ html.dark {
   background: rgba(239, 68, 68, 0.2);
   color: var(--danger);
 }
+
+
+/* ============================================
+   PREMIUM DASHBOARD ADDITIONS
+   Add these to the END of your index.css
+   ============================================ */
+
+/* ── Sidebar width CSS variables ── */
+:root {
+  --sidebar-width: 256px;
+  --sidebar-collapsed: 72px;
+  --navbar-height: 65px;
+}
+
+/* ── Premium card shadows ── */
+.card-premium {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card-premium:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  transform: translateY(-2px);
+}
+
+/* ── Stat card left-border accent variants ── */
+.stat-card {
+  border-left-width: 3px;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+/* ── Sidebar active link indicator ── */
+.sidebar-active-pill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: #6366f1;
+  border-radius: 0 4px 4px 0;
+}
+
+/* ── Smooth scrollbar for dark sidebar ── */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 999px;
+}
+
+/* ── Sparkline animation ── */
+@keyframes barGrow {
+  from { transform: scaleY(0); transform-origin: bottom; }
+  to   { transform: scaleY(1); transform-origin: bottom; }
+}
+.sparkline-bar {
+  animation: barGrow 0.4s ease-out both;
+}
+
+/* ── Timeline connector line ── */
+.timeline-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--border-color), transparent);
+}
+
+/* ── Delete modal overlay ── */
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-enter {
+  animation: modalIn 0.2s ease-out both;
+}
+
+/* ── Notification badge pulse ── */
+@keyframes notifPulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.3); }
+}
+.notif-badge {
+  animation: notifPulse 2s ease-in-out infinite;
+}
+
+/* ── Dark mode improvements ── */
+.dark .card-premium {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.15);
+}
+.dark .card-premium:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+}
+.dark .stat-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.30);
+}
+
+/* ── Tab switcher (chart) ── */
+.chart-tab-active {
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.dark .chart-tab-active {
+  background: #374151;
+  color: #f9fafb;
+}
+
+/* ── Profile modal gradient header ── */
+.profile-modal-header {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+
+/* ── Review tag badges ── */
+.review-tag-large {
+  background: rgba(99,102,241,0.1);
+  color: #6366f1;
+}
+.review-tag-short {
+  background: rgba(245,158,11,0.1);
+  color: #d97706;
+}
+.dark .review-tag-large {
+  background: rgba(99,102,241,0.15);
+  color: #818cf8;
+}
+.dark .review-tag-short {
+  background: rgba(245,158,11,0.15);
+  color: #fbbf24;
+}
+
+/* ── Skeleton pulse override ── */
+.skeleton {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+.dark .skeleton {
+  background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
+  background-size: 200% 100%;
+}
+
+/* ── Focus ring override for dark sidebar inputs ── */
+.sidebar-btn:focus-visible {
+  outline: 2px solid rgba(99,102,241,0.5);
+  outline-offset: 2px;
+}
+
+/* ── Client card hover ── */
+.client-card-actions {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+/* Uncomment to show actions only on hover:
+.client-card:hover .client-card-actions {
+  opacity: 1;
+}
+*/

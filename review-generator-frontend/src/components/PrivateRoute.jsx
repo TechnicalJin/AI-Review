@@ -9,7 +9,7 @@ const PrivateRoute = ({ children, requiredRole }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-100 dark:bg-slate-900">
-        <Spinner size="lg" />
+        <div className="w-12 h-12 border-4 border-indigo-200 dark:border-indigo-900 border-t-indigo-600 rounded-full animate-spin"></div>
       </div>
     );
   }

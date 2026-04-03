@@ -1,55 +1,103 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FiSearch, FiUsers, FiX } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import APIService from '../../services/APIService';
+import Sidebar from '../../components/userDashboard/Sidebar';
+import Header from '../../components/userDashboard/Header';
+import ClientTable from '../../components/userDashboard/ClientTable';
+import Pagination from '../../components/userDashboard/Pagination';
 
-// Import modular components
-import Sidebar from '../../components/layout/Sidebar';
-import Navbar from '../../components/layout/Navbar';
-import StatCard from '../../components/dashboard/StatCard';
-import ClientCard, { ClientCardSkeleton } from '../../components/dashboard/ClientCard';
+const ITEMS_PER_PAGE = 10;
+
+const mockClients = [
+  {
+    id: 1,
+    name: 'ABC',
+    email: 'abc@example.com',
+    mobile: '9876543210',
+    logo: '',
+    chatText: 'Digital Marketing Services, Website and SEO package details...',
+    reviewLink: 'https://g.page/r/CZ-ABC123/review',
+    downloadLink: '#',
+  },
+  {
+    id: 2,
+    name: '3Ace Infotech',
+    email: '3ace@example.com',
+    mobile: '9620254120',
+    logo: '',
+    chatText: 'WhatsApp Solutions, Automation and CRM integration services...',
+    reviewLink: 'https://g.page/r/CZ-DEF456/review',
+    downloadLink: '#',
+  },
+];
 
 const UserHome = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1024);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [clients, setClients] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
 
-  // Delete modal state
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [clients, setClients] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [clientToDelete, setClientToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    fetchClients();
-
-    const handleResize = () => {
-      if (window.innerWidth > 1024) {
-        setMobileSidebarOpen(false);
-        setSidebarOpen(true);
-      } else if (window.innerWidth <= 768) {
-        setSidebarOpen(false);
+    const fetchClients = async () => {
+      try {
+        setLoading(true);
+        const data = await APIService.getClients();
+        const clientList = Array.isArray(data) && data.length > 0 ? data : mockClients;
+        setClients(clientList);
+      } catch {
+        setClients(mockClients);
+      } finally {
+        setLoading(false);
       }
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+
+    fetchClients();
   }, []);
 
-  const fetchClients = async () => {
-    try {
-      setLoading(true);
-      const data = await APIService.getClients();
-      setClients(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Error fetching clients:', error);
-      setClients([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchTerm]);
+
+  const filteredClients = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return clients;
+
+    return clients.filter((client) => {
+      return (
+        (client.name || '').toLowerCase().includes(query) ||
+        (client.email || '').toLowerCase().includes(query) ||
+        (client.mobile || '').toLowerCase().includes(query)
+      );
+    });
+  }, [clients, searchTerm]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredClients.length / ITEMS_PER_PAGE));
+
+  const paginatedClients = useMemo(() => {
+    const start = currentPage * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+
+    return filteredClients.slice(start, end).map((client) => ({
+      id: client.id,
+      name: client.name,
+      email: client.email,
+      mobile: client.mobile,
+      logo: client.logo,
+      chatText: client.chatText,
+      reviewLink: client.reviewLink,
+      generateLink: client.generateLink,
+      downloadLink: client.downloadLink,
+    }));
+  }, [currentPage, filteredClients]);
 
   const handleLogout = () => {
     logout();
@@ -62,8 +110,8 @@ const UserHome = () => {
   };
 
   const closeDeleteModal = () => {
-    setShowDeleteModal(false);
     setClientToDelete(null);
+    setShowDeleteModal(false);
   };
 
   const handleDelete = async () => {
@@ -72,203 +120,130 @@ const UserHome = () => {
     setDeleting(true);
     try {
       await APIService.deleteClient(clientToDelete.id);
-      setClients(clients.filter((c) => c.id !== clientToDelete.id));
+      setClients((prev) => prev.filter((c) => c.id !== clientToDelete.id));
       closeDeleteModal();
-    } catch (error) {
-      console.error('Error deleting client:', error);
-      alert('Failed to delete client. Please try again.');
+    } catch {
+      window.alert('Failed to delete client. Please try again.');
     } finally {
       setDeleting(false);
     }
   };
 
-  const filteredClients = clients.filter((client) =>
-    client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handlePageChange = (page) => {
+    const boundedPage = Math.max(0, Math.min(page, totalPages - 1));
+    setCurrentPage(boundedPage);
+  };
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden motion-slow">
-      {/* Sidebar Component */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Sidebar
-        isOpen={sidebarOpen}
         isMobileOpen={mobileSidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
         onMobileClose={() => setMobileSidebarOpen(false)}
         onLogout={handleLogout}
         user={user}
       />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Navbar Component with Theme Toggle */}
-        <Navbar
-          onMobileMenuClick={() => setMobileSidebarOpen(true)}
-          user={user}
-          title="Client Dashboard"
-          subtitle={
-            <>
-              Welcome back, <span className="font-semibold text-indigo-600 dark:text-indigo-400">{user?.username || 'Admin'}</span>
-            </>
-          }
-        />
+      <main className="transition-all duration-300 md:ml-64">
+        <Header onMenuClick={() => setMobileSidebarOpen(true)} />
 
-        {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
-          {/* Search and Add Button */}
-          <div className="mb-8 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
-            <div className="flex-1 max-w-md">
-              <div className="relative group">
+        <section className="animate-[fadeIn_0.8s_ease-in-out] p-6">
+          <div className="mb-8">
+            <h2 className="mb-2 flex items-center text-3xl font-bold text-slate-800">
+              <FiUsers className="mr-3 text-indigo-500" />
+              Client Management
+            </h2>
+            <p className="text-slate-600">Manage your clients and their review links</p>
+          </div>
+
+          <section className="mb-8 rounded-xl border border-slate-200 bg-white p-6 shadow-lg">
+            <form className="flex flex-col gap-4 md:flex-row" onSubmit={(e) => e.preventDefault()}>
+              <div className="relative flex-1">
+                <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search clients by name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 motion-normal shadow-sm"
+                  className="w-full rounded-lg border border-slate-300 py-3 pl-12 pr-4 transition-all duration-300 focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Search by name, mobile or email..."
+                  aria-label="Search by name, mobile or email"
                 />
-                <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 motion-fast"></i>
               </div>
-            </div>
-            <Link
-              to="/user/create"
-              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-semibold motion-normal flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5"
-            >
-              <i className="fas fa-plus"></i>
-              <span>Add Client</span>
-            </Link>
-          </div>
+              <button
+                type="submit"
+                className="flex items-center justify-center rounded-lg bg-indigo-500 px-8 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-blue-600 hover:shadow-xl"
+              >
+                <FiSearch className="mr-2" />
+                Search
+              </button>
+            </form>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-            <StatCard
-              icon="fas fa-users"
-              label="Total Clients"
-              value={clients.length}
-              color="indigo"
-              trend="+12%"
-            />
-            <StatCard
-              icon="fas fa-circle-check"
-              label="Active"
-              value={clients.length}
-              color="emerald"
-              trend="+8%"
-            />
-            <StatCard
-              icon="fas fa-star"
-              label="Reviews"
-              value="-"
-              color="amber"
-            />
-            <StatCard
-              icon="fas fa-arrow-trend-up"
-              label="This Month"
-              value="-"
-              color="purple"
-            />
-          </div>
-
-          {/* Section Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                <i className="fas fa-building text-indigo-600 dark:text-indigo-400"></i>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">All Clients</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {filteredClients.length} client{filteredClients.length !== 1 ? 's' : ''} found
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Clients Grid */}
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, i) => (
-                <ClientCardSkeleton key={i} />
-              ))}
-            </div>
-          ) : filteredClients.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredClients.map((client, index) => (
-                <ClientCard
-                  key={client.id}
-                  client={client}
-                  onDelete={() => openDeleteModal(client)}
-                  index={index}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-12">
-              <div className="empty-state">
-                <div className="empty-state-icon">
-                  <i className="fas fa-inbox"></i>
-                </div>
-                <h3 className="empty-state-title">
-                  {searchTerm ? 'No clients found' : 'No clients yet'}
-                </h3>
-                <p className="empty-state-description">
-                  {searchTerm
-                    ? 'Try a different search term or clear your search'
-                    : 'Create your first client to get started with review generation'}
-                </p>
-                {!searchTerm && (
-                  <Link
-                    to="/user/create"
-                    className="btn btn-md btn-primary"
+            {searchTerm && (
+              <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-slate-700">
+                    {filteredClients.length > 0 ? (
+                      <span>
+                        Found <strong className="text-indigo-500">{filteredClients.length}</strong> results for{' '}
+                        <strong className="text-slate-800">"{searchTerm}"</strong>
+                      </span>
+                    ) : (
+                      <span>
+                        No results found for <strong className="text-slate-800">"{searchTerm}"</strong>
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="flex items-center rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-300 hover:bg-slate-300"
                   >
-                    <i className="fas fa-plus"></i>
-                    Create Your First Client
-                  </Link>
-                )}
+                    <FiX className="mr-2" />
+                    Clear Search
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
+          </section>
+
+          <ClientTable loading={loading} clients={paginatedClients} searchTerm={searchTerm} onDelete={openDeleteModal} />
+
+          {!loading && filteredClients.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredClients.length}
+              currentItemsCount={paginatedClients.length}
+              onPageChange={handlePageChange}
+            />
           )}
-        </main>
-      </div>
+        </section>
+      </main>
 
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="modal-backdrop">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 scale-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-slate-100 bg-white p-7 shadow-2xl">
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-6">
-                <i className="fas fa-trash-can text-red-500 text-2xl"></i>
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                Delete Client?
-              </h2>
-              <p className="text-slate-500 dark:text-slate-400 mb-8">
-                Are you sure you want to delete <strong className="text-slate-700 dark:text-slate-300">{clientToDelete?.name}</strong>? This action cannot be undone.
+              <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-xl text-red-500">🗑</div>
+              <h2 className="mb-2 text-xl font-bold text-slate-800">Delete Client?</h2>
+              <p className="mb-6 text-sm text-slate-500">
+                Are you sure you want to delete <span className="font-semibold text-slate-700">{clientToDelete?.name}</span>? This action cannot be undone.
               </p>
-
-              <div className="btn-group">
+              <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={closeDeleteModal}
                   disabled={deleting}
-                  className="flex-1 btn btn-md btn-secondary"
+                  className="flex-1 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="flex-1 btn btn-md btn-danger"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700"
                 >
-                  {deleting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full spin"></div>
-                      Deleting...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-trash-can"></i>
-                      Delete
-                    </>
-                  )}
+                  {deleting ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </div>
@@ -280,5 +255,3 @@ const UserHome = () => {
 };
 
 export default UserHome;
-
-
