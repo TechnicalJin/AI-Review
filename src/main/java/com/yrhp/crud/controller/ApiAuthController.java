@@ -4,6 +4,7 @@ import com.yrhp.crud.model.Client;
 import com.yrhp.crud.model.UserDtls;
 import com.yrhp.crud.repository.ClientRepository;
 import com.yrhp.crud.repository.UserRepository;
+import com.yrhp.crud.service.ApiTokenService;
 import com.yrhp.crud.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -36,6 +36,9 @@ public class ApiAuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ApiTokenService apiTokenService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
@@ -60,14 +63,13 @@ public class ApiAuthController {
                             .body(Map.of("message", "Invalid email or password"));
                 }
 
-                // Generate token
-                String token = UUID.randomUUID().toString();
-
                 // Get role without ROLE_ prefix
                 String role = user.getRole();
                 if (role != null && role.startsWith("ROLE_")) {
                     role = role.substring(5);
                 }
+
+                String token = apiTokenService.issueToken(user.getEmail(), role);
 
                 Map<String, Object> response = new HashMap<>();
                 response.put("id", user.getId());
@@ -93,14 +95,13 @@ public class ApiAuthController {
                             .body(Map.of("message", "Invalid email or password"));
                 }
 
-                // Generate token
-                String token = UUID.randomUUID().toString();
-
                 // Get role without ROLE_ prefix
                 String role = client.getRole();
                 if (role != null && role.startsWith("ROLE_")) {
                     role = role.substring(5);
                 }
+
+                String token = apiTokenService.issueToken(client.getEmail(), role);
 
                 Map<String, Object> response = new HashMap<>();
                 response.put("id", client.getId());

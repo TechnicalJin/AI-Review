@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import APIService from '../../services/APIService';
 import TagInput from '../../components/form/TagInput';
+import Sidebar from '../../components/userDashboard/Sidebar';
+import Header from '../../components/userDashboard/Header';
+import { useAuth } from '../../context/AuthContext';
 
 const inputClass =
   'w-full border rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none';
 
 const CreateClient = () => {
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState('');
 
@@ -136,108 +141,126 @@ const CreateClient = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
-    <div className="min-h-screen bg-[#fafafa] px-4 py-6">
-      <div className="mx-auto w-full md:w-2/3 max-w-4xl">
-        <div className="relative mb-4 flex items-center justify-center">
-          <Link to="/user/home" className="absolute left-0 rounded bg-slate-200 px-3 py-2 text-sm text-slate-800 hover:bg-slate-300">
-            &larr; Back
-          </Link>
-          <h1 className="text-center text-xl font-semibold">New Client</h1>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <Sidebar
+        isMobileOpen={mobileSidebarOpen}
+        onMobileClose={() => setMobileSidebarOpen(false)}
+        onLogout={handleLogout}
+        user={user}
+      />
 
-        <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-          {globalError && <p className="mb-4 rounded border border-red-300 bg-red-100 px-3 py-2 text-sm text-red-700">{globalError}</p>}
+      <main className="transition-all duration-300 md:ml-64">
+        <Header onMenuClick={() => setMobileSidebarOpen(true)} />
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4 grid grid-cols-12 gap-3">
-              <label htmlFor="name" className="col-span-12 md:col-span-4 font-semibold">Name</label>
-              <div className="col-span-12 md:col-span-8">
-                <input id="name" name="name" value={formData.name} onChange={handleChange} className={inputClass} />
-                {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
-              </div>
+        <section className="p-6">
+          <div className="mx-auto w-full max-w-4xl md:w-2/3">
+            <div className="relative mb-4 flex items-center justify-center">
+              <Link to="/user/home" className="absolute left-0 rounded bg-slate-200 px-3 py-2 text-sm text-slate-800 hover:bg-slate-300">
+                &larr; Back
+              </Link>
+              <h1 className="text-center text-xl font-semibold">New Client</h1>
             </div>
 
-            <div className="mb-4 grid grid-cols-12 gap-3">
-              <label htmlFor="email" className="col-span-12 md:col-span-4 font-semibold">Email</label>
-              <div className="col-span-12 md:col-span-8">
-                <input id="email" name="email" type="email" value={formData.email} onChange={handleChange} className={inputClass} />
-                {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
-              </div>
-            </div>
+            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+              {globalError && <p className="mb-4 rounded border border-red-300 bg-red-100 px-3 py-2 text-sm text-red-700">{globalError}</p>}
 
-            <div className="mb-4 grid grid-cols-12 gap-3">
-              <label htmlFor="password" className="col-span-12 md:col-span-4 font-semibold">Password</label>
-              <div className="col-span-12 md:col-span-8">
-                <input id="password" name="password" type="password" value={formData.password} onChange={handleChange} className={inputClass} />
-                {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
-              </div>
-            </div>
+              <form onSubmit={handleSubmit}>
+                <div className="mb-4 grid grid-cols-12 gap-3">
+                  <label htmlFor="name" className="col-span-12 md:col-span-4 font-semibold">Name</label>
+                  <div className="col-span-12 md:col-span-8">
+                    <input id="name" name="name" value={formData.name} onChange={handleChange} className={inputClass} />
+                    {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
+                  </div>
+                </div>
 
-            <div className="mb-4 grid grid-cols-12 gap-3">
-              <label htmlFor="mobile" className="col-span-12 md:col-span-4 font-semibold">Mobile</label>
-              <div className="col-span-12 md:col-span-8">
-                <input id="mobile" name="mobile" value={formData.mobile} onChange={handleChange} className={inputClass} />
-                {errors.mobile && <p className="mt-1 text-sm text-red-500">{errors.mobile}</p>}
-              </div>
-            </div>
+                <div className="mb-4 grid grid-cols-12 gap-3">
+                  <label htmlFor="email" className="col-span-12 md:col-span-4 font-semibold">Email</label>
+                  <div className="col-span-12 md:col-span-8">
+                    <input id="email" name="email" type="email" value={formData.email} onChange={handleChange} className={inputClass} />
+                    {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+                  </div>
+                </div>
 
-            <div className="mb-4 grid grid-cols-12 gap-3">
-              <label htmlFor="reviewLink" className="col-span-12 md:col-span-4 font-semibold">Review Link</label>
-              <div className="col-span-12 md:col-span-8">
-                <input id="reviewLink" name="reviewLink" value={formData.reviewLink} onChange={handleChange} className={inputClass} />
-                {errors.reviewLink && <p className="mt-1 text-sm text-red-500">{errors.reviewLink}</p>}
-              </div>
-            </div>
+                <div className="mb-4 grid grid-cols-12 gap-3">
+                  <label htmlFor="password" className="col-span-12 md:col-span-4 font-semibold">Password</label>
+                  <div className="col-span-12 md:col-span-8">
+                    <input id="password" name="password" type="password" value={formData.password} onChange={handleChange} className={inputClass} />
+                    {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
+                  </div>
+                </div>
 
-            <div className="mb-4 grid grid-cols-12 gap-3">
-              <label htmlFor="logo" className="col-span-12 md:col-span-4 font-semibold">Logo</label>
-              <div className="col-span-12 md:col-span-8">
-                <input id="logo" type="file" accept="image/jpeg,image/png" onChange={handleLogoChange} className={inputClass} />
-                <p className="mt-1 text-sm text-slate-500">Up to max 2 MB (JPEG or PNG)</p>
-                {errors.logo && <p className="mt-1 text-sm text-red-500">{errors.logo}</p>}
-              </div>
-            </div>
+                <div className="mb-4 grid grid-cols-12 gap-3">
+                  <label htmlFor="mobile" className="col-span-12 md:col-span-4 font-semibold">Mobile</label>
+                  <div className="col-span-12 md:col-span-8">
+                    <input id="mobile" name="mobile" value={formData.mobile} onChange={handleChange} className={inputClass} />
+                    {errors.mobile && <p className="mt-1 text-sm text-red-500">{errors.mobile}</p>}
+                  </div>
+                </div>
 
-            <div className="mb-4 grid grid-cols-12 gap-3">
-              <label className="col-span-12 md:col-span-4 font-semibold">Chat Text</label>
-              <div className="col-span-12 md:col-span-8">
-                <TagInput
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onAdd={addTag}
-                  onKeyDown={handleTagKeyDown}
-                  tags={tags}
-                  onRemove={removeTag}
-                  error={errors.chatText}
-                />
-              </div>
-            </div>
+                <div className="mb-4 grid grid-cols-12 gap-3">
+                  <label htmlFor="reviewLink" className="col-span-12 md:col-span-4 font-semibold">Review Link</label>
+                  <div className="col-span-12 md:col-span-8">
+                    <input id="reviewLink" name="reviewLink" value={formData.reviewLink} onChange={handleChange} className={inputClass} />
+                    {errors.reviewLink && <p className="mt-1 text-sm text-red-500">{errors.reviewLink}</p>}
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-12 gap-3 pt-2">
-              <div className="hidden md:block md:col-span-4" />
-              <div className="col-span-12 md:col-span-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="h-10 w-full rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60"
-                >
-                  {loading ? 'Adding...' : 'Add'}
-                </button>
-              </div>
-              <div className="col-span-12 md:col-span-4">
-                <button
-                  type="button"
-                  onClick={() => navigate('/user/home')}
-                  className="h-10 w-full rounded bg-slate-200 text-slate-700 hover:bg-slate-300"
-                >
-                  Cancel
-                </button>
-              </div>
+                <div className="mb-4 grid grid-cols-12 gap-3">
+                  <label htmlFor="logo" className="col-span-12 md:col-span-4 font-semibold">Logo</label>
+                  <div className="col-span-12 md:col-span-8">
+                    <input id="logo" type="file" accept="image/jpeg,image/png" onChange={handleLogoChange} className={inputClass} />
+                    <p className="mt-1 text-sm text-slate-500">Up to max 2 MB (JPEG or PNG)</p>
+                    {errors.logo && <p className="mt-1 text-sm text-red-500">{errors.logo}</p>}
+                  </div>
+                </div>
+
+                <div className="mb-4 grid grid-cols-12 gap-3">
+                  <label className="col-span-12 md:col-span-4 font-semibold">Chat Text</label>
+                  <div className="col-span-12 md:col-span-8">
+                    <TagInput
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onAdd={addTag}
+                      onKeyDown={handleTagKeyDown}
+                      tags={tags}
+                      onRemove={removeTag}
+                      error={errors.chatText}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-12 gap-3 pt-2">
+                  <div className="hidden md:block md:col-span-4" />
+                  <div className="col-span-12 md:col-span-4">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="h-10 w-full rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60"
+                    >
+                      {loading ? 'Adding...' : 'Add'}
+                    </button>
+                  </div>
+                  <div className="col-span-12 md:col-span-4">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/user/home')}
+                      className="h-10 w-full rounded bg-slate-200 text-slate-700 hover:bg-slate-300"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
-          </form>
-        </div>
-      </div>
+          </div>
+        </section>
+      </main>
     </div>
   );
 };

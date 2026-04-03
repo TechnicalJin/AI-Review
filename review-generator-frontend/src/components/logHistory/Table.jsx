@@ -1,7 +1,7 @@
 import React from 'react';
 import TableRow from './TableRow';
 
-const Table = ({ logs, loading, totalElements }) => {
+const Table = ({ logs, loading, totalElements, emptyTitle = 'No logs found', emptyDescription = 'No logs found matching your current filters. Try adjusting your search criteria.' }) => {
   if (loading) {
     return (
       <section className="mb-8 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-lg">
@@ -14,8 +14,8 @@ const Table = ({ logs, loading, totalElements }) => {
     return (
       <section className="mb-8 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-lg">
         <div className="p-12 text-center">
-          <h3 className="mb-2 text-xl font-semibold text-slate-700">No logs found</h3>
-          <p className="text-slate-500">No logs found matching your current filters. Try adjusting your search criteria.</p>
+          <h3 className="mb-2 text-xl font-semibold text-slate-700">{emptyTitle}</h3>
+          <p className="text-slate-500">{emptyDescription}</p>
         </div>
       </section>
     );

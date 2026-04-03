@@ -19,7 +19,7 @@ import ViewClient from './pages/user/ViewClient';
 // Client Pages
 import ClientHome from './pages/client/ClientHome';
 import ClientHistory from './pages/client/ClientHistory';
-import ClientChatText from './pages/client/ClientChatText';
+import ChatTags from './pages/ChatTags';
 
 // Error Page
 import NotFound from './pages/NotFound';
@@ -103,10 +103,18 @@ function App() {
               }
             />
             <Route
+              path="/client/chatText"
+              element={
+                <PrivateRoute requiredRole="CLIENT">
+                  <ChatTags />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/client/chattext"
               element={
                 <PrivateRoute requiredRole="CLIENT">
-                  <ClientChatText />
+                  <ChatTags />
                 </PrivateRoute>
               }
             />

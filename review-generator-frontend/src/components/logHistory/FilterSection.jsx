@@ -1,66 +1,77 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Flatpickr from 'react-flatpickr';
-import 'flatpickr/dist/themes/material_blue.css';
-import { FiFilter, FiChevronDown, FiCheck, FiRefreshCw } from 'react-icons/fi';
-
-const inputClass =
-  'w-full rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition-all duration-200 focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-100';
+import 'flatpickr/dist/flatpickr.min.css';
 
 const FilterSection = ({
-  showFilters,
-  onToggle,
   filters,
-  distinctCompanies,
   onFilterChange,
-  onDateRangeChange,
-  onApply,
-  onReset,
+  onApplyFilters,
+  onResetFilters,
+  isOpen,
+  onToggle,
 }) => {
-  const dateValue =
-    filters.startDate && filters.endDate
-      ? [filters.startDate, filters.endDate]
-      : filters.startDate
-      ? [filters.startDate]
-      : [];
+  const [tempDateRange, setTempDateRange] = useState([
+    filters.startDate ? new Date(filters.startDate) : null,
+    filters.endDate ? new Date(filters.endDate) : null,
+  ]);
+  const handleDateChange = (dates) => {
+    setTempDateRange(dates);
+  };
+
+  const handleApply = () => {
+    // Format dates to YYYY-MM-DDT00:00:00 and YYYY-MM-DDT23:59:59
+    const startDate = tempDateRange[0]
+      ? `${tempDateRange[0].toISOString().split('T')[0]}T00:00:00`
+      : null;
+    const endDate = tempDateRange[1]
+      ? `${tempDateRange[1].toISOString().split('T')[0]}T23:59:59`
+      : null;
+
+    onFilterChange('startDate', startDate);
+    onFilterChange('endDate', endDate);
+    onApplyFilters();
+  };
+
+  const handleReset = () => {
+    setTempDateRange([null, null]);
+    onResetFilters();
+  };
 
   return (
-    <section className="mb-8 overflow-hidden rounded-xl border border-slate-100 bg-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between border-b border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 px-8 py-6"
+        className="w-full p-5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 motion-fast border-b border-slate-200 dark:border-slate-700"
       >
-        <h2 className="flex items-center gap-3 text-xl font-bold text-slate-800">
-          <FiFilter className="text-indigo-500" />
+        <div className="flex items-center gap-3">
+          <i className="fas fa-filter text-purple-600 dark:text-purple-400"></i>
           Filters
-        </h2>
-        <FiChevronDown
-          className={`text-xl text-indigo-500 transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`}
-        />
+          {(filters.reviewLength || filters.regenerated || filters.keyPoints || filters.search || filters.startDate || filters.endDate) && (
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-bold">
+              {[filters.reviewLength, filters.regenerated, filters.keyPoints, filters.search, filters.startDate, filters.endDate].filter(Boolean).length}
+            </span>
+          )}
+        </div>
+        <i
+          className={`fas fa-chevron-down text-slate-500 dark:text-slate-400 transition-transform ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+        ></i>
       </button>
 
-      {showFilters && (
-        <div className="animate-[fadeIn_0.3s_ease-out] p-8">
-          <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-5">
+      {isOpen && (
+        <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Review Length Filter */}
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">Company:</label>
-              <select name="company" value={filters.company} onChange={onFilterChange} className={inputClass}>
-                <option value="">All Companies</option>
-                {distinctCompanies.map((company) => (
-                  <option key={company} value={company}>
-                    {company}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">Review Length:</label>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                Review Length
+              </label>
               <select
-                name="reviewLength"
-                value={filters.reviewLength}
-                onChange={onFilterChange}
-                className={inputClass}
+                value={filters.reviewLength || ''}
+                onChange={(e) => onFilterChange('reviewLength', e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
               >
                 <option value="">All Lengths</option>
                 <option value="short">Short</option>
@@ -69,13 +80,32 @@ const FilterSection = ({
               </select>
             </div>
 
+            {/* Regenerated Filter */}
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">Regenerated:</label>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                Regenerated
+              </label>
               <select
-                name="regenerated"
-                value={filters.regenerated}
-                onChange={onFilterChange}
-                className={inputClass}
+                value={filters.regenerated || ''}
+                onChange={(e) => onFilterChange('regenerated', e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
+              >
+                <option value="">All Lengths</option>
+                <option value="short">Short</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
+              </select>
+            </div>
+
+            {/* Key Points Filter */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                Key Points Status
+              </label>
+              <select
+                value={filters.keyPoints || ''}
+                onChange={(e) => onFilterChange('keyPoints', e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
               >
                 <option value="">All</option>
                 <option value="yes">Yes</option>
@@ -83,54 +113,46 @@ const FilterSection = ({
               </select>
             </div>
 
+            {/* Date Range Filter */}
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">Key Points:</label>
-              <input
-                type="text"
-                name="keyPoints"
-                value={filters.keyPoints}
-                onChange={onFilterChange}
-                placeholder="Search key points"
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">Date Range:</label>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                Date Range
+              </label>
               <Flatpickr
-                value={dateValue}
+                data-enable-time={false}
+                value={tempDateRange}
+                onChange={handleDateChange}
                 options={{
                   mode: 'range',
                   dateFormat: 'Y-m-d',
+                  maxDate: 'today',
                 }}
-                onChange={onDateRangeChange}
-                className={inputClass}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
                 placeholder="Select date range"
               />
             </div>
           </div>
 
-          <div className="flex flex-wrap justify-end gap-4">
+          {/* Action Buttons */}
+          <div className="flex gap-3 mt-6">
             <button
-              type="button"
-              onClick={onApply}
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-400 to-cyan-400 px-6 py-3 font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+              onClick={handleApply}
+              className="flex-1 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all active:scale-95"
             >
-              <FiCheck />
+              <i className="fas fa-search mr-2"></i>
               Apply Filters
             </button>
             <button
-              type="button"
-              onClick={onReset}
-              className="inline-flex items-center gap-2 rounded-lg border-2 border-rose-400 bg-white px-6 py-3 font-semibold text-rose-500 transition-all duration-200 hover:-translate-y-0.5 hover:bg-gradient-to-r hover:from-rose-400 hover:to-amber-300 hover:text-white"
+              onClick={handleReset}
+              className="px-6 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all"
             >
-              <FiRefreshCw />
-              Reset Filters
+              <i className="fas fa-rotate-left mr-2"></i>
+              Reset
             </button>
           </div>
         </div>
       )}
-    </section>
+    </div>
   );
 };
 

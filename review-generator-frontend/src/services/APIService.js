@@ -188,6 +188,14 @@ class APIService {
     return this.request(`/client/stats${params}`);
   }
 
+  async getClientLogs() {
+    return this.request('/client/logs');
+  }
+
+  async getClientProfile() {
+    return this.request('/client/profile');
+  }
+
   async getClientHistory(params = {}) {
     const queryString = new URLSearchParams(params).toString();
     return this.request(`/client/history?${queryString}`);
@@ -195,13 +203,19 @@ class APIService {
 
   async getChatText(email) {
     const params = email ? `?email=${encodeURIComponent(email)}` : '';
-    return this.request(`/client/chat-text${params}`);
+    return this.request(`/client/chatText${params}`);
   }
 
   async updateChatText(email, chatText) {
-    return this.request('/client/chat-text', {
+    const payload = typeof chatText === 'undefined' ? { chatText: email || '' } : { chatText };
+
+    if (typeof chatText !== 'undefined' && email) {
+      payload.email = email;
+    }
+
+    return this.request('/client/chatText', {
       method: 'POST',
-      body: JSON.stringify({ email, chatText }),
+      body: JSON.stringify(payload),
     });
   }
 

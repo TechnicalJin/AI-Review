@@ -2,6 +2,7 @@ package com.yrhp.crud.controller;
 
 import com.yrhp.crud.model.Client;
 import com.yrhp.crud.model.ReviewGenerationLog;
+import com.yrhp.crud.service.ApiTokenService;
 import com.yrhp.crud.service.ClientService;
 import com.yrhp.crud.service.ReviewGenerationLogService;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -32,14 +34,25 @@ public class ApiClientController {
     @Autowired
     private ReviewGenerationLogService logService;
 
+    @Autowired
+    private ApiTokenService apiTokenService;
+
     // ==================== STATS ENDPOINT ====================
 
     @GetMapping("/stats")
-    public ResponseEntity<?> getStats(@RequestParam(required = false) String email) {
-        log.info("API: Fetching client stats for email: {}", email);
+    public ResponseEntity<?> getStats(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            Authentication authentication) {
+        Optional<String> email = resolveCurrentClientEmail(authHeader, authentication);
+        if (email.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Unauthorized client request"));
+        }
+
+        log.info("API: Fetching client stats for email: {}", email.get());
         try {
-            // Get all logs for now (in production, filter by client)
-            List<ReviewGenerationLog> allLogs = logService.getAllLogs();
+            Client client = clientService.getClientByEmail(email.get());
+            List<ReviewGenerationLog> allLogs = logService.getLogsByCompanyName(client.getName());
 
             // Calculate stats
             long totalReviews = allLogs.size();
@@ -78,19 +91,33 @@ public class ApiClientController {
 
     @GetMapping("/history")
     public ResponseEntity<?> getHistory(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String reviewLength,
             @RequestParam(required = false) String regenerated,
-            @RequestParam(required = false) String email) {
+            @RequestParam(required = false) String keyPoints,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+
+        Optional<String> email = resolveCurrentClientEmail(authHeader, authentication);
+        if (email.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Unauthorized client request"));
+        }
 
         log.info("API: Fetching client history - page: {}, size: {}", page, size);
         try {
+            Client client = clientService.getClientByEmail(email.get());
             Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
 
+            LocalDateTime start = parseDateTime(startDate);
+            LocalDateTime end = parseDateTime(endDate);
+
             Page<ReviewGenerationLog> logsPage = logService.searchLogs(
-                    search, null, reviewLength, regenerated, null, null, null, pageable);
+                    search, client.getName(), reviewLength, regenerated, keyPoints, start, end, pageable);
 
             List<Map<String, Object>> logsList = logsPage.getContent().stream()
                     .map(this::transformLogToMap)
@@ -113,12 +140,16 @@ public class ApiClientController {
 
     // ==================== CHAT TEXT ENDPOINTS ====================
 
-    @GetMapping("/chat-text")
-    public ResponseEntity<?> getChatText(@RequestParam(required = false) String email) {
-        log.info("API: Fetching chat text for email: {}", email);
+    @GetMapping({"/chat-text", "/chatText"})
+    public ResponseEntity<?> getChatText(Authentication authentication,
+                         @RequestHeader(value = "Authorization", required = false) String authHeader,
+                                         @RequestParam(required = false) String email) {
+        String resolvedEmail = resolveCurrentClientEmail(authHeader, authentication).orElse(null);
+
+        log.info("API: Fetching chat text for email: {}", resolvedEmail);
         try {
-            if (email != null && !email.isEmpty()) {
-                Client client = clientService.getClientByEmail(email);
+            if (resolvedEmail != null && !resolvedEmail.isEmpty()) {
+                Client client = clientService.getClientByEmail(resolvedEmail);
                 return ResponseEntity.ok(Map.of(
                         "chatText", client.getChatText() != null ? client.getChatText() : "",
                         "clientId", client.getId(),
@@ -135,16 +166,18 @@ public class ApiClientController {
         }
     }
 
-    @PostMapping("/chat-text")
-    public ResponseEntity<?> updateChatText(@RequestBody Map<String, String> data) {
+    @PostMapping({"/chat-text", "/chatText"})
+    public ResponseEntity<?> updateChatText(Authentication authentication,
+                                            @RequestHeader(value = "Authorization", required = false) String authHeader,
+                                            @RequestBody Map<String, String> data) {
         log.info("API: Updating chat text");
         try {
-            String email = data.get("email");
+            String email = resolveCurrentClientEmail(authHeader, authentication).orElse(null);
             String chatText = data.get("chatText");
 
             if (email == null || email.isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("message", "Email is required"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Unauthorized client request"));
             }
 
             Client client = clientService.getClientByEmail(email);
@@ -160,6 +193,56 @@ public class ApiClientController {
             log.error("API: Error updating chat text: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("message", "Failed to update chat text: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<?> getClientProfile(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            Authentication authentication) {
+        Optional<String> email = resolveCurrentClientEmail(authHeader, authentication);
+        if (email.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Unauthorized client request"));
+        }
+
+        try {
+            Client client = clientService.getClientByEmail(email.get());
+            return ResponseEntity.ok(Map.of(
+                    "id", client.getId(),
+                    "name", client.getName(),
+                    "email", client.getEmail(),
+                    "mobile", client.getMobile(),
+                    "logo", client.getLogo() != null ? client.getLogo() : ""
+            ));
+        } catch (Exception e) {
+            log.error("API: Error fetching client profile: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to fetch client profile"));
+        }
+    }
+
+    @GetMapping("/logs")
+    public ResponseEntity<?> getClientLogs(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            Authentication authentication) {
+        Optional<String> email = resolveCurrentClientEmail(authHeader, authentication);
+        if (email.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Unauthorized client request"));
+        }
+
+        try {
+            Client client = clientService.getClientByEmail(email.get());
+            List<Map<String, Object>> logs = logService.getLogsByCompanyName(client.getName())
+                    .stream()
+                    .map(this::transformLogToMap)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(logs);
+        } catch (Exception e) {
+            log.error("API: Error fetching client logs: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to fetch client logs"));
         }
     }
 
@@ -180,5 +263,31 @@ public class ApiClientController {
         }
 
         return logMap;
+    }
+
+    private Optional<String> resolveCurrentClientEmail(String authHeader, Authentication authentication) {
+        Optional<String> emailFromToken = apiTokenService.resolveEmail(authHeader);
+        if (emailFromToken.isPresent()) {
+            return emailFromToken;
+        }
+
+        if (authentication != null && authentication.getName() != null && !authentication.getName().isBlank()) {
+            return Optional.of(authentication.getName());
+        }
+
+        return Optional.empty();
+    }
+
+    private LocalDateTime parseDateTime(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return LocalDateTime.parse(value.trim());
+        } catch (Exception e) {
+            log.warn("API: Ignoring invalid datetime parameter: {}", value);
+            return null;
+        }
     }
 }
